@@ -1,0 +1,38 @@
+.panel-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.panel-nav {
+    width: 220px;
+    padding: 16px;
+    background: #efe7da;
+}
+
+.panel-nav ul {
+    list-style: none;
+    padding: 0;
+}
+
+.panel-content {
+    flex: 1;
+    padding: 24px;
+}
+
+.panel-stats {
+    list-style: none;
+    padding: 0;
+    display: flex;
+    gap: 24px;
+}
+
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 6px 10px;
+    text-align: left;
+}

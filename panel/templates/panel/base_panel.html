@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="panel-layout">
+    <nav class="panel-nav">
+        <strong>Capricho — Panel</strong>
+        <ul>
+            <li><a href="{% url 'panel:dashboard' %}">Dashboard</a></li>
+            <li><a href="{% url 'panel:usuarios' %}">Usuarios</a></li>
+            <li><a href="{% url 'panel:productos' %}">Productos</a></li>
+            <li><a href="{% url 'panel:categorias' %}">Categorías</a></li>
+            <li><a href="{% url 'panel:pedidos' %}">Pedidos</a></li>
+            <li><a href="{% url 'panel:configuracion' %}">Configuración</a></li>
+        </ul>
+        <form method="post" action="{% url 'panel:logout' %}">
+            {% csrf_token %}
+            <button type="submit">Cerrar sesión</button>
+        </form>
+    </nav>
+    <main class="panel-content">
+        {% if messages %}
+            {% for message in messages %}<p class="form-success">{{ message }}</p>{% endfor %}
+        {% endif %}
+        {% block panel_content %}{% endblock %}
+    </main>
+</div>
+{% endblock %}

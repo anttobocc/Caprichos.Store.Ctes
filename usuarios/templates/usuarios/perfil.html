@@ -1,0 +1,30 @@
+{% extends "usuarios/base_usuarios.html" %}
+
+{% block title %}Mi perfil | Capricho{% endblock %}
+
+{% block content %}
+<main class="auth-page">
+    <h1>Mi perfil</h1>
+
+    {% if messages %}
+        {% for message in messages %}<p class="form-success">{{ message }}</p>{% endfor %}
+    {% endif %}
+
+    <dl>
+        <dt>Usuario</dt><dd>{{ user.username }}</dd>
+        <dt>Nombre</dt><dd>{{ user.first_name }} {{ user.last_name }}</dd>
+        <dt>Email</dt><dd>{{ user.email|default:"—" }}</dd>
+        <dt>Teléfono</dt><dd>{{ perfil.telefono|default:"—" }}</dd>
+        <dt>Dirección</dt><dd>{{ perfil.direccion|default:"—" }}</dd>
+    </dl>
+
+    <p>
+        <a href="{% url 'usuarios:perfil_editar' %}">Editar mis datos</a> ·
+        <a href="{% url 'usuarios:password_change' %}">Cambiar contraseña</a> ·
+        <form method="post" action="{% url 'usuarios:logout' %}" style="display:inline">
+            {% csrf_token %}
+            <button type="submit">Cerrar sesión</button>
+        </form>
+    </p>
+</main>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}{% if modo == "crear" %}Crear usuario{% else %}Editar usuario{% endif %} | Panel Capricho{% endblock %}
+
+{% block panel_content %}
+<h1>{% if modo == "crear" %}Crear usuario{% else %}Editar usuario "{{ usuario.username }}"{% endif %}</h1>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Guardar</button>
+</form>
+
+<p><a href="{% url 'panel:usuarios' %}">Volver al listado</a></p>
+{% endblock %}

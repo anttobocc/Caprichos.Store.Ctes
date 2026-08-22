@@ -1,0 +1,37 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}Usuarios | Panel Capricho{% endblock %}
+
+{% block panel_content %}
+<h1>Usuarios</h1>
+
+<form method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por usuario">
+    <button type="submit">Buscar</button>
+</form>
+
+<p><a href="{% url 'panel:usuario_crear' %}">+ Crear usuario</a></p>
+
+<table>
+    <thead>
+        <tr><th>Usuario</th><th>Nombre</th><th>Email</th><th>Activo</th><th>Administrador</th><th>Acciones</th></tr>
+    </thead>
+    <tbody>
+        {% for usuario in usuarios %}
+        <tr>
+            <td>{{ usuario.username }}</td>
+            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
+            <td>{{ usuario.email|default:"—" }}</td>
+            <td>{{ usuario.is_active|yesno:"Sí,No" }}</td>
+            <td>{{ usuario.is_staff|yesno:"Sí,No" }}</td>
+            <td>
+                <a href="{% url 'panel:usuario_editar' usuario.pk %}">Editar</a> ·
+                <a href="{% url 'panel:usuario_password' usuario.pk %}">Cambiar contraseña</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No se encontraron usuarios.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

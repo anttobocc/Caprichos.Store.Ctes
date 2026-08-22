@@ -1,0 +1,28 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}Productos | Panel Capricho{% endblock %}
+
+{% block panel_content %}
+<h1>Productos</h1>
+<p><em>Listado de solo lectura. La creación y edición de productos se habilita en la próxima etapa.</em></p>
+
+<table>
+    <thead>
+        <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Unidad</th><th>Disponible</th><th>Activo</th></tr>
+    </thead>
+    <tbody>
+        {% for producto in productos %}
+        <tr>
+            <td>{{ producto.nombre }}</td>
+            <td>{{ producto.categoria.nombre }}</td>
+            <td>{% if producto.precio %}${{ producto.precio }}{% else %}según variante{% endif %}</td>
+            <td>{{ producto.get_unidad_venta_display }}</td>
+            <td>{{ producto.disponible|yesno:"Sí,No" }}</td>
+            <td>{{ producto.activo|yesno:"Sí,No" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No hay productos cargados.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}Categorías | Panel Capricho{% endblock %}
+
+{% block panel_content %}
+<h1>Categorías</h1>
+<p><em>Listado de solo lectura. La creación y edición de categorías se habilita en la próxima etapa.</em></p>
+
+<table>
+    <thead>
+        <tr><th>Nombre</th><th>Orden</th><th>Activa</th></tr>
+    </thead>
+    <tbody>
+        {% for categoria in categorias %}
+        <tr>
+            <td>{{ categoria.nombre }}</td>
+            <td>{{ categoria.orden }}</td>
+            <td>{{ categoria.activo|yesno:"Sí,No" }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3">No hay categorías cargadas.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

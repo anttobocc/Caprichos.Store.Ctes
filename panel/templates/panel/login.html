@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Panel Capricho | Iniciar sesión{% endblock %}
+
+{% block extra_css %}
+    <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+{% endblock %}
+
+{% block content %}
+<main class="auth-page">
+    <h1>Panel Capricho</h1>
+
+    {% if form.errors %}
+        <p class="form-error">Usuario o contraseña incorrectos.</p>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Ingresar</button>
+    </form>
+</main>
+{% endblock %}

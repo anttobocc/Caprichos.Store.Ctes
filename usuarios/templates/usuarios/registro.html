@@ -1,0 +1,17 @@
+{% extends "usuarios/base_usuarios.html" %}
+
+{% block title %}Crear cuenta | Capricho{% endblock %}
+
+{% block content %}
+<main class="auth-page">
+    <h1>Crear cuenta</h1>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit">Registrarme</button>
+    </form>
+
+    <p><a href="{% url 'usuarios:login' %}">¿Ya tenés cuenta? Iniciá sesión</a></p>
+</main>
+{% endblock %}

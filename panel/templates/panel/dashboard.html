@@ -1,0 +1,36 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}Dashboard | Panel Capricho{% endblock %}
+
+{% block panel_content %}
+<h1>Dashboard</h1>
+
+<ul class="panel-stats">
+    <li>Productos: <strong>{{ total_productos }}</strong></li>
+    <li>Categorías: <strong>{{ total_categorias }}</strong></li>
+    <li>Usuarios: <strong>{{ total_usuarios }}</strong></li>
+    <li>Pedidos: <strong>{{ total_pedidos }}</strong></li>
+</ul>
+
+<h2>Pedidos recientes</h2>
+{% if pedidos_recientes %}
+<table>
+    <thead>
+        <tr><th>#</th><th>Cliente</th><th>Estado</th><th>Total</th><th>Fecha</th></tr>
+    </thead>
+    <tbody>
+        {% for pedido in pedidos_recientes %}
+        <tr>
+            <td>{{ pedido.pk }}</td>
+            <td>{{ pedido.nombre }} {{ pedido.apellido }}</td>
+            <td>{{ pedido.get_estado_display }}</td>
+            <td>${{ pedido.total }}</td>
+            <td>{{ pedido.fecha_creacion|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% else %}
+<p>Todavía no hay pedidos.</p>
+{% endif %}
+{% endblock %}
