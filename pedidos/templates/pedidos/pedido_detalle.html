@@ -1,0 +1,38 @@
+{% extends "pedidos/base_pedidos.html" %}
+
+{% block title %}Pedido #{{ pedido.pk }} | Capricho{% endblock %}
+
+{% block content %}
+<h1>Pedido #{{ pedido.pk }}</h1>
+
+{% if messages %}
+    {% for message in messages %}<p class="form-{{ message.tags }}">{{ message }}</p>{% endfor %}
+{% endif %}
+
+<p>Estado: {{ pedido.get_estado_display }}</p>
+<p>Fecha del pedido: {{ pedido.fecha_pedido|date:"d/m/Y" }}</p>
+<p>Entrega: {{ pedido.get_tipo_entrega_display }}{% if pedido.direccion_envio %} — {{ pedido.direccion_envio }}{% endif %}</p>
+
+<h2>Productos</h2>
+<table>
+    <thead>
+        <tr><th>Producto</th><th>Cantidad</th><th>Precio unitario</th><th>Subtotal</th></tr>
+    </thead>
+    <tbody>
+        {% for item in pedido.items.all %}
+        <tr>
+            <td>{{ item.nombre_producto }}{% if item.nombre_variante %} — {{ item.nombre_variante }}{% endif %}</td>
+            <td>{{ item.cantidad }}</td>
+            <td>${{ item.precio_unitario }}</td>
+            <td>${{ item.subtotal }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p class="producto-card__precio">Total: ${{ pedido.total }}</p>
+
+{% if pedido.observaciones %}<p>Observaciones: {{ pedido.observaciones }}</p>{% endif %}
+
+<p><a href="{% url 'pedidos:mis_pedidos' %}">Volver a mis pedidos</a></p>
+{% endblock %}

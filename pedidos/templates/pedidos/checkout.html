@@ -1,0 +1,26 @@
+{% extends "pedidos/base_pedidos.html" %}
+
+{% block title %}Checkout | Capricho{% endblock %}
+
+{% block content %}
+<h1>Confirmar pedido</h1>
+
+<h2>Resumen</h2>
+<ul>
+    {% for linea in lineas %}
+    <li>{{ linea.cantidad }} x {{ linea.producto.nombre }}{% if linea.variante %} ({{ linea.variante.nombre }}){% endif %} — ${{ linea.subtotal }}</li>
+    {% endfor %}
+</ul>
+<p>Subtotal: ${{ subtotal }}</p>
+<p><em>Si elegís envío, el costo (${{ costo_envio_estimado_con_envio }}) se calcula al confirmar según la configuración vigente.</em></p>
+
+<p>Los pedidos requieren al menos {{ config.dias_anticipacion_pedido }} día(s) de anticipación.</p>
+
+<form method="post" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Confirmar pedido</button>
+</form>
+
+<p><a href="{% url 'pedidos:carrito' %}">Volver al carrito</a></p>
+{% endblock %}

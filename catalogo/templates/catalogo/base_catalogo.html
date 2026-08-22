@@ -4,3 +4,13 @@
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/catalogo.css' %}">
 {% endblock %}
+
+{% block content %}
+<nav class="catalogo-nav">
+    <a href="{% url 'catalogo:home' %}">Capricho</a>
+    <a href="{% url 'catalogo:productos' %}">Productos</a>
+    <a href="{% url 'pedidos:carrito' %}">Carrito ({{ carrito_cantidad }})</a>
+    {% if user.is_authenticated %}<a href="{% url 'pedidos:mis_pedidos' %}">Mis pedidos</a>{% endif %}
+</nav>
+{% block catalogo_content %}{% endblock %}
+{% endblock %}

@@ -1,0 +1,60 @@
+{% extends "pedidos/base_pedidos.html" %}
+
+{% block title %}Carrito | Capricho{% endblock %}
+
+{% block content %}
+<h1>Tu carrito</h1>
+
+{% if messages %}
+    {% for message in messages %}<p class="form-{{ message.tags }}">{{ message }}</p>{% endfor %}
+{% endif %}
+
+{% if not lineas %}
+    <p>Tu carrito está vacío.</p>
+    <p><a href="{% url 'catalogo:productos' %}">Ver productos</a></p>
+{% else %}
+    <table class="carrito-tabla">
+        <thead>
+            <tr><th>Producto</th><th>Cantidad</th><th>Precio</th><th>Subtotal</th><th></th></tr>
+        </thead>
+        <tbody>
+            {% for linea in lineas %}
+            <tr>
+                <td>
+                    {{ linea.producto.nombre }}{% if linea.variante %} — {{ linea.variante.nombre }}{% endif %}
+                    {% if not linea.disponible %}<br><span class="producto-card__no-disponible">No disponible</span>{% endif %}
+                </td>
+                <td>
+                    <form method="post" action="{% url 'pedidos:carrito_actualizar' linea.clave %}">
+                        {% csrf_token %}
+                        <input type="number" name="cantidad" value="{{ linea.cantidad }}" min="1">
+                        <button type="submit">Actualizar</button>
+                    </form>
+                </td>
+                <td>${{ linea.precio_unitario }}</td>
+                <td>${{ linea.subtotal }}</td>
+                <td>
+                    <form method="post" action="{% url 'pedidos:carrito_eliminar' linea.clave %}">
+                        {% csrf_token %}
+                        <button type="submit">Quitar</button>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <p class="producto-card__precio">Total: ${{ total }}</p>
+
+    <form method="post" action="{% url 'pedidos:carrito_vaciar' %}">
+        {% csrf_token %}
+        <button type="submit">Vaciar carrito</button>
+    </form>
+
+    {% if hay_no_disponibles %}
+        <p class="form-error">Hay productos no disponibles en tu carrito. Quitalos para poder confirmar el pedido.</p>
+    {% else %}
+        <p><a href="{% url 'pedidos:checkout' %}">Continuar al checkout</a></p>
+    {% endif %}
+{% endif %}
+{% endblock %}
