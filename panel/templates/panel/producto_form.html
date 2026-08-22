@@ -1,0 +1,41 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}{% if modo == "crear" %}Nuevo producto{% else %}Editar producto{% endif %} | Panel Capricho{% endblock %}
+
+{% block panel_content %}
+<h1>{% if modo == "crear" %}Nuevo producto{% else %}Editar producto "{{ producto.nombre }}"{% endif %}</h1>
+
+<form method="post" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <h2>Variantes</h2>
+    <p><em>Un producto sin variantes debe tener un precio. Un producto con variantes debe tener el precio del producto vacío: cada variante define el suyo.</em></p>
+
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <p class="form-error">{{ formset.non_form_errors }}</p>
+    {% endif %}
+    <table>
+        <thead>
+            <tr><th>Nombre</th><th>Precio</th><th>Orden</th><th>Activa</th><th>Eliminar</th></tr>
+        </thead>
+        <tbody>
+            {% for variante_form in formset %}
+            <tr>
+                {{ variante_form.id }}
+                <td>{{ variante_form.nombre }}{{ variante_form.nombre.errors }}</td>
+                <td>{{ variante_form.precio }}{{ variante_form.precio.errors }}</td>
+                <td>{{ variante_form.orden }}</td>
+                <td>{{ variante_form.activo }}</td>
+                <td>{% if variante_form.instance.pk %}{{ variante_form.DELETE }}{% endif %}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <button type="submit">Guardar</button>
+</form>
+
+<p><a href="{% url 'panel:productos' %}">Volver al listado</a></p>
+{% endblock %}

@@ -4,11 +4,20 @@
 
 {% block panel_content %}
 <h1>Productos</h1>
-<p><em>Listado de solo lectura. La creación y edición de productos se habilita en la próxima etapa.</em></p>
+
+<form method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre">
+    <button type="submit">Buscar</button>
+</form>
+
+<p><a href="{% url 'panel:producto_crear' %}">+ Nuevo producto</a></p>
 
 <table>
     <thead>
-        <tr><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Unidad</th><th>Disponible</th><th>Activo</th></tr>
+        <tr>
+            <th>Nombre</th><th>Categoría</th><th>Precio</th><th>Unidad</th>
+            <th>Variantes</th><th>Disponible</th><th>Destacado</th><th>Activo</th><th>Acciones</th>
+        </tr>
     </thead>
     <tbody>
         {% for producto in productos %}
@@ -17,11 +26,31 @@
             <td>{{ producto.categoria.nombre }}</td>
             <td>{% if producto.precio %}${{ producto.precio }}{% else %}según variante{% endif %}</td>
             <td>{{ producto.get_unidad_venta_display }}</td>
+            <td>{{ producto.tiene_variantes|yesno:"Sí,No" }}</td>
             <td>{{ producto.disponible|yesno:"Sí,No" }}</td>
+            <td>{{ producto.destacado|yesno:"Sí,No" }}</td>
             <td>{{ producto.activo|yesno:"Sí,No" }}</td>
+            <td>
+                <a href="{% url 'panel:producto_editar' producto.pk %}">Editar</a>
+                <form method="post" action="{% url 'panel:producto_toggle_activo' producto.pk %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="activo" value="{% if producto.activo %}{% else %}on{% endif %}">
+                    <button type="submit">{% if producto.activo %}Desactivar{% else %}Activar{% endif %}</button>
+                </form>
+                <form method="post" action="{% url 'panel:producto_toggle_disponible' producto.pk %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="disponible" value="{% if producto.disponible %}{% else %}on{% endif %}">
+                    <button type="submit">{% if producto.disponible %}Marcar no disponible{% else %}Marcar disponible{% endif %}</button>
+                </form>
+                <form method="post" action="{% url 'panel:producto_toggle_destacado' producto.pk %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="destacado" value="{% if producto.destacado %}{% else %}on{% endif %}">
+                    <button type="submit">{% if producto.destacado %}Quitar destacado{% else %}Marcar destacado{% endif %}</button>
+                </form>
+            </td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">No hay productos cargados.</td></tr>
+        <tr><td colspan="9">No se encontraron productos.</td></tr>
         {% endfor %}
     </tbody>
 </table>

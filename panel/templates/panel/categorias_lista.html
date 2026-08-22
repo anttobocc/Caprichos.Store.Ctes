@@ -4,21 +4,36 @@
 
 {% block panel_content %}
 <h1>Categorías</h1>
-<p><em>Listado de solo lectura. La creación y edición de categorías se habilita en la próxima etapa.</em></p>
+
+<form method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre">
+    <button type="submit">Buscar</button>
+</form>
+
+<p><a href="{% url 'panel:categoria_crear' %}">+ Nueva categoría</a></p>
 
 <table>
     <thead>
-        <tr><th>Nombre</th><th>Orden</th><th>Activa</th></tr>
+        <tr><th>Nombre</th><th>Productos</th><th>Orden</th><th>Activa</th><th>Acciones</th></tr>
     </thead>
     <tbody>
         {% for categoria in categorias %}
         <tr>
             <td>{{ categoria.nombre }}</td>
+            <td>{{ categoria.productos.count }}</td>
             <td>{{ categoria.orden }}</td>
             <td>{{ categoria.activo|yesno:"Sí,No" }}</td>
+            <td>
+                <a href="{% url 'panel:categoria_editar' categoria.pk %}">Editar</a> ·
+                <form method="post" action="{% url 'panel:categoria_toggle_activo' categoria.pk %}" style="display:inline">
+                    {% csrf_token %}
+                    <input type="hidden" name="activo" value="{% if categoria.activo %}{% else %}on{% endif %}">
+                    <button type="submit">{% if categoria.activo %}Desactivar{% else %}Activar{% endif %}</button>
+                </form>
+            </td>
         </tr>
         {% empty %}
-        <tr><td colspan="3">No hay categorías cargadas.</td></tr>
+        <tr><td colspan="5">No se encontraron categorías.</td></tr>
         {% endfor %}
     </tbody>
 </table>

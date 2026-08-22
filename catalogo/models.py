@@ -56,7 +56,13 @@ class Producto(models.Model):
 
     @property
     def tiene_variantes(self):
-        return self.variantes.exists()
+        # Una variante desactivada no cuenta: un producto solo "usa variantes"
+        # si tiene al menos una activa (ver validación en panel.forms).
+        return self.variantes.filter(activo=True).exists()
+
+    @property
+    def variante_mas_barata(self):
+        return self.variantes.filter(activo=True).order_by("precio").first()
 
 
 class VarianteProducto(models.Model):

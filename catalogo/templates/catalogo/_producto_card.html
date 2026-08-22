@@ -1,0 +1,20 @@
+{% load static %}
+<article class="producto-card">
+    <a href="{% url 'catalogo:producto_detalle' producto.slug %}">
+        {% if producto.imagen %}
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+        {% else %}
+            <div class="producto-card__sin-imagen">Sin imagen</div>
+        {% endif %}
+        <h3>{{ producto.nombre }}</h3>
+    </a>
+    <p class="producto-card__categoria">{{ producto.categoria.nombre }}</p>
+    {% if not producto.disponible %}
+        <p class="producto-card__no-disponible">No disponible</p>
+    {% elif producto.tiene_variantes %}
+        <p class="producto-card__precio">Desde ${{ producto.variante_mas_barata.precio }}</p>
+    {% else %}
+        <p class="producto-card__precio">${{ producto.precio }}</p>
+    {% endif %}
+    <p class="producto-card__unidad">{{ producto.get_unidad_venta_display }}</p>
+</article>

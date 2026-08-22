@@ -1,0 +1,18 @@
+{% extends "catalogo/base_catalogo.html" %}
+
+{% block title %}{{ categoria.nombre }} | Capricho{% endblock %}
+
+{% block content %}
+<h1>{{ categoria.nombre }}</h1>
+{% if categoria.descripcion %}<p>{{ categoria.descripcion }}</p>{% endif %}
+
+<div class="productos-grid">
+    {% for producto in productos %}
+        {% include "catalogo/_producto_card.html" %}
+    {% empty %}
+        <p>Todavía no hay productos en esta categoría.</p>
+    {% endfor %}
+</div>
+
+<p><a href="{% url 'catalogo:home' %}">Volver al inicio</a></p>
+{% endblock %}

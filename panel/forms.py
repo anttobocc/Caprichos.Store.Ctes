@@ -1,8 +1,85 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth.models import User
+from django.forms import inlineformset_factory
+from django.utils.text import slugify
+
+from catalogo.models import Categoria, Producto, VarianteProducto
 
 from .models import ConfiguracionNegocio
+
+
+def _slug_unico(model, nombre, slug_ingresado, instance_pk=None):
+    """Genera un slug a partir de `nombre` si no se ingresó uno, agregando un
+    sufijo numérico ante colisión (excluyendo el propio registro al editar)."""
+    slug_base = slug_ingresado or slugify(nombre)
+    slug = slug_base
+    queryset = model.objects.all()
+    if instance_pk:
+        queryset = queryset.exclude(pk=instance_pk)
+    contador = 2
+    while queryset.filter(slug=slug).exists():
+        slug = f"{slug_base}-{contador}"
+        contador += 1
+    return slug
+
+
+class CategoriaForm(forms.ModelForm):
+    class Meta:
+        model = Categoria
+        fields = ["nombre", "slug", "descripcion", "orden", "activo"]
+        widgets = {"descripcion": forms.Textarea(attrs={"rows": 2})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["slug"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        nombre = cleaned.get("nombre")
+        if nombre:
+            cleaned["slug"] = _slug_unico(Categoria, nombre, cleaned.get("slug"), self.instance.pk)
+        return cleaned
+
+
+class ProductoForm(forms.ModelForm):
+    class Meta:
+        model = Producto
+        fields = [
+            "categoria",
+            "nombre",
+            "slug",
+            "descripcion_corta",
+            "descripcion",
+            "imagen",
+            "precio",
+            "unidad_venta",
+            "disponible",
+            "destacado",
+            "activo",
+        ]
+        widgets = {"descripcion": forms.Textarea(attrs={"rows": 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["slug"].required = False
+        self.fields["precio"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        nombre = cleaned.get("nombre")
+        if nombre:
+            cleaned["slug"] = _slug_unico(Producto, nombre, cleaned.get("slug"), self.instance.pk)
+        return cleaned
+
+
+VarianteProductoFormSet = inlineformset_factory(
+    Producto,
+    VarianteProducto,
+    fields=["nombre", "precio", "orden", "activo"],
+    extra=1,
+    can_delete=True,
+)
 
 
 class UsuarioCrearForm(UserCreationForm):

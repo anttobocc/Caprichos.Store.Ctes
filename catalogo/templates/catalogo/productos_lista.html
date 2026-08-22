@@ -1,0 +1,25 @@
+{% extends "catalogo/base_catalogo.html" %}
+
+{% block title %}Productos | Capricho{% endblock %}
+
+{% block content %}
+<h1>Productos</h1>
+
+<ul class="categorias-nav">
+    <li><a href="{% url 'catalogo:productos' %}" {% if not categoria_actual %}class="activo"{% endif %}>Todos</a></li>
+    {% for categoria in categorias %}
+    <li>
+        <a href="{% url 'catalogo:productos' %}?categoria={{ categoria.slug }}"
+           {% if categoria_actual.slug == categoria.slug %}class="activo"{% endif %}>{{ categoria.nombre }}</a>
+    </li>
+    {% endfor %}
+</ul>
+
+<div class="productos-grid">
+    {% for producto in productos %}
+        {% include "catalogo/_producto_card.html" %}
+    {% empty %}
+        <p>No hay productos disponibles.</p>
+    {% endfor %}
+</div>
+{% endblock %}

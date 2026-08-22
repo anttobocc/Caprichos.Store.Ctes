@@ -1,0 +1,34 @@
+{% extends "catalogo/base_catalogo.html" %}
+
+{% block title %}{{ producto.nombre }} | Capricho{% endblock %}
+
+{% block content %}
+<article class="producto-detalle">
+    {% if producto.imagen %}
+        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+    {% endif %}
+
+    <h1>{{ producto.nombre }}</h1>
+    <p class="producto-card__categoria"><a href="{% url 'catalogo:categoria_detalle' producto.categoria.slug %}">{{ producto.categoria.nombre }}</a></p>
+
+    {% if producto.descripcion_corta %}<p><em>{{ producto.descripcion_corta }}</em></p>{% endif %}
+    {% if producto.descripcion %}<p>{{ producto.descripcion }}</p>{% endif %}
+
+    <p>Unidad de venta: {{ producto.get_unidad_venta_display }}</p>
+
+    {% if not producto.disponible %}
+        <p class="producto-card__no-disponible">No disponible por el momento.</p>
+    {% elif variantes %}
+        <h2>Opciones</h2>
+        <ul class="variantes-lista">
+            {% for variante in variantes %}
+            <li>{{ variante.nombre }} — ${{ variante.precio }}</li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p class="producto-card__precio">${{ producto.precio }}</p>
+    {% endif %}
+</article>
+
+<p><a href="{% url 'catalogo:productos' %}">Volver a productos</a></p>
+{% endblock %}
