@@ -23,5 +23,7 @@ urlpatterns = [
     path("productos/<int:pk>/disponible/", views.producto_toggle_disponible, name="producto_toggle_disponible"),
     path("productos/<int:pk>/destacado/", views.producto_toggle_destacado, name="producto_toggle_destacado"),
     path("pedidos/", views.pedidos_lista, name="pedidos"),
+    path("pedidos/<int:pk>/", views.pedido_detalle, name="pedido_detalle"),
+    path("pedidos/<int:pk>/estado/", views.pedido_cambiar_estado, name="pedido_cambiar_estado"),
     path("configuracion/", views.configuracion, name="configuracion"),
 ]

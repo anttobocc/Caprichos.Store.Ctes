@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
+from django.db import models
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
@@ -12,6 +13,7 @@ from pedidos.models import Pedido
 from .forms import (
     CategoriaForm,
     ConfiguracionNegocioForm,
+    PedidoEstadoForm,
     ProductoForm,
     UsuarioCrearForm,
     UsuarioEditarForm,
@@ -263,8 +265,52 @@ def producto_toggle_destacado(request, pk):
 
 @panel_admin_required
 def pedidos_lista(request):
+    query = request.GET.get("q", "").strip()
+    estado = request.GET.get("estado", "").strip()
     pedidos = Pedido.objects.order_by("-fecha_creacion")
-    return render(request, "panel/pedidos_lista.html", {"pedidos": pedidos})
+    if query:
+        pedidos = pedidos.filter(
+            models.Q(nombre__icontains=query)
+            | models.Q(apellido__icontains=query)
+            | models.Q(telefono__icontains=query)
+        )
+    if estado:
+        pedidos = pedidos.filter(estado=estado)
+    return render(request, "panel/pedidos_lista.html", {
+        "pedidos": pedidos,
+        "q": query,
+        "estado": estado,
+        "estados": Pedido.Estado.choices,
+    })
+
+
+@panel_admin_required
+def pedido_detalle(request, pk):
+    pedido = get_object_or_404(Pedido.objects.select_related("usuario").prefetch_related("items"), pk=pk)
+    items = list(pedido.items.all())
+    subtotal = sum((item.subtotal for item in items), start=0)
+    costo_envio = pedido.total - subtotal
+    form = PedidoEstadoForm(instance=pedido)
+    return render(request, "panel/pedido_detalle.html", {
+        "pedido": pedido,
+        "items": items,
+        "subtotal": subtotal,
+        "costo_envio": costo_envio,
+        "form": form,
+    })
+
+
+@panel_admin_required
+@require_POST
+def pedido_cambiar_estado(request, pk):
+    pedido = get_object_or_404(Pedido, pk=pk)
+    form = PedidoEstadoForm(request.POST, instance=pedido)
+    if form.is_valid():
+        form.save()
+        messages.success(request, f"El pedido #{pedido.pk} quedó en estado \"{pedido.get_estado_display()}\".")
+    else:
+        messages.error(request, "No se pudo actualizar el estado del pedido.")
+    return redirect("panel:pedido_detalle", pk=pedido.pk)
 
 
 @panel_admin_required

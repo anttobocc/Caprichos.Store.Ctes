@@ -4,6 +4,7 @@ from django.test import TestCase
 from django.urls import reverse
 
 from catalogo.models import Categoria, Producto, VarianteProducto
+from pedidos.models import ItemPedido, Pedido
 
 
 def crear_cliente(username="cliente"):
@@ -472,3 +473,160 @@ class ImagenProductoTests(TestCase):
         respuesta = self.client.get(reverse("catalogo:producto_detalle", args=["producto-imagen-detalle-test"]))
         self.assertContains(respuesta, producto.imagen.url)
         producto.imagen.delete(save=True)
+
+
+def crear_pedido_test(usuario=None, **kwargs):
+    from datetime import date, timedelta
+
+    datos = {
+        "usuario": usuario,
+        "nombre": "Cliente",
+        "apellido": "Pedido Test",
+        "telefono": "3790000000",
+        "tipo_entrega": Pedido.TipoEntrega.RETIRO,
+        "fecha_pedido": date.today() + timedelta(days=1),
+        "estado": Pedido.Estado.PENDIENTE,
+        "total": 1000,
+    }
+    datos.update(kwargs)
+    return Pedido.objects.create(**datos)
+
+
+class GestionPedidosPanelTests(TestCase):
+    def setUp(self):
+        crear_admin()
+        self.client.login(username="admin", password="clave-valida-123")
+        self.categoria = Categoria.objects.create(nombre="Categoria Pedidos Panel Test", slug="categoria-pedidos-panel-test")
+        self.producto = Producto.objects.create(
+            categoria=self.categoria, nombre="Producto Pedido Panel Test", slug="producto-pedido-panel-test",
+            unidad_venta="unidad", precio=500,
+        )
+
+    def test_anonimo_no_accede_al_listado_de_pedidos(self):
+        self.client.logout()
+        respuesta = self.client.get(reverse("panel:pedidos"))
+        self.assertEqual(respuesta.status_code, 302)
+
+    def test_cliente_no_accede_al_listado_de_pedidos(self):
+        self.client.logout()
+        crear_cliente("cliente_pedidos")
+        self.client.login(username="cliente_pedidos", password="clave-valida-123")
+        respuesta = self.client.get(reverse("panel:pedidos"))
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_admin_accede_al_listado_de_pedidos(self):
+        crear_pedido_test()
+        respuesta = self.client.get(reverse("panel:pedidos"))
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_listado_muestra_datos_del_pedido(self):
+        crear_pedido_test(nombre="Fulano", apellido="Detectable")
+        respuesta = self.client.get(reverse("panel:pedidos"))
+        self.assertContains(respuesta, "Fulano")
+        self.assertContains(respuesta, "Detectable")
+
+    def test_filtro_por_estado_en_listado(self):
+        # Nombres distintivos: "Pendiente"/"Entregado" a secas también aparecen
+        # como texto de las <option> del selector de estados, sin importar el filtro.
+        crear_pedido_test(nombre="PedidoPendienteXYZ", estado=Pedido.Estado.PENDIENTE)
+        crear_pedido_test(nombre="PedidoEntregadoXYZ", estado=Pedido.Estado.ENTREGADO)
+        respuesta = self.client.get(reverse("panel:pedidos"), {"estado": "entregado"})
+        self.assertContains(respuesta, "PedidoEntregadoXYZ")
+        self.assertNotContains(respuesta, "PedidoPendienteXYZ")
+
+    def test_busqueda_por_nombre_en_listado(self):
+        crear_pedido_test(nombre="Buscable", apellido="Test")
+        crear_pedido_test(nombre="Otro", apellido="Distinto")
+        respuesta = self.client.get(reverse("panel:pedidos"), {"q": "Buscable"})
+        self.assertContains(respuesta, "Buscable")
+        self.assertNotContains(respuesta, "Otro Distinto")
+
+    def test_anonimo_no_accede_al_detalle(self):
+        pedido = crear_pedido_test()
+        self.client.logout()
+        respuesta = self.client.get(reverse("panel:pedido_detalle", args=[pedido.pk]))
+        self.assertEqual(respuesta.status_code, 302)
+
+    def test_cliente_no_accede_al_detalle(self):
+        pedido = crear_pedido_test()
+        self.client.logout()
+        crear_cliente("cliente_detalle_pedido")
+        self.client.login(username="cliente_detalle_pedido", password="clave-valida-123")
+        respuesta = self.client.get(reverse("panel:pedido_detalle", args=[pedido.pk]))
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_admin_ve_detalle_completo_del_pedido(self):
+        pedido = crear_pedido_test(direccion_envio="Calle Falsa 123", observaciones="Sin sal")
+        ItemPedido.objects.create(
+            pedido=pedido, producto=self.producto, nombre_producto=self.producto.nombre,
+            cantidad=2, precio_unitario=500,
+        )
+        respuesta = self.client.get(reverse("panel:pedido_detalle", args=[pedido.pk]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Calle Falsa 123")
+        self.assertContains(respuesta, "Sin sal")
+        self.assertContains(respuesta, "Producto Pedido Panel Test")
+        self.assertContains(respuesta, "3790000000")
+
+    def test_admin_cambia_estado_a_valor_valido(self):
+        pedido = crear_pedido_test()
+        respuesta = self.client.post(
+            reverse("panel:pedido_cambiar_estado", args=[pedido.pk]), {"estado": Pedido.Estado.CONFIRMADO}
+        )
+        self.assertRedirects(respuesta, reverse("panel:pedido_detalle", args=[pedido.pk]))
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, Pedido.Estado.CONFIRMADO)
+
+    def test_estado_invalido_no_se_aplica(self):
+        pedido = crear_pedido_test(estado=Pedido.Estado.PENDIENTE)
+        respuesta = self.client.post(
+            reverse("panel:pedido_cambiar_estado", args=[pedido.pk]), {"estado": "estado_que_no_existe"}
+        )
+        self.assertRedirects(respuesta, reverse("panel:pedido_detalle", args=[pedido.pk]))
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, Pedido.Estado.PENDIENTE)
+
+    def test_cambio_de_estado_afecta_solo_al_pedido_correspondiente(self):
+        pedido_a = crear_pedido_test(nombre="A")
+        pedido_b = crear_pedido_test(nombre="B")
+        self.client.post(
+            reverse("panel:pedido_cambiar_estado", args=[pedido_a.pk]), {"estado": Pedido.Estado.LISTO}
+        )
+        pedido_a.refresh_from_db()
+        pedido_b.refresh_from_db()
+        self.assertEqual(pedido_a.estado, Pedido.Estado.LISTO)
+        self.assertEqual(pedido_b.estado, Pedido.Estado.PENDIENTE)
+
+    def test_cliente_no_puede_cambiar_estado(self):
+        pedido = crear_pedido_test()
+        self.client.logout()
+        crear_cliente("cliente_cambia_estado")
+        self.client.login(username="cliente_cambia_estado", password="clave-valida-123")
+        respuesta = self.client.post(
+            reverse("panel:pedido_cambiar_estado", args=[pedido.pk]), {"estado": Pedido.Estado.CANCELADO}
+        )
+        self.assertEqual(respuesta.status_code, 403)
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.estado, Pedido.Estado.PENDIENTE)
+
+    def test_cambio_de_estado_no_altera_snapshots_del_item(self):
+        pedido = crear_pedido_test()
+        item = ItemPedido.objects.create(
+            pedido=pedido, producto=self.producto, nombre_producto="Nombre Historico",
+            nombre_variante="", cantidad=1, precio_unitario=999,
+        )
+        self.client.post(
+            reverse("panel:pedido_cambiar_estado", args=[pedido.pk]), {"estado": Pedido.Estado.ENTREGADO}
+        )
+        item.refresh_from_db()
+        self.assertEqual(item.nombre_producto, "Nombre Historico")
+        self.assertEqual(item.precio_unitario, 999)
+        self.assertEqual(item.subtotal, 999)
+
+    def test_cambio_de_estado_no_altera_total_del_pedido(self):
+        pedido = crear_pedido_test(total=12345)
+        self.client.post(
+            reverse("panel:pedido_cambiar_estado", args=[pedido.pk]), {"estado": Pedido.Estado.CONFIRMADO}
+        )
+        pedido.refresh_from_db()
+        self.assertEqual(pedido.total, 12345)

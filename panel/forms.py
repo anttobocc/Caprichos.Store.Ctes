@@ -5,6 +5,7 @@ from django.forms import inlineformset_factory
 from django.utils.text import slugify
 
 from catalogo.models import Categoria, Producto, VarianteProducto
+from pedidos.models import Pedido
 
 from .models import ConfiguracionNegocio
 
@@ -125,3 +126,12 @@ class ConfiguracionNegocioForm(forms.ModelForm):
             "costo_envio",
             "envio_gratis_desde",
         ]
+
+
+class PedidoEstadoForm(forms.ModelForm):
+    """Cambia únicamente el estado del pedido. No toca ningún otro campo:
+    ni los datos del cliente ni los ItemPedido (snapshots históricos)."""
+
+    class Meta:
+        model = Pedido
+        fields = ["estado"]

@@ -4,11 +4,21 @@
 
 {% block panel_content %}
 <h1>Pedidos</h1>
-<p><em>Listado de solo lectura. La gestión completa de pedidos se habilita en una etapa posterior.</em></p>
+
+<form method="get">
+    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre, apellido o teléfono">
+    <select name="estado">
+        <option value="">Todos los estados</option>
+        {% for valor, etiqueta in estados %}
+        <option value="{{ valor }}" {% if estado == valor %}selected{% endif %}>{{ etiqueta }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Buscar</button>
+</form>
 
 <table>
     <thead>
-        <tr><th>#</th><th>Cliente</th><th>Estado</th><th>Entrega</th><th>Total</th><th>Fecha pedido</th></tr>
+        <tr><th>#</th><th>Cliente</th><th>Estado</th><th>Entrega</th><th>Total</th><th>Fecha pedido</th><th>Acciones</th></tr>
     </thead>
     <tbody>
         {% for pedido in pedidos %}
@@ -19,9 +29,10 @@
             <td>{{ pedido.get_tipo_entrega_display }}</td>
             <td>${{ pedido.total }}</td>
             <td>{{ pedido.fecha_pedido|date:"d/m/Y" }}</td>
+            <td><a href="{% url 'panel:pedido_detalle' pedido.pk %}">Ver detalle</a></td>
         </tr>
         {% empty %}
-        <tr><td colspan="6">No hay pedidos todavía.</td></tr>
+        <tr><td colspan="7">No se encontraron pedidos.</td></tr>
         {% endfor %}
     </tbody>
 </table>
