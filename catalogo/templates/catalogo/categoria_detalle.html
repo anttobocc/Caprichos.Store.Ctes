@@ -3,16 +3,18 @@
 {% block title %}{{ categoria.nombre }} | Capricho{% endblock %}
 
 {% block catalogo_content %}
-<h1>{{ categoria.nombre }}</h1>
-{% if categoria.descripcion %}<p>{{ categoria.descripcion }}</p>{% endif %}
+<section class="pagina-listado contenedor">
+    <h1 class="titulo-decorado"><span>❧</span> {{ categoria.nombre }} <span>❧</span></h1>
+    {% if categoria.descripcion %}<p class="subtitulo-centrado">{{ categoria.descripcion }}</p>{% endif %}
 
-<div class="productos-grid">
-    {% for producto in productos %}
-        {% include "catalogo/_producto_card.html" %}
-    {% empty %}
-        <p>Todavía no hay productos en esta categoría.</p>
-    {% endfor %}
-</div>
+    <div class="productos-grid">
+        {% for producto in productos %}
+            {% include "catalogo/_producto_card.html" %}
+        {% empty %}
+            <p>Todavía no hay productos en esta categoría.</p>
+        {% endfor %}
+    </div>
 
-<p><a href="{% url 'catalogo:home' %}">Volver al inicio</a></p>
+    <p class="pagina-listado__volver"><a href="{% url 'catalogo:home' %}">← Volver al inicio</a></p>
+</section>
 {% endblock %}

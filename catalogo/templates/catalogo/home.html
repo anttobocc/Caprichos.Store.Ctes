@@ -3,28 +3,75 @@
 {% block title %}Capricho | Boutique Empanadas & Bakery{% endblock %}
 
 {% block catalogo_content %}
-<header class="home-header">
-    <h1>Capricho</h1>
-    <p>Boutique Empanadas & Bakery</p>
-    <p><a href="{% url 'catalogo:productos' %}">Ver productos</a></p>
-</header>
+<section class="hero">
+    <div class="contenedor hero__grid">
+        <div class="hero__texto">
+            <p class="hero__decorativa">Hechos con amor,</p>
+            <h1>Pensados<br>para vos</h1>
+            <p class="hero__descripcion">Productos artesanales elaborados cada día con ingredientes seleccionados.</p>
+            <a href="{% url 'catalogo:productos' %}" class="boton">Ver nuestros productos ♥</a>
+        </div>
+        <div class="hero__imagen">
+            <div class="hero__imagen-marco">
+                {% with destacados|first as producto_hero %}
+                    {% if producto_hero.imagen %}
+                        <img src="{{ producto_hero.imagen.url }}" alt="{{ producto_hero.nombre }}">
+                    {% else %}
+                        <div class="hero__imagen-placeholder" aria-hidden="true">
+                            <svg viewBox="0 0 200 200" class="hero__ilustracion">
+                                <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 6"/>
+                                <circle cx="100" cy="112" r="62" fill="var(--color-blanco-calido)" stroke="currentColor" stroke-width="2"/>
+                                <path d="M100 60 C120 60 138 78 138 112 L62 112 C62 78 80 60 100 60 Z" fill="var(--color-terracota)"/>
+                                <path d="M78 100 c4 -10 12 -14 22 -14 s18 4 22 14" fill="none" stroke="var(--color-blanco-calido)" stroke-width="2" stroke-linecap="round"/>
+                                <circle cx="82" cy="86" r="4" fill="var(--color-oliva)"/>
+                                <circle cx="100" cy="78" r="4" fill="var(--color-oliva)"/>
+                                <circle cx="118" cy="86" r="4" fill="var(--color-oliva)"/>
+                            </svg>
+                            <p>Capricho</p>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+            <div class="sello-pedidos">
+                <span>Se toman pedidos con</span>
+                <strong>{{ configuracion_negocio.dias_anticipacion_pedido }} día{{ configuracion_negocio.dias_anticipacion_pedido|pluralize }}</strong>
+                <span>de anticipación</span>
+            </div>
+        </div>
+    </div>
+</section>
 
-<section>
-    <h2>Categorías</h2>
-    <ul class="categorias-nav">
+<section class="categorias contenedor">
+    <div class="categorias-grid">
         {% for categoria in categorias %}
-        <li><a href="{% url 'catalogo:categoria_detalle' categoria.slug %}">{{ categoria.nombre }}</a></li>
+        <article class="categoria-card">
+            <span class="categoria-card__icono" aria-hidden="true">
+                {% if categoria.slug == "empanadas" %}🥟{% elif categoria.slug == "budines" %}🍞{% elif categoria.slug == "dulces" %}🍓{% else %}🍰{% endif %}
+            </span>
+            <h3>{{ categoria.nombre }}</h3>
+            {% if categoria.descripcion %}<p>{{ categoria.descripcion }}</p>{% endif %}
+            <a href="{% url 'catalogo:categoria_detalle' categoria.slug %}" class="categoria-card__enlace">Ver más ♥</a>
+        </article>
         {% endfor %}
-    </ul>
+        <article class="categoria-card categoria-card--cta">
+            <span class="categoria-card__icono" aria-hidden="true">📱</span>
+            <h3>Pedidos</h3>
+            <p>Encargá tu docena fácil y rápido.</p>
+            <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener" class="categoria-card__enlace">Pedí ahora ♥</a>
+        </article>
+    </div>
 </section>
 
 {% if destacados %}
-<section>
-    <h2>Productos destacados</h2>
-    <div class="productos-grid">
-        {% for producto in destacados %}
-            {% include "catalogo/_producto_card.html" %}
-        {% endfor %}
+<section class="destacados">
+    <div class="contenedor">
+        <h2 class="titulo-decorado"><span>❧</span> Productos destacados <span>❧</span></h2>
+        <p class="subtitulo-centrado">Lo más elegido por nuestros clientes</p>
+        <div class="productos-grid productos-grid--destacados">
+            {% for producto in destacados %}
+                {% include "catalogo/_producto_card.html" %}
+            {% endfor %}
+        </div>
     </div>
 </section>
 {% endif %}

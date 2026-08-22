@@ -3,23 +3,25 @@
 {% block title %}Productos | Capricho{% endblock %}
 
 {% block catalogo_content %}
-<h1>Productos</h1>
+<section class="pagina-listado contenedor">
+    <h1 class="titulo-decorado"><span>❧</span> Productos <span>❧</span></h1>
 
-<ul class="categorias-nav">
-    <li><a href="{% url 'catalogo:productos' %}" {% if not categoria_actual %}class="activo"{% endif %}>Todos</a></li>
-    {% for categoria in categorias %}
-    <li>
-        <a href="{% url 'catalogo:productos' %}?categoria={{ categoria.slug }}"
-           {% if categoria_actual.slug == categoria.slug %}class="activo"{% endif %}>{{ categoria.nombre }}</a>
-    </li>
-    {% endfor %}
-</ul>
+    <ul class="categorias-nav">
+        <li><a href="{% url 'catalogo:productos' %}" class="chip {% if not categoria_actual %}chip--activo{% endif %}">Todos</a></li>
+        {% for categoria in categorias %}
+        <li>
+            <a href="{% url 'catalogo:productos' %}?categoria={{ categoria.slug }}"
+               class="chip {% if categoria_actual.slug == categoria.slug %}chip--activo{% endif %}">{{ categoria.nombre }}</a>
+        </li>
+        {% endfor %}
+    </ul>
 
-<div class="productos-grid">
-    {% for producto in productos %}
-        {% include "catalogo/_producto_card.html" %}
-    {% empty %}
-        <p>No hay productos disponibles.</p>
-    {% endfor %}
-</div>
+    <div class="productos-grid">
+        {% for producto in productos %}
+            {% include "catalogo/_producto_card.html" %}
+        {% empty %}
+            <p>No hay productos disponibles.</p>
+        {% endfor %}
+    </div>
+</section>
 {% endblock %}

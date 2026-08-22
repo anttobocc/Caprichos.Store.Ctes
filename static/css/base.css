@@ -1,6 +1,99 @@
+:root {
+    --color-crema: #faf3e8;
+    --color-crema-oscuro: #f1e6d3;
+    --color-oliva: #6b7a4f;
+    --color-oliva-oscuro: #4a5636;
+    --color-terracota: #c1663f;
+    --color-marron: #3b2e26;
+    --color-beige: #e9dcc3;
+    --color-blanco-calido: #fffaf2;
+
+    --fuente-titulos: 'Playfair Display', Georgia, serif;
+    --fuente-texto: 'Poppins', system-ui, sans-serif;
+    --fuente-decorativa: 'Caveat', cursive;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html {
+    -webkit-text-size-adjust: 100%;
+}
+
 body {
     margin: 0;
-    font-family: system-ui, sans-serif;
-    background: #faf6ef;
-    color: #3b2e26;
+    font-family: var(--fuente-texto);
+    background: var(--color-crema);
+    color: var(--color-marron);
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4 {
+    font-family: var(--fuente-titulos);
+    color: var(--color-marron);
+    margin: 0 0 0.5em;
+}
+
+a {
+    color: inherit;
+    text-decoration: none;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 3px solid var(--color-terracota);
+    outline-offset: 2px;
+}
+
+button {
+    font-family: var(--fuente-texto);
+    cursor: pointer;
+}
+
+img {
+    max-width: 100%;
+    display: block;
+}
+
+.contenedor {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.boton {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border-radius: 999px;
+    background: var(--color-terracota);
+    color: var(--color-blanco-calido);
+    font-weight: 600;
+    border: none;
+    white-space: nowrap;
+}
+
+.boton:hover {
+    background: var(--color-oliva-oscuro);
+}
+
+.boton--oliva {
+    background: var(--color-oliva-oscuro);
+}
+
+.boton--oliva:hover {
+    background: var(--color-terracota);
+}
+
+.form-error {
+    color: #a33;
+}
+
+.form-success {
+    color: #4a6741;
 }

@@ -1,20 +1,26 @@
 {% load static %}
 <article class="producto-card">
-    <a href="{% url 'catalogo:producto_detalle' producto.slug %}">
+    <a href="{% url 'catalogo:producto_detalle' producto.slug %}" class="producto-card__imagen-link">
         {% if producto.imagen %}
             <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
         {% else %}
-            <div class="producto-card__sin-imagen">Sin imagen</div>
+            <div class="producto-card__sin-imagen" aria-hidden="true">🍰</div>
         {% endif %}
-        <h3>{{ producto.nombre }}</h3>
     </a>
-    <p class="producto-card__categoria">{{ producto.categoria.nombre }}</p>
-    {% if not producto.disponible %}
-        <p class="producto-card__no-disponible">No disponible</p>
-    {% elif producto.tiene_variantes %}
-        <p class="producto-card__precio">Desde ${{ producto.variante_mas_barata.precio }}</p>
-    {% else %}
-        <p class="producto-card__precio">${{ producto.precio }}</p>
-    {% endif %}
-    <p class="producto-card__unidad">{{ producto.get_unidad_venta_display }}</p>
+    <div class="producto-card__cuerpo">
+        <p class="producto-card__categoria">{{ producto.categoria.nombre }}</p>
+        <h3><a href="{% url 'catalogo:producto_detalle' producto.slug %}">{{ producto.nombre }}</a></h3>
+        {% if producto.descripcion_corta %}<p class="producto-card__descripcion">{{ producto.descripcion_corta }}</p>{% endif %}
+
+        {% if not producto.disponible %}
+            <p class="producto-card__no-disponible">No disponible</p>
+        {% elif producto.tiene_variantes %}
+            <p class="producto-card__precio">Desde ${{ producto.variante_mas_barata.precio }}</p>
+        {% else %}
+            <p class="producto-card__precio">${{ producto.precio }}</p>
+        {% endif %}
+        <p class="producto-card__unidad">{{ producto.get_unidad_venta_display }}</p>
+
+        <a href="{% url 'catalogo:producto_detalle' producto.slug %}" class="boton producto-card__boton">Ver producto</a>
+    </div>
 </article>

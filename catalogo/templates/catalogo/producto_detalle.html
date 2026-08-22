@@ -3,47 +3,53 @@
 {% block title %}{{ producto.nombre }} | Capricho{% endblock %}
 
 {% block catalogo_content %}
-<article class="producto-detalle">
-    {% if producto.imagen %}
-        <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
-    {% endif %}
+<section class="contenedor producto-detalle">
+    <div class="producto-detalle__imagen">
+        {% if producto.imagen %}
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+        {% else %}
+            <div class="producto-card__sin-imagen producto-detalle__sin-imagen" aria-hidden="true">🍰</div>
+        {% endif %}
+    </div>
 
-    <h1>{{ producto.nombre }}</h1>
-    <p class="producto-card__categoria"><a href="{% url 'catalogo:categoria_detalle' producto.categoria.slug %}">{{ producto.categoria.nombre }}</a></p>
+    <div class="producto-detalle__info">
+        <p class="producto-card__categoria"><a href="{% url 'catalogo:categoria_detalle' producto.categoria.slug %}">{{ producto.categoria.nombre }}</a></p>
+        <h1>{{ producto.nombre }}</h1>
 
-    {% if producto.descripcion_corta %}<p><em>{{ producto.descripcion_corta }}</em></p>{% endif %}
-    {% if producto.descripcion %}<p>{{ producto.descripcion }}</p>{% endif %}
+        {% if producto.descripcion_corta %}<p class="producto-detalle__descripcion-corta"><em>{{ producto.descripcion_corta }}</em></p>{% endif %}
+        {% if producto.descripcion %}<p>{{ producto.descripcion }}</p>{% endif %}
 
-    <p>Unidad de venta: {{ producto.get_unidad_venta_display }}</p>
+        <p class="producto-card__unidad">Unidad de venta: {{ producto.get_unidad_venta_display }}</p>
 
-    {% if not producto.disponible %}
-        <p class="producto-card__no-disponible">No disponible por el momento.</p>
-    {% elif variantes %}
-        <h2>Opciones</h2>
-        <form method="post" action="{% url 'pedidos:carrito_agregar' producto.pk %}">
-            {% csrf_token %}
-            <ul class="variantes-lista">
-                {% for variante in variantes %}
-                <li>
-                    <label>
-                        <input type="radio" name="variante_id" value="{{ variante.pk }}" {% if forloop.first %}checked{% endif %} required>
-                        {{ variante.nombre }} — ${{ variante.precio }}
-                    </label>
-                </li>
-                {% endfor %}
-            </ul>
-            <label>Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
-            <button type="submit">Agregar al carrito</button>
-        </form>
-    {% else %}
-        <p class="producto-card__precio">${{ producto.precio }}</p>
-        <form method="post" action="{% url 'pedidos:carrito_agregar' producto.pk %}">
-            {% csrf_token %}
-            <label>Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
-            <button type="submit">Agregar al carrito</button>
-        </form>
-    {% endif %}
-</article>
+        {% if not producto.disponible %}
+            <p class="producto-card__no-disponible">No disponible por el momento.</p>
+        {% elif variantes %}
+            <h2>Opciones</h2>
+            <form method="post" action="{% url 'pedidos:carrito_agregar' producto.pk %}" class="producto-detalle__form">
+                {% csrf_token %}
+                <ul class="variantes-lista">
+                    {% for variante in variantes %}
+                    <li>
+                        <label>
+                            <input type="radio" name="variante_id" value="{{ variante.pk }}" {% if forloop.first %}checked{% endif %} required>
+                            {{ variante.nombre }} — ${{ variante.precio }}
+                        </label>
+                    </li>
+                    {% endfor %}
+                </ul>
+                <label class="producto-detalle__cantidad">Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
+                <button type="submit" class="boton">Agregar al carrito</button>
+            </form>
+        {% else %}
+            <p class="producto-card__precio">${{ producto.precio }}</p>
+            <form method="post" action="{% url 'pedidos:carrito_agregar' producto.pk %}" class="producto-detalle__form">
+                {% csrf_token %}
+                <label class="producto-detalle__cantidad">Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
+                <button type="submit" class="boton">Agregar al carrito</button>
+            </form>
+        {% endif %}
+    </div>
+</section>
 
-<p><a href="{% url 'catalogo:productos' %}">Volver a productos</a></p>
+<p class="contenedor pagina-listado__volver"><a href="{% url 'catalogo:productos' %}">← Volver a productos</a></p>
 {% endblock %}
