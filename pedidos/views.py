@@ -9,6 +9,7 @@ from django.views.decorators.http import require_POST
 from catalogo.models import Producto, VarianteProducto
 from panel.models import ConfiguracionNegocio
 
+from . import whatsapp
 from .carrito import Carrito
 from .forms import CheckoutForm
 from .models import ItemPedido, Pedido
@@ -193,4 +194,7 @@ def mis_pedidos(request):
 @login_required(login_url=LOGIN_URL_CLIENTE)
 def pedido_detalle(request, pk):
     pedido = get_object_or_404(Pedido.objects.prefetch_related("items"), pk=pk, usuario=request.user)
-    return render(request, "pedidos/pedido_detalle.html", {"pedido": pedido})
+    return render(request, "pedidos/pedido_detalle.html", {
+        "pedido": pedido,
+        "whatsapp_url": whatsapp.construir_url(pedido),
+    })

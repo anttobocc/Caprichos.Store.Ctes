@@ -34,5 +34,11 @@
 
 {% if pedido.observaciones %}<p>Observaciones: {{ pedido.observaciones }}</p>{% endif %}
 
+<p>
+    <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="boton-whatsapp">
+        Enviar pedido por WhatsApp
+    </a>
+</p>
+
 <p><a href="{% url 'pedidos:mis_pedidos' %}">Volver a mis pedidos</a></p>
 {% endblock %}

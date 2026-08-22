@@ -7,6 +7,7 @@ from django.urls import reverse
 from catalogo.models import Categoria, Producto, VarianteProducto
 from panel.models import ConfiguracionNegocio
 
+from . import whatsapp
 from .models import ItemPedido, Pedido
 
 
@@ -449,3 +450,96 @@ class MisPedidosTests(TestCase):
         respuesta = self.client.get(reverse("pedidos:pedido_detalle", args=[pedido.pk]))
         self.assertEqual(respuesta.status_code, 302)
         self.assertIn(reverse("usuarios:login"), respuesta.url)
+
+
+class WhatsAppTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario()
+        self.client.login(username="cliente", password="clave-valida-123")
+        self.categoria = crear_categoria()
+        self.config = ConfiguracionNegocio.get_solo()
+        self.config.whatsapp_numero = "5493790001234"
+        self.config.save()
+
+    def _crear_pedido_con_item(self, **kwargs):
+        producto = crear_producto(self.categoria, **kwargs)
+        pedido = Pedido.objects.create(
+            usuario=self.usuario, nombre="Ana", apellido="Test", telefono="111222333",
+            tipo_entrega=Pedido.TipoEntrega.RETIRO, fecha_pedido=date.today() + timedelta(days=1),
+            estado=Pedido.Estado.PENDIENTE, total=producto.precio * 2,
+        )
+        ItemPedido.objects.create(
+            pedido=pedido, producto=producto, nombre_producto=producto.nombre,
+            cantidad=2, precio_unitario=producto.precio,
+        )
+        return pedido, producto
+
+    def test_detalle_de_pedido_incluye_enlace_de_whatsapp(self):
+        pedido, _ = self._crear_pedido_con_item()
+        respuesta = self.client.get(reverse("pedidos:pedido_detalle", args=[pedido.pk]))
+        self.assertContains(respuesta, "wa.me/5493790001234")
+
+    def test_enlace_usa_el_numero_configurado(self):
+        self.config.whatsapp_numero = "5493795559999"
+        self.config.save()
+        pedido, _ = self._crear_pedido_con_item()
+        respuesta = self.client.get(reverse("pedidos:pedido_detalle", args=[pedido.pk]))
+        self.assertContains(respuesta, "wa.me/5493795559999")
+
+    def test_mensaje_incluye_nombre_producto_y_cantidad(self):
+        pedido, producto = self._crear_pedido_con_item(nombre="Producto WhatsApp Test")
+        mensaje = whatsapp.construir_mensaje(pedido)
+        self.assertIn("Producto WhatsApp Test", mensaje)
+        self.assertIn("2 x", mensaje)
+
+    def test_mensaje_incluye_variante_cuando_corresponde(self):
+        producto = crear_producto(self.categoria, slug="whatsapp-variante-test", precio=None)
+        variante = VarianteProducto.objects.create(producto=producto, nombre="Cocinadas", precio=200)
+        pedido = Pedido.objects.create(
+            usuario=self.usuario, nombre="Ana", apellido="Test", telefono="111",
+            tipo_entrega=Pedido.TipoEntrega.RETIRO, fecha_pedido=date.today() + timedelta(days=1),
+            estado=Pedido.Estado.PENDIENTE, total=200,
+        )
+        ItemPedido.objects.create(
+            pedido=pedido, producto=producto, variante=variante,
+            nombre_producto=producto.nombre, nombre_variante=variante.nombre,
+            cantidad=1, precio_unitario=variante.precio,
+        )
+        mensaje = whatsapp.construir_mensaje(pedido)
+        self.assertIn("Cocinadas", mensaje)
+
+    def test_mensaje_incluye_total_y_numero_de_pedido(self):
+        pedido, _ = self._crear_pedido_con_item()
+        mensaje = whatsapp.construir_mensaje(pedido)
+        self.assertIn(f"Pedido #{pedido.pk}", mensaje)
+        self.assertIn(str(pedido.total), mensaje)
+
+    def test_mensaje_incluye_direccion_solo_si_hay_envio(self):
+        producto = crear_producto(self.categoria, slug="whatsapp-envio-test")
+        pedido = Pedido.objects.create(
+            usuario=self.usuario, nombre="Ana", apellido="Test", telefono="111",
+            tipo_entrega=Pedido.TipoEntrega.ENVIO, direccion_envio="Calle Falsa 123",
+            fecha_pedido=date.today() + timedelta(days=1),
+            estado=Pedido.Estado.PENDIENTE, total=producto.precio,
+        )
+        ItemPedido.objects.create(
+            pedido=pedido, producto=producto, nombre_producto=producto.nombre,
+            cantidad=1, precio_unitario=producto.precio,
+        )
+        mensaje = whatsapp.construir_mensaje(pedido)
+        self.assertIn("Calle Falsa 123", mensaje)
+
+    def test_url_esta_correctamente_codificada(self):
+        pedido, _ = self._crear_pedido_con_item()
+        url = whatsapp.construir_url(pedido)
+        self.assertTrue(url.startswith("https://wa.me/5493790001234?text="))
+        self.assertNotIn(" ", url)
+        self.assertNotIn("\n", url)
+
+    def test_otro_usuario_no_puede_ver_el_enlace_de_un_pedido_ajeno(self):
+        pedido, _ = self._crear_pedido_con_item()
+        self.client.logout()
+        crear_usuario("otro_cliente_whatsapp")
+        self.client.login(username="otro_cliente_whatsapp", password="clave-valida-123")
+        respuesta = self.client.get(reverse("pedidos:pedido_detalle", args=[pedido.pk]))
+        self.assertEqual(respuesta.status_code, 404)
