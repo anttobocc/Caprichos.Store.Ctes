@@ -1,3 +1,49 @@
+from django.conf import settings
+from django.core.validators import RegexValidator
 from django.db import models
 
-# Create your models here.
+whatsapp_validator = RegexValidator(
+    regex=r"^\+?\d{8,15}$",
+    message="Ingresá el número en formato internacional, solo dígitos y opcionalmente un '+' inicial.",
+)
+
+
+class ConfiguracionNegocio(models.Model):
+    """Configuración única del negocio. Usar siempre ConfiguracionNegocio.get_solo()."""
+
+    nombre_negocio = models.CharField(max_length=150, default="Capricho")
+    eslogan = models.CharField(max_length=255, blank=True, default="Boutique Empanadas & Bakery")
+    whatsapp_numero = models.CharField(max_length=30, validators=[whatsapp_validator])
+    direccion = models.CharField(max_length=255, blank=True)
+    instagram = models.URLField(blank=True)
+    dias_anticipacion_pedido = models.PositiveIntegerField(
+        default=getattr(settings, "MIN_ORDER_ADVANCE_DAYS", 1),
+        help_text="Días mínimos de anticipación exigidos para un pedido. Única fuente de verdad de esta regla.",
+    )
+    envio_habilitado = models.BooleanField(default=True)
+    # Preparados para una futura lógica de costos/zonas de envío; sin uso todavía.
+    costo_envio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    envio_gratis_desde = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    fecha_actualizacion = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "configuración del negocio"
+        verbose_name_plural = "configuración del negocio"
+
+    def __str__(self):
+        return self.nombre_negocio
+
+    def save(self, *args, **kwargs):
+        self.pk = 1
+        super().save(*args, **kwargs)
+
+    def delete(self, *args, **kwargs):
+        pass
+
+    @classmethod
+    def get_solo(cls):
+        obj, _ = cls.objects.get_or_create(
+            pk=1,
+            defaults={"whatsapp_numero": "5493790000000"},
+        )
+        return obj
