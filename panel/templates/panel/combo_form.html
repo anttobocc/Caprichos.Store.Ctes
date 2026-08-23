@@ -1,0 +1,66 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}{% if modo == "crear" %}Nuevo combo{% else %}Editar combo{% endif %} | Panel Capricho{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <a href="{% url 'panel:combos' %}">Combos</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">{% if modo == "crear" %}Nuevo{% else %}Editar{% endif %}</span>
+</nav>
+{% endblock %}
+
+{% block panel_content %}
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Catálogo</span>
+        <h1>{% if modo == "crear" %}Nuevo combo{% else %}Editar combo{% endif %}</h1>
+        <p>{% if modo == "crear" %}Armá una nueva promoción combinando productos.{% else %}Modificá la información de "{{ combo.nombre }}".{% endif %}</p>
+    </div>
+</div>
+
+<form method="post" enctype="multipart/form-data" novalidate class="admin-form admin-form--ancho">
+    {% csrf_token %}
+
+    <fieldset class="admin-fieldset">
+        <legend>Información del combo</legend>
+        <div class="admin-form__grid">
+            {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+        </div>
+    </fieldset>
+
+    <fieldset class="admin-fieldset">
+        <legend>Productos del combo</legend>
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+            <div class="admin-alert admin-alert--error">{{ formset.non_form_errors }}</div>
+        {% endif %}
+        <div class="admin-table-wrap">
+            <div class="admin-table-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Producto</th><th>Cantidad</th><th>Eliminar</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for item_form in formset %}
+                        <tr>
+                            {{ item_form.id }}
+                            <td>{{ item_form.producto }}{% for error in item_form.producto.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
+                            <td>{{ item_form.cantidad }}</td>
+                            <td>{% if item_form.instance.pk %}{{ item_form.DELETE }}{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="admin-form__acciones">
+        <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+        <a href="{% url 'panel:combos' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+    </div>
+</form>
+{% endblock %}

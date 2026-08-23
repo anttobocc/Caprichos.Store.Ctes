@@ -1,21 +1,23 @@
 {% extends "panel/base_panel.html" %}
 
-{% block title %}Configuración | Panel Capricho{% endblock %}
+{% block title %}Editar perfil | Panel Capricho{% endblock %}
 
 {% block breadcrumbs %}
 <nav class="admin-breadcrumbs">
     <a href="{% url 'panel:dashboard' %}">Administración</a>
     <span class="admin-breadcrumbs__sep">/</span>
-    <span class="admin-breadcrumbs__actual">Configuración del negocio</span>
+    <a href="{% url 'panel:perfiles' %}">Perfiles</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">Editar</span>
 </nav>
 {% endblock %}
 
 {% block panel_content %}
 <div class="admin-page-header">
     <div>
-        <span class="admin-page-header__eyebrow">Negocio</span>
-        <h1>Configuración del negocio</h1>
-        <p>Configurá la información general de Capricho.</p>
+        <span class="admin-page-header__eyebrow">Usuarios</span>
+        <h1>Editar perfil</h1>
+        <p>Modificá los datos de "{{ perfil.usuario.username }}".</p>
     </div>
 </div>
 
@@ -27,6 +29,7 @@
         </div>
         <div class="admin-form__acciones">
             <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+            <a href="{% url 'panel:perfiles' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
         </div>
     </form>
 </div>

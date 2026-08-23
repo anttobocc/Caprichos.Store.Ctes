@@ -1,41 +1,76 @@
 {% extends "panel/base_panel.html" %}
+{% load static %}
 
 {% block title %}{% if modo == "crear" %}Nuevo producto{% else %}Editar producto{% endif %} | Panel Capricho{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <a href="{% url 'panel:productos' %}">Productos</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">{% if modo == "crear" %}Nuevo{% else %}Editar{% endif %}</span>
+</nav>
+{% endblock %}
+
 {% block panel_content %}
-<h1>{% if modo == "crear" %}Nuevo producto{% else %}Editar producto "{{ producto.nombre }}"{% endif %}</h1>
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Catálogo</span>
+        <h1>{% if modo == "crear" %}Nuevo producto{% else %}Editar producto{% endif %}</h1>
+        <p>{% if modo == "crear" %}Cargá un nuevo producto para el catálogo.{% else %}Modificá la información de "{{ producto.nombre }}".{% endif %}</p>
+    </div>
+</div>
 
-<form method="post" enctype="multipart/form-data" novalidate>
+<form method="post" enctype="multipart/form-data" novalidate class="admin-form admin-form--ancho" data-modo="{{ modo }}">
     {% csrf_token %}
-    {{ form.as_p }}
 
-    <h2>Variantes</h2>
-    <p><em>Un producto sin variantes debe tener un precio. Un producto con variantes debe tener el precio del producto vacío: cada variante define el suyo.</em></p>
+    <fieldset class="admin-fieldset">
+        <legend>Información del producto</legend>
+        <div class="admin-form__grid">
+            {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+        </div>
+    </fieldset>
 
-    {{ formset.management_form }}
-    {% if formset.non_form_errors %}
-        <p class="form-error">{{ formset.non_form_errors }}</p>
-    {% endif %}
-    <table>
-        <thead>
-            <tr><th>Nombre</th><th>Precio</th><th>Orden</th><th>Activa</th><th>Eliminar</th></tr>
-        </thead>
-        <tbody>
-            {% for variante_form in formset %}
-            <tr>
-                {{ variante_form.id }}
-                <td>{{ variante_form.nombre }}{{ variante_form.nombre.errors }}</td>
-                <td>{{ variante_form.precio }}{{ variante_form.precio.errors }}</td>
-                <td>{{ variante_form.orden }}</td>
-                <td>{{ variante_form.activo }}</td>
-                <td>{% if variante_form.instance.pk %}{{ variante_form.DELETE }}{% endif %}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <fieldset class="admin-fieldset">
+        <legend>Variantes</legend>
+        <p class="admin-field__ayuda admin-field__ayuda--intro">Un producto sin variantes debe tener un precio. Un producto con variantes debe tener el precio del producto vacío: cada variante define el suyo.</p>
 
-    <button type="submit">Guardar</button>
+        {{ formset.management_form }}
+        {% if formset.non_form_errors %}
+            <div class="admin-alert admin-alert--error">{{ formset.non_form_errors }}</div>
+        {% endif %}
+
+        <div class="admin-table-wrap">
+            <div class="admin-table-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Cantidad</th><th>Modalidad</th><th>Precio</th><th>Orden</th><th>Activa</th><th>Eliminar</th></tr>
+                    </thead>
+                    <tbody data-variantes-body>
+                        {% for variante_form in formset %}
+                        <tr>
+                            {{ variante_form.id }}
+                            <td>{{ variante_form.nombre }}{% for error in variante_form.nombre.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
+                            <td>{{ variante_form.modalidad }}{% for error in variante_form.modalidad.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
+                            <td>{{ variante_form.precio }}{% for error in variante_form.precio.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
+                            <td>{{ variante_form.orden }}</td>
+                            <td>{{ variante_form.activo }}</td>
+                            <td>{% if variante_form.instance.pk %}{{ variante_form.DELETE }}{% endif %}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </fieldset>
+
+    <div class="admin-form__acciones">
+        <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+        <a href="{% url 'panel:productos' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+    </div>
 </form>
 
-<p><a href="{% url 'panel:productos' %}">Volver al listado</a></p>
+<script>window.CAPRICHO_PLANTILLAS_VARIANTES = {{ plantillas_variantes_json|safe }};</script>
+{% block panel_extra_js %}<script src="{% static 'js/panel_variantes.js' %}" defer></script>{% endblock %}
 {% endblock %}

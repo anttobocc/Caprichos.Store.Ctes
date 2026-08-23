@@ -1,0 +1,12 @@
+{% comment %}
+Renderiza un único BoundField de un formulario con el estilo del panel.
+Uso: {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+No cambia la lógica del formulario: solo envuelve el widget ya generado por
+Django con las clases del sistema de diseño.
+{% endcomment %}
+<div class="admin-field{% if field.errors %} admin-field--error{% endif %}{% if field.field.widget.input_type == "checkbox" %} admin-field--checkbox{% endif %}{% if field.is_hidden %} admin-field--oculto{% endif %}">
+    {% if not field.is_hidden %}{{ field.label_tag }}{% endif %}
+    {{ field }}
+    {% if field.help_text %}<span class="admin-field__ayuda">{{ field.help_text|safe }}</span>{% endif %}
+    {% for error in field.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+</div>

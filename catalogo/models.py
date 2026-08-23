@@ -1,3 +1,4 @@
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
 
 
@@ -8,6 +9,31 @@ class Categoria(models.Model):
     orden = models.PositiveIntegerField(default=0)
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
+    imagen_categoria = models.ImageField(
+        verbose_name="imagen de portada",
+        upload_to="categorias/",
+        blank=True,
+        null=True,
+        help_text="Imagen mostrada en la tarjeta de esta categoría en la página de inicio.",
+    )
+    imagen_pos_x = models.IntegerField(
+        verbose_name="posición horizontal (X)",
+        default=0,
+        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
+        help_text="Ajuste horizontal en px sobre la posición actual. Negativo = izquierda, positivo = derecha.",
+    )
+    imagen_pos_y = models.IntegerField(
+        verbose_name="posición vertical (Y)",
+        default=0,
+        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
+        help_text="Ajuste vertical en px sobre la posición actual. Negativo = arriba, positivo = abajo.",
+    )
+    imagen_tamano = models.PositiveIntegerField(
+        verbose_name="tamaño",
+        default=260,
+        validators=[MinValueValidator(50), MaxValueValidator(600)],
+        help_text="Alto de la imagen en px (el ancho se ajusta proporcionalmente).",
+    )
 
     class Meta:
         verbose_name = "categoría"
@@ -27,7 +53,7 @@ class Producto(models.Model):
 
     categoria = models.ForeignKey(
         Categoria,
-        on_delete=models.PROTECT,
+        on_delete=models.CASCADE,
         related_name="productos",
     )
     nombre = models.CharField(max_length=200)
@@ -64,14 +90,35 @@ class Producto(models.Model):
     def variante_mas_barata(self):
         return self.variantes.filter(activo=True).order_by("precio").first()
 
+    @property
+    def tiene_modalidad(self):
+        # True para productos con eje "cantidad x modalidad" (hoy: Empanadas).
+        return self.variantes.filter(activo=True).exclude(modalidad="").exists()
+
 
 class VarianteProducto(models.Model):
+    class Modalidad(models.TextChoices):
+        COCINADA = "cocinada", "Cocinadas"
+        CONGELADA = "congelada", "Congeladas"
+
     producto = models.ForeignKey(
         Producto,
         on_delete=models.CASCADE,
         related_name="variantes",
     )
+    # Representa la cantidad/presentación (Unidad, Media docena, Docena,
+    # Pequeña/Mediana/Grande, etc.). Para productos con dos ejes de compra
+    # (hoy: Empanadas) se combina con "modalidad" para formar cada
+    # combinación cantidad+modalidad como una fila propia, sin que eso
+    # implique variantes visibles como productos independientes: la interfaz
+    # pública sigue mostrando dos selectores (cantidad y modalidad).
     nombre = models.CharField(max_length=100)
+    modalidad = models.CharField(
+        max_length=10,
+        choices=Modalidad.choices,
+        blank=True,
+        help_text="Solo se usa en productos con dos formas de compra (ej. Empanadas: cocinadas/congeladas).",
+    )
     precio = models.DecimalField(max_digits=10, decimal_places=2)
     orden = models.PositiveIntegerField(default=0)
     activo = models.BooleanField(default=True)
@@ -79,10 +126,64 @@ class VarianteProducto(models.Model):
     class Meta:
         verbose_name = "variante de producto"
         verbose_name_plural = "variantes de producto"
-        ordering = ["orden", "nombre"]
+        ordering = ["orden", "modalidad", "nombre"]
         constraints = [
-            models.UniqueConstraint(fields=["producto", "nombre"], name="variante_unica_por_producto"),
+            models.UniqueConstraint(fields=["producto", "nombre", "modalidad"], name="variante_unica_por_producto"),
         ]
 
     def __str__(self):
-        return f"{self.producto} - {self.nombre}"
+        return f"{self.producto} - {self.nombre_completo}"
+
+    @property
+    def nombre_completo(self):
+        if self.modalidad:
+            return f"{self.nombre} — {self.get_modalidad_display()}"
+        return self.nombre
+
+
+class Combo(models.Model):
+    nombre = models.CharField(max_length=200)
+    slug = models.SlugField(unique=True)
+    descripcion = models.TextField(blank=True)
+    imagen = models.ImageField(upload_to="combos/", blank=True, null=True)
+    precio_promocional = models.DecimalField(max_digits=10, decimal_places=2)
+    activo = models.BooleanField(default=True)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "combo"
+        verbose_name_plural = "combos"
+        ordering = ["nombre"]
+
+    def __str__(self):
+        return self.nombre
+
+    @property
+    def precio_individual_total(self):
+        total = None
+        for item in self.items.select_related("producto"):
+            precio_item = item.producto.precio
+            if precio_item is None:
+                variante = item.producto.variante_mas_barata
+                precio_item = variante.precio if variante else None
+            if precio_item is None:
+                continue
+            aporte = precio_item * item.cantidad
+            total = aporte if total is None else total + aporte
+        return total
+
+
+class ComboItem(models.Model):
+    combo = models.ForeignKey(Combo, on_delete=models.CASCADE, related_name="items")
+    producto = models.ForeignKey(Producto, on_delete=models.CASCADE, related_name="combos")
+    cantidad = models.PositiveIntegerField(default=1)
+
+    class Meta:
+        verbose_name = "producto del combo"
+        verbose_name_plural = "productos del combo"
+        constraints = [
+            models.UniqueConstraint(fields=["combo", "producto"], name="producto_unico_por_combo"),
+        ]
+
+    def __str__(self):
+        return f"{self.cantidad} x {self.producto.nombre} ({self.combo.nombre})"

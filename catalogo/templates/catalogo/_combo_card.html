@@ -1,0 +1,18 @@
+{% load static %}
+<article class="producto-card">
+    {% if combo.imagen %}
+        <img src="{{ combo.imagen.url }}" alt="{{ combo.nombre }}" class="producto-card__imagen-link">
+    {% else %}
+        <div class="producto-card__sin-imagen" aria-hidden="true">🎁</div>
+    {% endif %}
+    <div class="producto-card__cuerpo">
+        <p class="producto-card__categoria">Combo</p>
+        <h3>{{ combo.nombre }}</h3>
+        {% if combo.descripcion %}<p class="producto-card__descripcion">{{ combo.descripcion }}</p>{% endif %}
+
+        {% if combo.precio_individual_total %}
+            <p class="producto-card__unidad"><s>${{ combo.precio_individual_total }}</s></p>
+        {% endif %}
+        <p class="producto-card__precio">${{ combo.precio_promocional }}</p>
+    </div>
+</article>

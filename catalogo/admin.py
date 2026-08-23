@@ -11,6 +11,20 @@ class CategoriaAdmin(admin.ModelAdmin):
     list_editable = ["orden", "activo"]
     prepopulated_fields = {"slug": ("nombre",)}
     ordering = ["orden", "nombre"]
+    fieldsets = (
+        (None, {"fields": ("nombre", "slug", "descripcion", "orden", "activo")}),
+        (
+            "Imagen en la portada",
+            {
+                "fields": ("imagen_categoria", "imagen_pos_x", "imagen_pos_y", "imagen_tamano"),
+                "description": (
+                    "Usá estos valores para ajustar manualmente la posición de la imagen dentro "
+                    "de la tarjeta de esta categoría en la portada. No reemplazan el diseño base "
+                    "de la tarjeta, solo lo desplazan/escalan."
+                ),
+            },
+        ),
+    )
 
 
 class VarianteProductoInline(admin.TabularInline):

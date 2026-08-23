@@ -4,21 +4,34 @@
 {% block title %}Panel Capricho | Iniciar sesión{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/usuarios.css' %}">
+    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
 {% endblock %}
 
 {% block content %}
-<main class="auth-page">
-    <h1>Panel Capricho</h1>
+<main class="panel-login">
+    <div class="panel-login__card">
+        <span class="panel-login__marca" aria-hidden="true">
+            <span class="panel-login__isotipo">
+                <svg viewBox="0 0 40 18">
+                    <path d="M6 17c-3.2-4-1-8.4 2-12.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M20 17c-3.2-5-1-9.4 2-14.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M34 17c-3.2-4-1-8.4 2-12.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span class="panel-login__letra">C</span>
+            </span>
+        </span>
+        <h1>Panel Capricho</h1>
+        <p class="panel-login__subtitulo">Iniciá sesión para administrar el sitio.</p>
 
-    {% if form.errors %}
-        <p class="form-error">Usuario o contraseña incorrectos.</p>
-    {% endif %}
+        {% if form.errors %}
+            <div class="admin-alert admin-alert--error">Usuario o contraseña incorrectos.</div>
+        {% endif %}
 
-    <form method="post" novalidate>
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="submit">Ingresar</button>
-    </form>
+        <form method="post" novalidate>
+            {% csrf_token %}
+            {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+            <button type="submit" class="admin-btn admin-btn--primary">Ingresar</button>
+        </form>
+    </div>
 </main>
 {% endblock %}

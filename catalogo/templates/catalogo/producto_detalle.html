@@ -23,6 +23,44 @@
 
         {% if not producto.disponible %}
             <p class="producto-card__no-disponible">No disponible por el momento.</p>
+        {% elif cantidades %}
+            <h2>Opciones</h2>
+            <form method="post" action="{% url 'pedidos:carrito_agregar' producto.pk %}" class="producto-detalle__form" data-selector-variantes data-variantes-mapa="{{ variantes_mapa_json }}">
+                {% csrf_token %}
+                <input type="hidden" name="variante_id" data-variante-id value="">
+
+                <div>
+                    <p class="producto-detalle__eje-titulo">Cantidad</p>
+                    <ul class="variantes-lista" data-eje="cantidad">
+                        {% for cantidad in cantidades %}
+                        <li>
+                            <label>
+                                <input type="radio" name="cantidad_elegida" value="{{ cantidad }}" {% if forloop.first %}checked{% endif %} data-opcion-cantidad>
+                                {{ cantidad }}
+                            </label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div>
+                    <p class="producto-detalle__eje-titulo">Modalidad</p>
+                    <ul class="variantes-lista" data-eje="modalidad">
+                        {% for valor, etiqueta in modalidades %}
+                        <li>
+                            <label>
+                                <input type="radio" name="modalidad_elegida" value="{{ valor }}" {% if forloop.first %}checked{% endif %} data-opcion-modalidad>
+                                {{ etiqueta }}
+                            </label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <p class="producto-card__precio" data-precio-mostrado>$—</p>
+                <label class="producto-detalle__cantidad">Cantidad a pedir: <input type="number" name="cantidad" value="1" min="1"></label>
+                <button type="submit" class="boton" data-boton-agregar disabled>Agregar al carrito</button>
+            </form>
         {% elif variantes %}
             <h2>Opciones</h2>
             <form method="post" action="{% url 'pedidos:carrito_agregar' producto.pk %}" class="producto-detalle__form">
@@ -52,4 +90,37 @@
 </section>
 
 <p class="contenedor pagina-listado__volver"><a href="{% url 'catalogo:productos' %}">← Volver a productos</a></p>
+
+{% if cantidades %}
+<script>
+(function () {
+    "use strict";
+    var form = document.querySelector("[data-selector-variantes]");
+    if (!form) { return; }
+    var mapa = JSON.parse(form.getAttribute("data-variantes-mapa") || "{}");
+    var campoVariante = form.querySelector("[data-variante-id]");
+    var precioEl = form.querySelector("[data-precio-mostrado]");
+    var boton = form.querySelector("[data-boton-agregar]");
+
+    function actualizar() {
+        var cantidad = form.querySelector('[data-opcion-cantidad]:checked');
+        var modalidad = form.querySelector('[data-opcion-modalidad]:checked');
+        var clave = (cantidad ? cantidad.value : "") + "|" + (modalidad ? modalidad.value : "");
+        var opcion = mapa[clave];
+        if (opcion) {
+            campoVariante.value = opcion.id;
+            precioEl.textContent = "$" + opcion.precio;
+            boton.disabled = false;
+        } else {
+            campoVariante.value = "";
+            precioEl.textContent = "$—";
+            boton.disabled = true;
+        }
+    }
+
+    form.addEventListener("change", actualizar);
+    actualizar();
+})();
+</script>
+{% endif %}
 {% endblock %}

@@ -235,11 +235,22 @@ class CheckoutTests(TestCase):
         respuesta = self.client.get(reverse("pedidos:checkout"))
         self.assertRedirects(respuesta, reverse("pedidos:carrito"))
 
-    def test_anonimo_redirige_al_login(self):
+    def test_anonimo_puede_acceder_al_checkout(self):
         self.client.logout()
+        self._agregar_producto()
         respuesta = self.client.get(reverse("pedidos:checkout"))
-        self.assertEqual(respuesta.status_code, 302)
-        self.assertIn(reverse("usuarios:login"), respuesta.url)
+        self.assertEqual(respuesta.status_code, 200)
+
+    def test_anonimo_completa_pedido_y_puede_verlo(self):
+        self.client.logout()
+        self._agregar_producto()
+        datos = self._datos_checkout()
+        respuesta = self.client.post(reverse("pedidos:checkout"), datos)
+        pedido = Pedido.objects.get()
+        self.assertIsNone(pedido.usuario)
+        self.assertRedirects(respuesta, reverse("pedidos:pedido_detalle", args=[pedido.pk]))
+        respuesta_detalle = self.client.get(reverse("pedidos:pedido_detalle", args=[pedido.pk]))
+        self.assertEqual(respuesta_detalle.status_code, 200)
 
     def test_fecha_inferior_al_minimo_da_error(self):
         self._agregar_producto()
@@ -445,11 +456,10 @@ class MisPedidosTests(TestCase):
         self.assertEqual(respuesta.status_code, 302)
         self.assertIn(reverse("usuarios:login"), respuesta.url)
 
-    def test_anonimo_redirige_al_login_en_detalle(self):
+    def test_anonimo_no_puede_ver_pedido_ajeno_por_pk(self):
         pedido = self._crear_pedido_para(self.usuario)
         respuesta = self.client.get(reverse("pedidos:pedido_detalle", args=[pedido.pk]))
-        self.assertEqual(respuesta.status_code, 302)
-        self.assertIn(reverse("usuarios:login"), respuesta.url)
+        self.assertEqual(respuesta.status_code, 404)
 
 
 class WhatsAppTests(TestCase):

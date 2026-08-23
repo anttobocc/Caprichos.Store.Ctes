@@ -1,36 +1,81 @@
 {% extends "panel/base_panel.html" %}
 
-{% block title %}Dashboard | Panel Capricho{% endblock %}
+{% block title %}Panel de administración | Capricho{% endblock %}
 
 {% block panel_content %}
-<h1>Dashboard</h1>
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Administración</span>
+        <h1>Panel de administración</h1>
+        <p>Gestioná el contenido y la configuración de Capricho desde un solo lugar.</p>
+    </div>
+</div>
 
-<ul class="panel-stats">
-    <li>Productos: <strong>{{ total_productos }}</strong></li>
-    <li>Categorías: <strong>{{ total_categorias }}</strong></li>
-    <li>Usuarios: <strong>{{ total_usuarios }}</strong></li>
-    <li>Pedidos: <strong>{{ total_pedidos }}</strong></li>
-</ul>
+<div class="admin-stats">
+    <a class="admin-stat" href="{% url 'panel:productos' %}">
+        <span class="admin-stat__icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 7.5 12 3l8.5 4.5v9L12 21l-8.5-4.5v-9Z"/><path d="M3.5 7.5 12 12l8.5-4.5"/><path d="M12 12v9"/></svg>
+        </span>
+        <span class="admin-stat__texto">
+            <span class="admin-stat__numero">{{ total_productos }}</span>
+            <span class="admin-stat__label">Productos</span>
+            <span class="admin-stat__enlace">Gestionar →</span>
+        </span>
+    </a>
+    <a class="admin-stat" href="{% url 'panel:categorias' %}">
+        <span class="admin-stat__icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12.6 2.8H4.8a2 2 0 0 0-2 2v7.8a2 2 0 0 0 .6 1.4l8.9 8.9a2 2 0 0 0 2.8 0l7.4-7.4a2 2 0 0 0 0-2.8l-8.9-8.9a2 2 0 0 0-1-.6Z"/><circle cx="8" cy="8" r="1.6"/></svg>
+        </span>
+        <span class="admin-stat__texto">
+            <span class="admin-stat__numero">{{ total_categorias }}</span>
+            <span class="admin-stat__label">Categorías</span>
+            <span class="admin-stat__enlace">Gestionar →</span>
+        </span>
+    </a>
+    <a class="admin-stat" href="{% url 'panel:usuarios' %}">
+        <span class="admin-stat__icono" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M4.5 20.5a7.5 7.5 0 0 1 15 0"/></svg>
+        </span>
+        <span class="admin-stat__texto">
+            <span class="admin-stat__numero">{{ total_usuarios }}</span>
+            <span class="admin-stat__label">Usuarios</span>
+            <span class="admin-stat__enlace">Gestionar →</span>
+        </span>
+    </a>
+</div>
 
-<h2>Pedidos recientes</h2>
-{% if pedidos_recientes %}
-<table>
-    <thead>
-        <tr><th>#</th><th>Cliente</th><th>Estado</th><th>Total</th><th>Fecha</th></tr>
-    </thead>
-    <tbody>
-        {% for pedido in pedidos_recientes %}
-        <tr>
-            <td>{{ pedido.pk }}</td>
-            <td>{{ pedido.nombre }} {{ pedido.apellido }}</td>
-            <td>{{ pedido.get_estado_display }}</td>
-            <td>${{ pedido.total }}</td>
-            <td>{{ pedido.fecha_creacion|date:"d/m/Y" }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-{% else %}
-<p>Todavía no hay pedidos.</p>
-{% endif %}
+<section class="admin-seccion">
+    <div class="admin-page-header" style="margin-bottom:12px">
+        <div>
+            <h2 style="font-family:var(--fuente-titulos); font-size:1.15rem; margin:0;">Pedidos recientes</h2>
+        </div>
+        <div class="admin-page-header__acciones">
+            <a href="{% url 'panel:pedidos' %}" class="admin-btn admin-btn--secondary admin-btn--sm">Ver todos los pedidos</a>
+        </div>
+    </div>
+    {% if pedidos_recientes %}
+    <div class="admin-table-wrap">
+        <div class="admin-table-scroll">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Pedido</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th></tr>
+                </thead>
+                <tbody>
+                    {% for pedido in pedidos_recientes %}
+                    <tr>
+                        <td><a href="{% url 'panel:pedido_detalle' pedido.pk %}">#{{ pedido.pk }}</a></td>
+                        <td>{{ pedido.nombre }} {{ pedido.apellido }}</td>
+                        <td>{{ pedido.fecha_creacion|date:"d/m/Y" }}</td>
+                        <td><span class="admin-badge admin-badge--accent">{{ pedido.get_estado_display }}</span></td>
+                        <td>${{ pedido.total }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <p class="admin-seccion__descripcion">Todavía no hay pedidos.</p>
+    {% endif %}
+</section>
 {% endblock %}

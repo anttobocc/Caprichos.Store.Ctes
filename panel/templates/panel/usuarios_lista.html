@@ -2,36 +2,85 @@
 
 {% block title %}Usuarios | Panel Capricho{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">Usuarios</span>
+</nav>
+{% endblock %}
+
 {% block panel_content %}
-<h1>Usuarios</h1>
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Usuarios</span>
+        <h1>Usuarios</h1>
+        <p>Administrá las cuentas de usuario del sitio.</p>
+    </div>
+    <div class="admin-page-header__acciones">
+        <button type="button" class="admin-btn admin-btn--primary" data-panel-target="#panel-usuario-nuevo">+ Crear usuario</button>
+    </div>
+</div>
 
-<form method="get">
-    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por usuario">
-    <button type="submit">Buscar</button>
-</form>
+<div class="admin-lista-con-formulario">
+    <div class="admin-lista-con-formulario__lista">
+        <form method="get" class="admin-toolbar">
+            <input type="text" name="q" value="{{ q }}" placeholder="Buscar por usuario…">
+            <button type="submit" class="admin-btn admin-btn--secondary">Buscar</button>
+        </form>
 
-<p><a href="{% url 'panel:usuario_crear' %}">+ Crear usuario</a></p>
+        <div class="admin-table-wrap">
+            <div class="admin-table-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Usuario</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for usuario in usuarios %}
+                        {% url 'panel:usuario_toggle_activo' usuario.pk as url_toggle %}
+                        <tr>
+                            <td>{{ usuario.username }}</td>
+                            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
+                            <td>{{ usuario.email|default:"—" }}</td>
+                            <td>{% if usuario.is_staff %}<span class="admin-badge admin-badge--accent">Administrador</span>{% else %}<span class="admin-badge admin-badge--off">Cliente</span>{% endif %}</td>
+                            <td>
+                                {% if usuario.pk == request.user.pk %}
+                                    <span class="admin-switch__etiqueta">Activo</span>
+                                {% else %}
+                                    {% include "panel/includes/_switch.html" with accion_url=url_toggle activo=usuario.is_active %}
+                                {% endif %}
+                            </td>
+                            <td class="admin-table__acciones">
+                                <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-usuario-{{ usuario.pk }}">Editar</button>
+                                {% if usuario.pk != request.user.pk %}
+                                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-modal-target="#modal-eliminar-usuario-{{ usuario.pk }}">Eliminar</button>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="6" class="admin-table__vacio">No se encontraron usuarios.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% include "panel/includes/_paginacion.html" with page_obj=usuarios %}
+    </div>
 
-<table>
-    <thead>
-        <tr><th>Usuario</th><th>Nombre</th><th>Email</th><th>Activo</th><th>Administrador</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-        {% for usuario in usuarios %}
-        <tr>
-            <td>{{ usuario.username }}</td>
-            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
-            <td>{{ usuario.email|default:"—" }}</td>
-            <td>{{ usuario.is_active|yesno:"Sí,No" }}</td>
-            <td>{{ usuario.is_staff|yesno:"Sí,No" }}</td>
-            <td>
-                <a href="{% url 'panel:usuario_editar' usuario.pk %}">Editar</a> ·
-                <a href="{% url 'panel:usuario_password' usuario.pk %}">Cambiar contraseña</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="6">No se encontraron usuarios.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+    {% url 'panel:usuario_crear' as url_crear %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-usuario" pk="nuevo" titulo="Crear usuario" form=form_crear accion_url=url_crear %}
+
+    {% for usuario in usuarios %}
+    {% url 'panel:usuario_editar' usuario.pk as url_editar %}
+    {% url 'panel:usuario_password' usuario.pk as url_password %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-usuario" pk=usuario.pk titulo="Editar usuario" form=usuario.form_editar accion_url=url_editar url_password=url_password cuerpo_template="panel/includes/_usuario_panel_campos.html" %}
+    {% endfor %}
+</div>
+
+{% for usuario in usuarios %}
+{% if usuario.pk != request.user.pk %}
+{% url 'panel:usuario_eliminar' usuario.pk as url_eliminar %}
+{% include "panel/includes/_confirmar_eliminar.html" with id_base="modal-eliminar-usuario" pk=usuario.pk titulo="¿Eliminar usuario?" objeto_nombre=usuario.username accion_url=url_eliminar %}
+{% endif %}
+{% endfor %}
 {% endblock %}

@@ -3,30 +3,66 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+    {% block panel_extra_css %}{% endblock %}
 {% endblock %}
 
 {% block content %}
-<div class="panel-layout">
+{% with url_actual=request.resolver_match.url_name %}
+<div class="panel-shell">
+    <header class="panel-header">
+        <a href="{% url 'panel:dashboard' %}" class="panel-header__marca">
+            <span class="panel-header__isotipo" aria-hidden="true">
+                <svg viewBox="0 0 40 18">
+                    <path d="M6 17c-3.2-4-1-8.4 2-12.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M20 17c-3.2-5-1-9.4 2-14.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M34 17c-3.2-4-1-8.4 2-12.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span class="panel-header__letra">C</span>
+            </span>
+            <span class="panel-header__texto">
+                <strong>CAPRICHO</strong>
+                <small>Boutique Empanadas &amp; Bakery</small>
+            </span>
+        </a>
+        <div class="panel-header__acciones">
+            <span class="panel-header__bienvenida">Bienvenido/a, <strong>{{ request.user.get_short_name|default:request.user.username }}</strong></span>
+            <a href="{% url 'catalogo:home' %}" class="admin-btn admin-btn--secondary admin-btn--sm" target="_blank" rel="noopener">Ver sitio</a>
+            <a href="{% url 'panel:usuario_password' request.user.pk %}" class="admin-btn admin-btn--secondary admin-btn--sm">Cambiar contraseña</a>
+            <form method="post" action="{% url 'panel:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn admin-btn--primary admin-btn--sm">Cerrar sesión</button>
+            </form>
+        </div>
+    </header>
+
     <nav class="panel-nav">
-        <strong>Capricho — Panel</strong>
-        <ul>
-            <li><a href="{% url 'panel:dashboard' %}">Dashboard</a></li>
-            <li><a href="{% url 'panel:usuarios' %}">Usuarios</a></li>
-            <li><a href="{% url 'panel:productos' %}">Productos</a></li>
-            <li><a href="{% url 'panel:categorias' %}">Categorías</a></li>
-            <li><a href="{% url 'panel:pedidos' %}">Pedidos</a></li>
-            <li><a href="{% url 'panel:configuracion' %}">Configuración</a></li>
-        </ul>
-        <form method="post" action="{% url 'panel:logout' %}">
-            {% csrf_token %}
-            <button type="submit">Cerrar sesión</button>
-        </form>
+        <a href="{% url 'panel:dashboard' %}" class="{% if url_actual == 'dashboard' %}activo{% endif %}">Inicio</a>
+        <a href="{% url 'panel:categorias' %}" class="{% if url_actual == 'categorias' or url_actual == 'categoria_crear' or url_actual == 'categoria_editar' %}activo{% endif %}">Categorías</a>
+        <a href="{% url 'panel:productos' %}" class="{% if url_actual == 'productos' or url_actual == 'producto_crear' or url_actual == 'producto_editar' %}activo{% endif %}">Productos</a>
+        <a href="{% url 'panel:usuarios' %}" class="{% if url_actual == 'usuarios' or url_actual == 'usuario_crear' or url_actual == 'usuario_editar' or url_actual == 'usuario_password' %}activo{% endif %}">Usuarios</a>
+        <a href="{% url 'panel:perfiles' %}" class="{% if url_actual == 'perfiles' or url_actual == 'perfil_editar' %}activo{% endif %}">Perfiles</a>
+        <a href="{% url 'panel:combos' %}" class="{% if url_actual == 'combos' or url_actual == 'combo_crear' or url_actual == 'combo_editar' %}activo{% endif %}">Combos</a>
+        <a href="{% url 'panel:configuracion' %}" class="{% if url_actual == 'configuracion' %}activo{% endif %}">Configuración</a>
     </nav>
-    <main class="panel-content">
-        {% if messages %}
-            {% for message in messages %}<p class="form-success">{{ message }}</p>{% endfor %}
-        {% endif %}
+
+    <main class="panel-main">
+        {% block breadcrumbs %}{% endblock %}
+
         {% block panel_content %}{% endblock %}
     </main>
 </div>
+
+{% if messages %}
+<div class="admin-toasts" data-toasts>
+    {% for message in messages %}
+        <div class="admin-alert admin-toast admin-alert--{% if message.tags == 'error' %}error{% elif message.tags == 'warning' %}warning{% elif message.tags == 'success' %}success{% else %}info{% endif %}" role="status">
+            <span>{{ message }}</span>
+            <button type="button" class="admin-toast__cerrar" data-toast-close aria-label="Cerrar">✕</button>
+        </div>
+    {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+<script src="{% static 'js/panel.js' %}" defer></script>
+{% block panel_extra_js %}{% endblock %}
 {% endblock %}

@@ -3,6 +3,7 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
+from django.http import Http404
 from django.shortcuts import get_object_or_404, redirect, render
 from django.views.decorators.http import require_POST
 
@@ -15,6 +16,7 @@ from .forms import CheckoutForm
 from .models import ItemPedido, Pedido
 
 LOGIN_URL_CLIENTE = "usuarios:login"
+SESSION_KEY_ULTIMO_PEDIDO = "ultimo_pedido_id"
 
 
 def _costo_envio(config, tipo_entrega, subtotal):
@@ -38,7 +40,6 @@ def _cantidad_valida(valor):
     return cantidad
 
 
-@login_required(login_url=LOGIN_URL_CLIENTE)
 def carrito_ver(request):
     carrito = Carrito(request)
     avisos = []
@@ -52,7 +53,6 @@ def carrito_ver(request):
     })
 
 
-@login_required(login_url=LOGIN_URL_CLIENTE)
 @require_POST
 def carrito_agregar(request, producto_id):
     producto = get_object_or_404(Producto, pk=producto_id, activo=True)
@@ -82,7 +82,6 @@ def carrito_agregar(request, producto_id):
     return redirect("pedidos:carrito")
 
 
-@login_required(login_url=LOGIN_URL_CLIENTE)
 @require_POST
 def carrito_actualizar(request, clave):
     cantidad = _cantidad_valida(request.POST.get("cantidad"))
@@ -93,21 +92,18 @@ def carrito_actualizar(request, clave):
     return redirect("pedidos:carrito")
 
 
-@login_required(login_url=LOGIN_URL_CLIENTE)
 @require_POST
 def carrito_eliminar(request, clave):
     Carrito(request).eliminar(clave)
     return redirect("pedidos:carrito")
 
 
-@login_required(login_url=LOGIN_URL_CLIENTE)
 @require_POST
 def carrito_vaciar(request):
     Carrito(request).vaciar()
     return redirect("pedidos:carrito")
 
 
-@login_required(login_url=LOGIN_URL_CLIENTE)
 def checkout(request):
     carrito = Carrito(request)
     lineas = carrito.items()
@@ -123,7 +119,7 @@ def checkout(request):
     subtotal = carrito.total()
     config = ConfiguracionNegocio.get_solo()
 
-    usuario = request.user
+    usuario = request.user if request.user.is_authenticated else None
 
     if request.method == "POST":
         form = CheckoutForm(request.POST)
@@ -164,13 +160,14 @@ def checkout(request):
                     )
 
             carrito.vaciar()
+            request.session[SESSION_KEY_ULTIMO_PEDIDO] = pedido.pk
             messages.success(request, "¡Tu pedido fue confirmado!")
             return redirect("pedidos:pedido_detalle", pk=pedido.pk)
     else:
-        perfil = getattr(usuario, "perfil", None)
+        perfil = getattr(usuario, "perfil", None) if usuario else None
         initial = {
-            "nombre": usuario.first_name,
-            "apellido": usuario.last_name,
+            "nombre": usuario.first_name if usuario else "",
+            "apellido": usuario.last_name if usuario else "",
             "telefono": perfil.telefono if perfil else "",
         }
         form = CheckoutForm(initial=initial)
@@ -191,9 +188,14 @@ def mis_pedidos(request):
     return render(request, "pedidos/mis_pedidos.html", {"pedidos": pedidos})
 
 
-@login_required(login_url=LOGIN_URL_CLIENTE)
 def pedido_detalle(request, pk):
-    pedido = get_object_or_404(Pedido.objects.prefetch_related("items"), pk=pk, usuario=request.user)
+    pedido = get_object_or_404(Pedido.objects.prefetch_related("items"), pk=pk)
+
+    es_dueno = request.user.is_authenticated and pedido.usuario_id == request.user.id
+    es_pedido_recien_confirmado = request.session.get(SESSION_KEY_ULTIMO_PEDIDO) == pedido.pk
+    if not (es_dueno or es_pedido_recien_confirmado):
+        raise Http404
+
     return render(request, "pedidos/pedido_detalle.html", {
         "pedido": pedido,
         "whatsapp_url": whatsapp.construir_url(pedido),

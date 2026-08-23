@@ -1,40 +1,77 @@
 {% extends "panel/base_panel.html" %}
+{% load static %}
 
 {% block title %}Categorías | Panel Capricho{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">Categorías</span>
+</nav>
+{% endblock %}
+
 {% block panel_content %}
-<h1>Categorías</h1>
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Catálogo</span>
+        <h1>Categorías</h1>
+        <p>Administrá las categorías que aparecen en la portada de Capricho.</p>
+    </div>
+    <div class="admin-page-header__acciones">
+        <button type="button" class="admin-btn admin-btn--primary" data-panel-target="#panel-categoria-nueva">+ Nueva categoría</button>
+    </div>
+</div>
 
-<form method="get">
-    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre">
-    <button type="submit">Buscar</button>
-</form>
+<div class="admin-lista-con-formulario">
+    <div class="admin-lista-con-formulario__lista">
+        <form method="get" class="admin-toolbar">
+            <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre…">
+            <button type="submit" class="admin-btn admin-btn--secondary">Buscar</button>
+        </form>
 
-<p><a href="{% url 'panel:categoria_crear' %}">+ Nueva categoría</a></p>
+        <div class="admin-table-wrap">
+            <div class="admin-table-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Nombre</th><th>Productos</th><th>Orden</th><th>Estado</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for categoria in categorias %}
+                        {% url 'panel:categoria_toggle_activo' categoria.pk as url_toggle %}
+                        <tr>
+                            <td>{{ categoria.nombre }}</td>
+                            <td>{{ categoria.productos.count }}</td>
+                            <td>{{ categoria.orden }}</td>
+                            <td>{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=categoria.activo %}</td>
+                            <td class="admin-table__acciones">
+                                <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-categoria-{{ categoria.pk }}">Editar</button>
+                                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-modal-target="#modal-eliminar-categoria-{{ categoria.pk }}">Eliminar</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="admin-table__vacio">No se encontraron categorías.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% include "panel/includes/_paginacion.html" with page_obj=categorias %}
+    </div>
 
-<table>
-    <thead>
-        <tr><th>Nombre</th><th>Productos</th><th>Orden</th><th>Activa</th><th>Acciones</th></tr>
-    </thead>
-    <tbody>
-        {% for categoria in categorias %}
-        <tr>
-            <td>{{ categoria.nombre }}</td>
-            <td>{{ categoria.productos.count }}</td>
-            <td>{{ categoria.orden }}</td>
-            <td>{{ categoria.activo|yesno:"Sí,No" }}</td>
-            <td>
-                <a href="{% url 'panel:categoria_editar' categoria.pk %}">Editar</a> ·
-                <form method="post" action="{% url 'panel:categoria_toggle_activo' categoria.pk %}" style="display:inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="activo" value="{% if categoria.activo %}{% else %}on{% endif %}">
-                    <button type="submit">{% if categoria.activo %}Desactivar{% else %}Activar{% endif %}</button>
-                </form>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="5">No se encontraron categorías.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+    {% url 'panel:categoria_crear' as url_crear %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-categoria" pk="nueva" modo="crear" titulo="Nueva categoría" form=form_crear accion_url=url_crear enctype="multipart/form-data" cuerpo_template="panel/includes/_categoria_panel_campos.html" %}
+
+    {% for categoria in categorias %}
+    {% url 'panel:categoria_editar' categoria.pk as url_editar %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-categoria" pk=categoria.pk modo="editar" titulo="Editar categoría" form=categoria.form_editar accion_url=url_editar enctype="multipart/form-data" cuerpo_template="panel/includes/_categoria_panel_campos.html" categoria=categoria %}
+    {% endfor %}
+</div>
+
+{% for categoria in categorias %}
+{% url 'panel:categoria_eliminar' categoria.pk as url_eliminar %}
+{% include "panel/includes/_confirmar_eliminar.html" with id_base="modal-eliminar-categoria" pk=categoria.pk titulo="¿Eliminar categoría?" objeto_nombre=categoria.nombre accion_url=url_eliminar %}
+{% endfor %}
+
+{% block panel_extra_js %}<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>{% endblock %}
 {% endblock %}

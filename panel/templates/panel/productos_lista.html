@@ -1,57 +1,83 @@
 {% extends "panel/base_panel.html" %}
+{% load static %}
 
 {% block title %}Productos | Panel Capricho{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">Productos</span>
+</nav>
+{% endblock %}
+
 {% block panel_content %}
-<h1>Productos</h1>
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Catálogo</span>
+        <h1>Productos</h1>
+        <p>Administrá los productos disponibles en Capricho.</p>
+    </div>
+    <div class="admin-page-header__acciones">
+        <button type="button" class="admin-btn admin-btn--primary" data-panel-target="#panel-producto-nuevo">+ Nuevo producto</button>
+    </div>
+</div>
 
-<form method="get">
-    <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre">
-    <button type="submit">Buscar</button>
-</form>
+<div class="admin-lista-con-formulario">
+    <div class="admin-lista-con-formulario__lista">
+        <form method="get" class="admin-toolbar">
+            <input type="text" name="q" value="{{ q }}" placeholder="Buscar por nombre…">
+            <button type="submit" class="admin-btn admin-btn--secondary">Buscar</button>
+        </form>
 
-<p><a href="{% url 'panel:producto_crear' %}">+ Nuevo producto</a></p>
+        <div class="admin-table-wrap">
+            <div class="admin-table-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th><th>Categoría</th><th>Precio</th><th>Unidad</th>
+                            <th>Variantes</th><th>Estado</th><th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        {% url 'panel:producto_toggle_activo' producto.pk as url_toggle %}
+                        <tr>
+                            <td>{{ producto.nombre }}</td>
+                            <td>{{ producto.categoria.nombre }}</td>
+                            <td>{% if producto.precio %}${{ producto.precio }}{% else %}según variante{% endif %}</td>
+                            <td>{{ producto.get_unidad_venta_display }}</td>
+                            <td>{{ producto.tiene_variantes|yesno:"Sí,No" }}</td>
+                            <td>{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=producto.activo %}</td>
+                            <td class="admin-table__acciones">
+                                <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-producto-{{ producto.pk }}">Editar</button>
+                                <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-modal-target="#modal-eliminar-producto-{{ producto.pk }}">Eliminar</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="7" class="admin-table__vacio">No se encontraron productos.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% include "panel/includes/_paginacion.html" with page_obj=productos %}
+    </div>
 
-<table>
-    <thead>
-        <tr>
-            <th>Nombre</th><th>Categoría</th><th>Precio</th><th>Unidad</th>
-            <th>Variantes</th><th>Disponible</th><th>Destacado</th><th>Activo</th><th>Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for producto in productos %}
-        <tr>
-            <td>{{ producto.nombre }}</td>
-            <td>{{ producto.categoria.nombre }}</td>
-            <td>{% if producto.precio %}${{ producto.precio }}{% else %}según variante{% endif %}</td>
-            <td>{{ producto.get_unidad_venta_display }}</td>
-            <td>{{ producto.tiene_variantes|yesno:"Sí,No" }}</td>
-            <td>{{ producto.disponible|yesno:"Sí,No" }}</td>
-            <td>{{ producto.destacado|yesno:"Sí,No" }}</td>
-            <td>{{ producto.activo|yesno:"Sí,No" }}</td>
-            <td>
-                <a href="{% url 'panel:producto_editar' producto.pk %}">Editar</a>
-                <form method="post" action="{% url 'panel:producto_toggle_activo' producto.pk %}" style="display:inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="activo" value="{% if producto.activo %}{% else %}on{% endif %}">
-                    <button type="submit">{% if producto.activo %}Desactivar{% else %}Activar{% endif %}</button>
-                </form>
-                <form method="post" action="{% url 'panel:producto_toggle_disponible' producto.pk %}" style="display:inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="disponible" value="{% if producto.disponible %}{% else %}on{% endif %}">
-                    <button type="submit">{% if producto.disponible %}Marcar no disponible{% else %}Marcar disponible{% endif %}</button>
-                </form>
-                <form method="post" action="{% url 'panel:producto_toggle_destacado' producto.pk %}" style="display:inline">
-                    {% csrf_token %}
-                    <input type="hidden" name="destacado" value="{% if producto.destacado %}{% else %}on{% endif %}">
-                    <button type="submit">{% if producto.destacado %}Quitar destacado{% else %}Marcar destacado{% endif %}</button>
-                </form>
-            </td>
-        </tr>
-        {% empty %}
-        <tr><td colspan="9">No se encontraron productos.</td></tr>
-        {% endfor %}
-    </tbody>
-</table>
+    {% url 'panel:producto_crear' as url_crear %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-producto" pk="nuevo" modo="crear" titulo="Nuevo producto" form=form_crear formset=formset_crear accion_url=url_crear enctype="multipart/form-data" cuerpo_template="panel/includes/_producto_panel_campos.html" %}
+
+    {% for producto in productos %}
+    {% url 'panel:producto_editar' producto.pk as url_editar %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-producto" pk=producto.pk modo="editar" titulo="Editar producto" form=producto.form_editar formset=producto.formset_editar accion_url=url_editar enctype="multipart/form-data" cuerpo_template="panel/includes/_producto_panel_campos.html" %}
+    {% endfor %}
+</div>
+
+{% for producto in productos %}
+{% url 'panel:producto_eliminar' producto.pk as url_eliminar %}
+{% include "panel/includes/_confirmar_eliminar.html" with id_base="modal-eliminar-producto" pk=producto.pk titulo="¿Eliminar producto?" objeto_nombre=producto.nombre accion_url=url_eliminar %}
+{% endfor %}
+
+<script>window.CAPRICHO_PLANTILLAS_VARIANTES = {{ plantillas_variantes_json|safe }};</script>
+{% block panel_extra_js %}<script src="{% static 'js/panel_variantes.js' %}" defer></script>{% endblock %}
 {% endblock %}

@@ -1,0 +1,36 @@
+{% comment %}
+Panel de formulario reutilizable para crear/editar cualquier entidad del
+panel. Vive DENTRO del layout de la página (no es un drawer/overlay): un
+botón con data-panel-target="#id" lo muestra, reemplazando cualquier otro
+panel abierto en el mismo ".admin-lista-con-formulario". Contiene solo el
+"chrome" (header con título y cerrar, footer con Cancelar/Guardar); el
+cuerpo se arma con el loop estándar de campos salvo que se pase
+"cuerpo_template" para casos con contenido extra (formset de variantes).
+
+Uso:
+{% include "panel/includes/_panel_formulario.html" with id_base="panel-categoria" pk="nueva" titulo="Nueva categoría" form=form accion_url=url %}
+
+Parámetros opcionales: enctype, boton_texto, cuerpo_template.
+id_base + pk se concatenan en vez de armar el id con filtros de template
+(el filtro "add" no concatena string+int de forma confiable).
+{% endcomment %}
+<div id="{{ id_base }}-{{ pk }}" class="admin-panel-form" data-modo="{{ modo|default:'editar' }}" hidden>
+    <form method="post" action="{{ accion_url }}"{% if enctype %} enctype="{{ enctype }}"{% endif %}>
+        {% csrf_token %}
+        <header class="admin-panel-form__header">
+            <h2>{{ titulo }}</h2>
+            <button type="button" class="admin-panel-form__cerrar" data-panel-close aria-label="Cerrar">✕</button>
+        </header>
+        <div class="admin-panel-form__cuerpo">
+            {% if cuerpo_template %}
+                {% include cuerpo_template %}
+            {% else %}
+                {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+            {% endif %}
+        </div>
+        <footer class="admin-panel-form__footer">
+            <button type="button" class="admin-btn admin-btn--secondary" data-panel-close>Cancelar</button>
+            <button type="submit" class="admin-btn admin-btn--primary">{{ boton_texto|default:"Guardar" }}</button>
+        </footer>
+    </form>
+</div>

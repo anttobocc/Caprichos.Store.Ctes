@@ -16,11 +16,12 @@ Including another URLconf
 """
 from django.conf import settings
 from django.conf.urls.static import static
-from django.contrib import admin
 from django.urls import include, path
 
+# El Django Admin predeterminado (django.contrib.admin) no se expone como
+# interfaz administrativa: toda la gestión del sitio vive en /panel/, la
+# app propia de Capricho. Ver panel/urls.py.
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('panel/', include('panel.urls')),
     path('', include('usuarios.urls')),
     path('', include('pedidos.urls')),

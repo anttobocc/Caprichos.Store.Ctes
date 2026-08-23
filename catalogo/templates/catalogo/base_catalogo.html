@@ -20,7 +20,14 @@
 <header class="site-header">
     <div class="site-header__fila contenedor">
         <a href="{% url 'catalogo:home' %}" class="site-header__logo">
-            <span class="site-header__marca">C</span>
+            <span class="site-header__isotipo" aria-hidden="true">
+                <svg class="site-header__vapor" viewBox="0 0 40 18" aria-hidden="true">
+                    <path d="M6 17c-3.2-4-1-8.4 2-12.4" stroke="var(--color-terracota)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M20 17c-3.2-5-1-9.4 2-14.4" stroke="var(--color-terracota)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M34 17c-3.2-4-1-8.4 2-12.4" stroke="var(--color-terracota)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span class="site-header__isotipo-letra">C</span>
+            </span>
             <span class="site-header__nombre">
                 CAPRICHO
                 <small>{{ configuracion_negocio.eslogan|default:"Boutique Empanadas & Bakery" }}</small>
@@ -28,27 +35,19 @@
         </a>
 
         <nav class="site-nav">
-            <a href="{% url 'catalogo:home' %}">Inicio</a>
-            <a href="{% url 'catalogo:productos' %}?categoria=empanadas">Empanadas</a>
-            <a href="{% url 'catalogo:productos' %}?categoria=budines">Budines</a>
-            <a href="{% url 'catalogo:productos' %}?categoria=dulces">Dulces</a>
-            <a href="{% url 'catalogo:productos' %}">Pedidos</a>
-            <a href="{% url 'catalogo:home' %}#nosotros">Nosotros</a>
+            <a href="{% url 'catalogo:home' %}" class="{% if request.resolver_match.url_name == 'home' %}site-nav__link--activo{% endif %}">Inicio</a>
+            <a href="{% url 'catalogo:productos' %}">Productos</a>
             <a href="{% url 'catalogo:home' %}#contacto">Contacto</a>
         </nav>
 
         <div class="site-header__acciones">
-            <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener" class="icono-accion" aria-label="Escribinos por WhatsApp">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15L2 22l5.2-1.4A10 10 0 1 0 12 2zm0 18.2a8.1 8.1 0 0 1-4.2-1.2l-.3-.2-3.1.8.8-3-.2-.3A8.2 8.2 0 1 1 12 20.2zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8s-.4-.1-.5.1-.6.8-.7.9-.3.2-.5.1a6.7 6.7 0 0 1-2-1.2 7.4 7.4 0 0 1-1.4-1.7c-.1-.2 0-.4.1-.5s.2-.3.4-.4a1.6 1.6 0 0 0 .2-.4.4.4 0 0 0 0-.4c-.1-.1-.5-1.3-.7-1.8s-.4-.4-.5-.4h-.5a.9.9 0 0 0-.7.3 2.7 2.7 0 0 0-.9 2.1 4.8 4.8 0 0 0 1 2.5 10.9 10.9 0 0 0 4.2 3.7c.6.2 1 .4 1.4.5a3.4 3.4 0 0 0 1.5.1 2.5 2.5 0 0 0 1.6-1.1 2 2 0 0 0 .1-1.1c-.1-.1-.2-.2-.5-.3z"/></svg>
-            </a>
             <a href="{% url 'pedidos:carrito' %}" class="icono-accion icono-accion--carrito" aria-label="Ver carrito">
-                <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
                     <path d="M2.5 3h2l2.2 11.2a2 2 0 0 0 2 1.6h8a2 2 0 0 0 2-1.6L21 7H6"/>
                 </svg>
                 <span class="icono-accion__contador">{{ carrito_cantidad|default:0 }}</span>
             </a>
-            <a href="{% url 'catalogo:productos' %}" class="boton boton--oliva boton-header">Pedí tu docena</a>
             <label for="menu-toggle" class="boton-hamburguesa" aria-label="Abrir menú">
                 <span></span><span></span><span></span>
             </label>
@@ -57,11 +56,7 @@
 
     <nav class="site-nav site-nav--mobile">
         <a href="{% url 'catalogo:home' %}">Inicio</a>
-        <a href="{% url 'catalogo:productos' %}?categoria=empanadas">Empanadas</a>
-        <a href="{% url 'catalogo:productos' %}?categoria=budines">Budines</a>
-        <a href="{% url 'catalogo:productos' %}?categoria=dulces">Dulces</a>
-        <a href="{% url 'catalogo:productos' %}">Pedidos</a>
-        <a href="{% url 'catalogo:home' %}#nosotros">Nosotros</a>
+        <a href="{% url 'catalogo:productos' %}">Productos</a>
         <a href="{% url 'catalogo:home' %}#contacto">Contacto</a>
         {% if user.is_authenticated %}
             <a href="{% url 'pedidos:mis_pedidos' %}">Mis pedidos</a>

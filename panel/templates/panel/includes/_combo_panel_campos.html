@@ -1,0 +1,36 @@
+{% comment %}
+Cuerpo del panel de Combo: campos del combo + formset de productos que lo
+integran (producto + cantidad). Se usa como "cuerpo_template" de
+_panel_formulario.html (espera "form" y "formset" en el contexto).
+{% endcomment %}
+{% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+
+<div class="admin-panel-form__seccion">
+    <h3>Productos del combo</h3>
+    <p class="admin-field__ayuda">Elegí los productos que forman parte de este combo y la cantidad de cada uno.</p>
+
+    {{ formset.management_form }}
+    {% if formset.non_form_errors %}
+        <div class="admin-alert admin-alert--error">{{ formset.non_form_errors }}</div>
+    {% endif %}
+
+    <div class="admin-table-wrap">
+        <div class="admin-table-scroll">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Producto</th><th>Cantidad</th><th>Eliminar</th></tr>
+                </thead>
+                <tbody>
+                    {% for item_form in formset %}
+                    <tr>
+                        {{ item_form.id }}
+                        <td>{{ item_form.producto }}{% for error in item_form.producto.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
+                        <td>{{ item_form.cantidad }}</td>
+                        <td>{% if item_form.instance.pk %}{{ item_form.DELETE }}{% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

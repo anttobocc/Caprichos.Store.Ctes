@@ -1,0 +1,10 @@
+{% comment %}
+Cuerpo del panel de edición de Usuario: campos del formulario + acceso a
+cambiar la contraseña (esa acción sigue teniendo su propia vista dedicada,
+no un campo de este formulario). Se usa como "cuerpo_template" de
+_panel_formulario.html (espera "form" y opcionalmente "url_password").
+{% endcomment %}
+{% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+{% if url_password %}
+<a href="{{ url_password }}" class="admin-btn admin-btn--secondary admin-btn--sm">Cambiar contraseña</a>
+{% endif %}

@@ -4,8 +4,9 @@ from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.utils.text import slugify
 
-from catalogo.models import Categoria, Producto, VarianteProducto
+from catalogo.models import Categoria, Combo, ComboItem, Producto, VarianteProducto
 from pedidos.models import Pedido
+from usuarios.models import Perfil
 
 from .models import ConfiguracionNegocio
 
@@ -28,18 +29,38 @@ def _slug_unico(model, nombre, slug_ingresado, instance_pk=None):
 class CategoriaForm(forms.ModelForm):
     class Meta:
         model = Categoria
-        fields = ["nombre", "slug", "descripcion", "orden", "activo"]
-        widgets = {"descripcion": forms.Textarea(attrs={"rows": 2})}
+        fields = [
+            "nombre", "slug", "descripcion", "orden",
+            "imagen_categoria", "imagen_pos_x", "imagen_pos_y", "imagen_tamano",
+        ]
+        widgets = {
+            "descripcion": forms.Textarea(attrs={"rows": 2}),
+            "imagen_pos_x": forms.HiddenInput(),
+            "imagen_pos_y": forms.HiddenInput(),
+            "imagen_tamano": forms.HiddenInput(),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["slug"].required = False
+        # Los completa el editor visual de imagen (arrastrar/deslizador) vía
+        # JS; si llegan vacíos (por ejemplo un POST manual) se usa el
+        # default del modelo en lugar de exigirlos en el formulario.
+        self.fields["imagen_pos_x"].required = False
+        self.fields["imagen_pos_y"].required = False
+        self.fields["imagen_tamano"].required = False
 
     def clean(self):
         cleaned = super().clean()
         nombre = cleaned.get("nombre")
         if nombre:
             cleaned["slug"] = _slug_unico(Categoria, nombre, cleaned.get("slug"), self.instance.pk)
+        if cleaned.get("imagen_pos_x") in (None, ""):
+            cleaned["imagen_pos_x"] = 0
+        if cleaned.get("imagen_pos_y") in (None, ""):
+            cleaned["imagen_pos_y"] = 0
+        if cleaned.get("imagen_tamano") in (None, ""):
+            cleaned["imagen_tamano"] = 260
         return cleaned
 
 
@@ -55,9 +76,7 @@ class ProductoForm(forms.ModelForm):
             "imagen",
             "precio",
             "unidad_venta",
-            "disponible",
             "destacado",
-            "activo",
         ]
         widgets = {"descripcion": forms.Textarea(attrs={"rows": 3})}
 
@@ -77,7 +96,34 @@ class ProductoForm(forms.ModelForm):
 VarianteProductoFormSet = inlineformset_factory(
     Producto,
     VarianteProducto,
-    fields=["nombre", "precio", "orden", "activo"],
+    fields=["nombre", "modalidad", "precio", "orden", "activo"],
+    extra=1,
+    can_delete=True,
+)
+
+
+class ComboForm(forms.ModelForm):
+    class Meta:
+        model = Combo
+        fields = ["nombre", "slug", "descripcion", "imagen", "precio_promocional"]
+        widgets = {"descripcion": forms.Textarea(attrs={"rows": 3})}
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["slug"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        nombre = cleaned.get("nombre")
+        if nombre:
+            cleaned["slug"] = _slug_unico(Combo, nombre, cleaned.get("slug"), self.instance.pk)
+        return cleaned
+
+
+ComboItemFormSet = inlineformset_factory(
+    Combo,
+    ComboItem,
+    fields=["producto", "cantidad"],
     extra=1,
     can_delete=True,
 )
@@ -109,7 +155,7 @@ class UsuarioEditarForm(forms.ModelForm):
 
     class Meta:
         model = User
-        fields = ["username", "first_name", "last_name", "email", "is_active", "is_staff"]
+        fields = ["username", "first_name", "last_name", "email", "is_staff"]
 
 
 class ConfiguracionNegocioForm(forms.ModelForm):
@@ -126,6 +172,40 @@ class ConfiguracionNegocioForm(forms.ModelForm):
             "costo_envio",
             "envio_gratis_desde",
         ]
+
+
+class PerfilAdminForm(forms.ModelForm):
+    """Edición administrativa del perfil de CUALQUIER usuario: mismos datos
+    (User + Perfil combinados) que usa el propio cliente en
+    usuarios.forms.PerfilForm, pero accesible desde el panel para un admin."""
+
+    first_name = forms.CharField(max_length=150, required=False, label="Nombre")
+    last_name = forms.CharField(max_length=150, required=False, label="Apellido")
+    email = forms.EmailField(required=False, label="Email")
+
+    class Meta:
+        model = Perfil
+        fields = ["telefono", "direccion"]
+
+    def __init__(self, *args, usuario=None, **kwargs):
+        self.usuario = usuario
+        super().__init__(*args, **kwargs)
+        if usuario is not None:
+            self.fields["first_name"].initial = usuario.first_name
+            self.fields["last_name"].initial = usuario.last_name
+            self.fields["email"].initial = usuario.email
+
+    def save(self, commit=True):
+        perfil = super().save(commit=False)
+        if self.usuario is not None:
+            self.usuario.first_name = self.cleaned_data["first_name"]
+            self.usuario.last_name = self.cleaned_data["last_name"]
+            self.usuario.email = self.cleaned_data["email"]
+        if commit:
+            perfil.save()
+            if self.usuario is not None:
+                self.usuario.save(update_fields=["first_name", "last_name", "email"])
+        return perfil
 
 
 class PedidoEstadoForm(forms.ModelForm):

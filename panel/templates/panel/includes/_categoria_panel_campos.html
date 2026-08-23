@@ -1,0 +1,26 @@
+{% comment %}
+Cuerpo del panel de Categoría: campos normales + editor visual de la imagen
+de portada (arrastrar para posicionar, deslizador para el tamaño). Sin
+inputs de X/Y visibles: esos campos existen en el form como HiddenInput y
+los actualiza static/js/panel_categoria_imagen.js.
+{% endcomment %}
+{% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+
+<div class="admin-imagen-editor" data-imagen-editor>
+    <span class="admin-field__ayuda">Arrastrá la imagen para elegir qué parte queda visible en la portada.</span>
+    <div class="admin-imagen-editor__lienzo" data-lienzo>
+        <img
+            data-imagen-preview
+            draggable="false"
+            alt=""
+            {% if not categoria.imagen_categoria %}hidden{% endif %}
+            {% if categoria.imagen_categoria %}src="{{ categoria.imagen_categoria.url }}"{% endif %}
+            style="height:{{ categoria.imagen_tamano|default:260 }}px; transform: translate({{ categoria.imagen_pos_x|default:0 }}px, {{ categoria.imagen_pos_y|default:0 }}px);"
+        >
+        <span class="admin-imagen-editor__vacio" data-imagen-vacio {% if categoria.imagen_categoria %}hidden{% endif %}>Elegí una imagen para previsualizarla acá</span>
+    </div>
+    <label class="admin-imagen-editor__tamano">
+        Tamaño
+        <input type="range" min="120" max="400" step="10" value="{{ categoria.imagen_tamano|default:260 }}" data-tamano-slider>
+    </label>
+</div>

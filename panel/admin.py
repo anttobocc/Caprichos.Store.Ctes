@@ -11,6 +11,16 @@ class ConfiguracionNegocioAdmin(admin.ModelAdmin):
         (None, {"fields": ("nombre_negocio", "eslogan", "direccion", "instagram")}),
         ("WhatsApp y pedidos", {"fields": ("whatsapp_numero", "dias_anticipacion_pedido")}),
         ("Envíos (preparado para uso futuro)", {"fields": ("envio_habilitado", "costo_envio", "envio_gratis_desde")}),
+        (
+            "Imagen de pedidos en portada",
+            {
+                "fields": ("pedidos_imagen", "pedidos_imagen_pos_x", "pedidos_imagen_pos_y", "pedidos_imagen_tamano"),
+                "description": (
+                    "Usá estos valores para ajustar manualmente la posición de la imagen dentro "
+                    "de la tarjeta 'Pedidos' de la portada."
+                ),
+            },
+        ),
     )
 
     def has_add_permission(self, request):

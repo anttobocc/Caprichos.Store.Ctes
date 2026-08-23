@@ -2,14 +2,33 @@
 
 {% block title %}{% if modo == "crear" %}Crear usuario{% else %}Editar usuario{% endif %} | Panel Capricho{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <a href="{% url 'panel:usuarios' %}">Usuarios</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">{% if modo == "crear" %}Crear{% else %}Editar{% endif %}</span>
+</nav>
+{% endblock %}
+
 {% block panel_content %}
-<h1>{% if modo == "crear" %}Crear usuario{% else %}Editar usuario "{{ usuario.username }}"{% endif %}</h1>
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Usuarios</span>
+        <h1>{% if modo == "crear" %}Crear usuario{% else %}Editar usuario{% endif %}</h1>
+        <p>{% if modo == "crear" %}Creá una nueva cuenta de usuario.{% else %}Modificá la información de "{{ usuario.username }}".{% endif %}</p>
+    </div>
+</div>
 
-<form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
-
-<p><a href="{% url 'panel:usuarios' %}">Volver al listado</a></p>
+<div class="admin-card">
+    <form method="post" novalidate class="admin-form">
+        {% csrf_token %}
+        {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+        <div class="admin-form__acciones">
+            <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+            <a href="{% url 'panel:usuarios' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
 {% endblock %}

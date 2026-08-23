@@ -1,12 +1,17 @@
+import json
+
 from django.shortcuts import get_object_or_404, render
 
-from .models import Categoria, Producto
+from .models import Categoria, Combo, Producto
 
 
 def home(request):
     categorias = Categoria.objects.filter(activo=True)
     destacados = Producto.objects.filter(activo=True, destacado=True).select_related("categoria")
-    return render(request, "catalogo/home.html", {"categorias": categorias, "destacados": destacados})
+    combos = Combo.objects.filter(activo=True).prefetch_related("items__producto")
+    return render(request, "catalogo/home.html", {
+        "categorias": categorias, "destacados": destacados, "combos": combos,
+    })
 
 
 def lista_productos(request):
@@ -32,4 +37,29 @@ def categoria_detalle(request, slug):
 def producto_detalle(request, slug):
     producto = get_object_or_404(Producto.objects.select_related("categoria"), slug=slug, activo=True)
     variantes = producto.variantes.filter(activo=True) if producto.tiene_variantes else None
-    return render(request, "catalogo/producto_detalle.html", {"producto": producto, "variantes": variantes})
+    contexto = {"producto": producto, "variantes": variantes}
+
+    if variantes is not None and producto.tiene_modalidad:
+        # Empanadas y cualquier otro producto con dos ejes de compra
+        # (cantidad x modalidad): se arman dos selectores independientes en
+        # vez de una lista plana de combinaciones (ver VarianteProducto).
+        cantidades, vistas_cantidades = [], set()
+        modalidades, vistas_modalidades = [], set()
+        mapa = {}
+        for variante in variantes:
+            if variante.nombre not in vistas_cantidades:
+                vistas_cantidades.add(variante.nombre)
+                cantidades.append(variante.nombre)
+            if variante.modalidad and variante.modalidad not in vistas_modalidades:
+                vistas_modalidades.add(variante.modalidad)
+                modalidades.append((variante.modalidad, variante.get_modalidad_display()))
+            mapa[f"{variante.nombre}|{variante.modalidad}"] = {
+                "id": variante.pk, "precio": str(variante.precio),
+            }
+        contexto.update({
+            "cantidades": cantidades,
+            "modalidades": modalidades,
+            "variantes_mapa_json": json.dumps(mapa),
+        })
+
+    return render(request, "catalogo/producto_detalle.html", contexto)

@@ -1,0 +1,61 @@
+{% extends "panel/base_panel.html" %}
+
+{% block title %}Perfiles | Panel Capricho{% endblock %}
+
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">Perfiles</span>
+</nav>
+{% endblock %}
+
+{% block panel_content %}
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Usuarios</span>
+        <h1>Perfiles</h1>
+        <p>Datos adicionales de contacto de cada usuario del sitio.</p>
+    </div>
+</div>
+
+<div class="admin-lista-con-formulario">
+    <div class="admin-lista-con-formulario__lista">
+        <form method="get" class="admin-toolbar">
+            <input type="text" name="q" value="{{ q }}" placeholder="Buscar por usuario…">
+            <button type="submit" class="admin-btn admin-btn--secondary">Buscar</button>
+        </form>
+
+        <div class="admin-table-wrap">
+            <div class="admin-table-scroll">
+                <table class="admin-table">
+                    <thead>
+                        <tr><th>Usuario</th><th>Nombre</th><th>Teléfono</th><th>Dirección</th><th>Acciones</th></tr>
+                    </thead>
+                    <tbody>
+                        {% for perfil in perfiles %}
+                        <tr>
+                            <td>{{ perfil.usuario.username }}</td>
+                            <td>{{ perfil.usuario.first_name }} {{ perfil.usuario.last_name }}</td>
+                            <td>{{ perfil.telefono|default:"—" }}</td>
+                            <td>{{ perfil.direccion|default:"—" }}</td>
+                            <td class="admin-table__acciones">
+                                <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-perfil-{{ perfil.pk }}">Editar</button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="admin-table__vacio">No se encontraron perfiles.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% include "panel/includes/_paginacion.html" with page_obj=perfiles %}
+    </div>
+
+    {% for perfil in perfiles %}
+    {% url 'panel:perfil_editar' perfil.pk as url_editar %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-perfil" pk=perfil.pk titulo="Editar perfil" form=perfil.form_editar accion_url=url_editar %}
+    {% endfor %}
+</div>
+{% endblock %}

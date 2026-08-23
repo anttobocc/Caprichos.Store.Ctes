@@ -1,0 +1,17 @@
+{% comment %}
+Switch ON/OFF reutilizable. Hace POST real a la vista de toggle existente
+(reutiliza la misma lógica de backend que antes usaban los botones
+Activar/Desactivar: un checkbox sin marcar simplemente no viaja en el POST).
+
+Uso:
+{% include "panel/includes/_switch.html" with accion_url=... activo=objeto.activo %}
+Parámetro opcional "campo" (default "activo") si el campo en el backend se llama distinto.
+{% endcomment %}
+<form method="post" action="{{ accion_url }}" class="admin-switch-form">
+    {% csrf_token %}
+    <label class="admin-switch" aria-label="{% if activo %}Activo, hacer clic para desactivar{% else %}Inactivo, hacer clic para activar{% endif %}">
+        <input type="checkbox" name="{{ campo|default:'activo' }}" {% if activo %}checked{% endif %} onchange="this.form.requestSubmit()">
+        <span class="admin-switch__track"><span class="admin-switch__thumb"></span></span>
+    </label>
+    <span class="admin-switch__etiqueta">{% if activo %}Activo{% else %}Inactivo{% endif %}</span>
+</form>

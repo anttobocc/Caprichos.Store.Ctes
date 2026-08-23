@@ -98,7 +98,6 @@ class GestionUsuariosTests(TestCase):
             "first_name": "Editado",
             "last_name": "Apellido",
             "email": "editado@example.com",
-            "is_active": True,
             "is_staff": True,
         })
         self.assertRedirects(respuesta, reverse("panel:usuarios"))
@@ -106,16 +105,9 @@ class GestionUsuariosTests(TestCase):
         self.assertEqual(otro.first_name, "Editado")
         self.assertTrue(otro.is_staff)
 
-    def test_administrador_desactiva_usuario(self):
+    def test_administrador_desactiva_usuario_con_el_switch(self):
         otro = crear_cliente("otro_usuario2")
-        respuesta = self.client.post(reverse("panel:usuario_editar", args=[otro.pk]), {
-            "username": "otro_usuario2",
-            "first_name": "",
-            "last_name": "",
-            "email": "",
-            "is_active": False,
-            "is_staff": False,
-        })
+        respuesta = self.client.post(reverse("panel:usuario_toggle_activo", args=[otro.pk]), {"activo": ""})
         self.assertRedirects(respuesta, reverse("panel:usuarios"))
         otro.refresh_from_db()
         self.assertFalse(otro.is_active)
@@ -136,23 +128,15 @@ class GestionUsuariosTests(TestCase):
             "first_name": "",
             "last_name": "",
             "email": "",
-            "is_active": True,
             "is_staff": False,
         })
         self.assertEqual(respuesta.status_code, 200)
         self.admin.refresh_from_db()
         self.assertTrue(self.admin.is_staff)
 
-    def test_administrador_no_puede_desactivarse_a_si_mismo(self):
-        respuesta = self.client.post(reverse("panel:usuario_editar", args=[self.admin.pk]), {
-            "username": "admin",
-            "first_name": "",
-            "last_name": "",
-            "email": "",
-            "is_active": False,
-            "is_staff": True,
-        })
-        self.assertEqual(respuesta.status_code, 200)
+    def test_administrador_no_puede_desactivarse_a_si_mismo_con_el_switch(self):
+        respuesta = self.client.post(reverse("panel:usuario_toggle_activo", args=[self.admin.pk]), {"activo": ""})
+        self.assertRedirects(respuesta, reverse("panel:usuarios"))
         self.admin.refresh_from_db()
         self.assertTrue(self.admin.is_active)
 
@@ -237,16 +221,17 @@ class CategoriaCRUDPanelTests(TestCase):
 
     def test_admin_crea_categoria(self):
         respuesta = self.client.post(reverse("panel:categoria_crear"), {
-            "nombre": "Nueva Categoria Test", "slug": "", "descripcion": "", "orden": 0, "activo": True,
+            "nombre": "Nueva Categoria Test", "slug": "", "descripcion": "", "orden": 0,
         })
         self.assertRedirects(respuesta, reverse("panel:categorias"))
         categoria = Categoria.objects.get(nombre="Nueva Categoria Test")
         self.assertEqual(categoria.slug, "nueva-categoria-test")
+        self.assertTrue(categoria.activo)
 
     def test_admin_edita_categoria(self):
         categoria = crear_categoria_test()
         respuesta = self.client.post(reverse("panel:categoria_editar", args=[categoria.pk]), {
-            "nombre": "Categoria Editada Test", "slug": "categoria-panel-test", "descripcion": "", "orden": 1, "activo": True,
+            "nombre": "Categoria Editada Test", "slug": "categoria-panel-test", "descripcion": "", "orden": 1,
         })
         self.assertRedirects(respuesta, reverse("panel:categorias"))
         categoria.refresh_from_db()
@@ -275,9 +260,7 @@ class ProductoCRUDPanelTests(TestCase):
             "descripcion": "",
             "precio": "1000",
             "unidad_venta": "unidad",
-            "disponible": True,
             "destacado": False,
-            "activo": True,
         }
         datos.update(overrides)
         return datos
@@ -297,6 +280,7 @@ class ProductoCRUDPanelTests(TestCase):
         producto = Producto.objects.get(nombre="Producto Panel Test")
         self.assertEqual(producto.precio, 1000)
         self.assertFalse(producto.tiene_variantes)
+        self.assertTrue(producto.activo)
 
     def test_b_producto_sin_variantes_precio_vacio_da_error_y_no_guarda(self):
         datos = self._datos_producto(precio="")
@@ -448,9 +432,7 @@ class ImagenProductoTests(TestCase):
             "imagen": imagen,
             "precio": "1000",
             "unidad_venta": "unidad",
-            "disponible": True,
             "destacado": False,
-            "activo": True,
         }
         datos.update(datos_formset_variantes([]))
         respuesta = self.client.post(reverse("panel:producto_crear"), datos)

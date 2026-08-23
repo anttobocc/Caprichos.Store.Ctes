@@ -1,15 +1,37 @@
 {% extends "panel/base_panel.html" %}
+{% load static %}
 
 {% block title %}{% if modo == "crear" %}Nueva categoría{% else %}Editar categoría{% endif %} | Panel Capricho{% endblock %}
 
+{% block breadcrumbs %}
+<nav class="admin-breadcrumbs">
+    <a href="{% url 'panel:dashboard' %}">Administración</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <a href="{% url 'panel:categorias' %}">Categorías</a>
+    <span class="admin-breadcrumbs__sep">/</span>
+    <span class="admin-breadcrumbs__actual">{% if modo == "crear" %}Nueva{% else %}Editar{% endif %}</span>
+</nav>
+{% endblock %}
+
 {% block panel_content %}
-<h1>{% if modo == "crear" %}Nueva categoría{% else %}Editar categoría "{{ categoria.nombre }}"{% endif %}</h1>
+<div class="admin-page-header">
+    <div>
+        <span class="admin-page-header__eyebrow">Catálogo</span>
+        <h1>{% if modo == "crear" %}Nueva categoría{% else %}Editar categoría{% endif %}</h1>
+        <p>{% if modo == "crear" %}Creá una nueva categoría para el catálogo.{% else %}Modificá la información de "{{ categoria.nombre }}".{% endif %}</p>
+    </div>
+</div>
 
-<form method="post" novalidate>
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Guardar</button>
-</form>
+<div class="admin-card">
+    <form method="post" enctype="multipart/form-data" novalidate class="admin-form">
+        {% csrf_token %}
+        {% include "panel/includes/_categoria_panel_campos.html" %}
+        <div class="admin-form__acciones">
+            <button type="submit" class="admin-btn admin-btn--primary">Guardar</button>
+            <a href="{% url 'panel:categorias' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
 
-<p><a href="{% url 'panel:categorias' %}">Volver al listado</a></p>
+{% block panel_extra_js %}<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>{% endblock %}
 {% endblock %}

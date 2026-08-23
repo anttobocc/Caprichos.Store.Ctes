@@ -1,0 +1,18 @@
+{% comment %}
+Modal de confirmación de eliminación reutilizable.
+Uso: {% include "panel/includes/_confirmar_eliminar.html" with id_base="modal-eliminar-producto" pk=objeto.pk titulo="¿Eliminar producto?" objeto_nombre="Empanada de pollo" accion_url=url %}
+{% endcomment %}
+<dialog id="{{ id_base }}-{{ pk }}" class="admin-modal">
+    <div class="admin-modal__cuerpo">
+        <h2>{{ titulo|default:"¿Eliminar?" }}</h2>
+        <p>¿Estás seguro de que querés eliminar "{{ objeto_nombre }}"?</p>
+        <p class="admin-modal__aviso">Esta acción no se puede deshacer.</p>
+        <div class="admin-modal__acciones">
+            <button type="button" class="admin-btn admin-btn--secondary" data-modal-close>Cancelar</button>
+            <form method="post" action="{{ accion_url }}">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn admin-btn--danger">Eliminar</button>
+            </form>
+        </div>
+    </div>
+</dialog>

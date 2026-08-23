@@ -1,5 +1,5 @@
 from django.conf import settings
-from django.core.validators import RegexValidator
+from django.core.validators import MaxValueValidator, MinValueValidator, RegexValidator
 from django.db import models
 
 whatsapp_validator = RegexValidator(
@@ -24,6 +24,31 @@ class ConfiguracionNegocio(models.Model):
     # Preparados para una futura lógica de costos/zonas de envío; sin uso todavía.
     costo_envio = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     envio_gratis_desde = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    pedidos_imagen = models.ImageField(
+        verbose_name="imagen de pedidos en portada",
+        upload_to="categorias/",
+        blank=True,
+        null=True,
+        help_text="Imagen de la tarjeta 'Pedidos' en la página de inicio.",
+    )
+    pedidos_imagen_pos_x = models.IntegerField(
+        verbose_name="posición horizontal (X)",
+        default=0,
+        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
+        help_text="Ajuste horizontal en px sobre la posición actual. Negativo = izquierda, positivo = derecha.",
+    )
+    pedidos_imagen_pos_y = models.IntegerField(
+        verbose_name="posición vertical (Y)",
+        default=0,
+        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
+        help_text="Ajuste vertical en px sobre la posición actual. Negativo = arriba, positivo = abajo.",
+    )
+    pedidos_imagen_tamano = models.PositiveIntegerField(
+        verbose_name="tamaño",
+        default=260,
+        validators=[MinValueValidator(50), MaxValueValidator(600)],
+        help_text="Alto de la imagen en px (el ancho se ajusta proporcionalmente).",
+    )
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 
     class Meta:

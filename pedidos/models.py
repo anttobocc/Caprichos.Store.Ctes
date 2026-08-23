@@ -56,17 +56,18 @@ class ItemPedido(models.Model):
     )
     producto = models.ForeignKey(
         Producto,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="items_pedido",
     )
     variante = models.ForeignKey(
         VarianteProducto,
-        on_delete=models.PROTECT,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="items_pedido",
     )
-    # Snapshots: conservan el detalle del pedido aunque el producto/variante cambie o se desactive después.
+    # Snapshots: conservan el detalle del pedido aunque el producto/variante se elimine, cambie o se desactive después.
     nombre_producto = models.CharField(max_length=200)
     nombre_variante = models.CharField(max_length=100, blank=True)
     cantidad = models.PositiveIntegerField(validators=[MinValueValidator(1)])

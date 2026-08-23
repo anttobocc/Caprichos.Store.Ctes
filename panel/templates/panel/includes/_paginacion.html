@@ -1,0 +1,27 @@
+{% comment %}
+Paginación reutilizable. Uso: {% include "panel/includes/_paginacion.html" with page_obj=usuarios %}
+Preserva los demás parámetros de la URL (q, estado, etc.), solo cambia "page".
+{% endcomment %}
+{% if page_obj.paginator.num_pages > 1 %}
+<nav class="admin-pagination" aria-label="Paginación">
+    {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}">‹ Anterior</a>
+    {% else %}
+        <span class="admin-pagination__deshabilitado">‹ Anterior</span>
+    {% endif %}
+
+    {% for numero in page_obj.paginator.page_range %}
+        {% if numero == page_obj.number %}
+            <span class="admin-pagination__actual">{{ numero }}</span>
+        {% else %}
+            <a href="?page={{ numero }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}">{{ numero }}</a>
+        {% endif %}
+    {% endfor %}
+
+    {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value|urlencode }}{% endif %}{% endfor %}">Siguiente ›</a>
+    {% else %}
+        <span class="admin-pagination__deshabilitado">Siguiente ›</span>
+    {% endif %}
+</nav>
+{% endif %}

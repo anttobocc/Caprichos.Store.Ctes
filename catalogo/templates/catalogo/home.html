@@ -4,60 +4,82 @@
 
 {% block catalogo_content %}
 <section class="hero">
-    <div class="contenedor hero__grid">
+    <div class="hero__imagen" aria-hidden="true">
+        <div class="hero__imagen-marco">
+            <img src="/media/productos/portada.png" alt="">
+        </div>
+    </div>
+
+    <div class="hero__grid">
+        <div class="hero__flores" aria-hidden="true">
+            <img class="hero__flores-img" src="/static/img/flores-portada.png" alt="">
+        </div>
+
         <div class="hero__texto">
             <p class="hero__decorativa">Hechos con amor,</p>
             <h1>Pensados<br>para vos</h1>
+
+            <div class="hero__divisor" aria-hidden="true">
+                <span class="hero__divisor-flecha">‹</span>
+                <span class="hero__divisor-linea"></span>
+                <svg viewBox="0 0 24 24" width="13" height="13" fill="var(--color-terracota)"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z"/></svg>
+                <span class="hero__divisor-linea"></span>
+                <span class="hero__divisor-flecha">›</span>
+            </div>
+
             <p class="hero__descripcion">Productos artesanales elaborados cada día con ingredientes seleccionados.</p>
-            <a href="{% url 'catalogo:productos' %}" class="boton">Ver nuestros productos ♥</a>
+            <a href="{% url 'catalogo:productos' %}" class="boton hero__boton">Ver nuestros productos ♥</a>
         </div>
-        <div class="hero__imagen">
-            <div class="hero__imagen-marco">
-                {% with destacados|first as producto_hero %}
-                    {% if producto_hero.imagen %}
-                        <img src="{{ producto_hero.imagen.url }}" alt="{{ producto_hero.nombre }}">
-                    {% else %}
-                        <div class="hero__imagen-placeholder" aria-hidden="true">
-                            <svg viewBox="0 0 200 200" class="hero__ilustracion">
-                                <circle cx="100" cy="100" r="88" fill="none" stroke="currentColor" stroke-width="1.5" stroke-dasharray="2 6"/>
-                                <circle cx="100" cy="112" r="62" fill="var(--color-blanco-calido)" stroke="currentColor" stroke-width="2"/>
-                                <path d="M100 60 C120 60 138 78 138 112 L62 112 C62 78 80 60 100 60 Z" fill="var(--color-terracota)"/>
-                                <path d="M78 100 c4 -10 12 -14 22 -14 s18 4 22 14" fill="none" stroke="var(--color-blanco-calido)" stroke-width="2" stroke-linecap="round"/>
-                                <circle cx="82" cy="86" r="4" fill="var(--color-oliva)"/>
-                                <circle cx="100" cy="78" r="4" fill="var(--color-oliva)"/>
-                                <circle cx="118" cy="86" r="4" fill="var(--color-oliva)"/>
-                            </svg>
-                            <p>Capricho</p>
-                        </div>
-                    {% endif %}
-                {% endwith %}
-            </div>
-            <div class="sello-pedidos">
-                <span>Se toman pedidos con</span>
-                <strong>{{ configuracion_negocio.dias_anticipacion_pedido }} día{{ configuracion_negocio.dias_anticipacion_pedido|pluralize }}</strong>
-                <span>de anticipación</span>
-            </div>
-        </div>
+    </div>
+
+    <div class="sello-pedidos">
+        <span>Se toman pedidos con</span>
+        <strong>{{ configuracion_negocio.dias_anticipacion_pedido }} día{{ configuracion_negocio.dias_anticipacion_pedido|pluralize }}</strong>
+        <span>de anticipación</span>
     </div>
 </section>
 
-<section class="categorias contenedor">
+<section class="categorias">
     <div class="categorias-grid">
         {% for categoria in categorias %}
         <article class="categoria-card">
-            <span class="categoria-card__icono" aria-hidden="true">
-                {% if categoria.slug == "empanadas" %}🥟{% elif categoria.slug == "budines" %}🍞{% elif categoria.slug == "dulces" %}🍓{% else %}🍰{% endif %}
-            </span>
-            <h3>{{ categoria.nombre }}</h3>
-            {% if categoria.descripcion %}<p>{{ categoria.descripcion }}</p>{% endif %}
-            <a href="{% url 'catalogo:categoria_detalle' categoria.slug %}" class="categoria-card__enlace">Ver más ♥</a>
+            <div class="categoria-card__cuerpo">
+                <span class="categoria-card__icono categoria-card__icono--{{ categoria.slug }}" aria-hidden="true">
+                    {% if categoria.slug == "empanadas" %}🥟{% elif categoria.slug == "budines" %}🍞{% elif categoria.slug == "dulces" %}🍰{% elif categoria.slug == "alfajores" %}🍪{% else %}🍓{% endif %}
+                </span>
+                <div class="categoria-card__texto">
+                    <h3>{{ categoria.nombre }}</h3>
+                    {% if categoria.descripcion %}<p>{{ categoria.descripcion }}</p>{% endif %}
+                    <a href="{% url 'catalogo:categoria_detalle' categoria.slug %}" class="categoria-card__enlace">Ver más ♥</a>
+                </div>
+            </div>
+            {% if categoria.slug == "empanadas" %}
+                <div class="categoria-card__imagen categoria-card__imagen--empanadas" style="--imagen-x:{{ categoria.imagen_pos_x }}px;--imagen-y:{{ categoria.imagen_pos_y }}px;--imagen-size:{{ categoria.imagen_tamano }}px;"><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-empanadas.png{% endif %}" alt="Empanadas Capricho"></div>
+            {% elif categoria.slug == "budines" %}
+                <div class="categoria-card__imagen categoria-card__imagen--budines" style="--imagen-x:{{ categoria.imagen_pos_x }}px;--imagen-y:{{ categoria.imagen_pos_y }}px;--imagen-size:{{ categoria.imagen_tamano }}px;"><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-budines.png{% endif %}" alt="Budines Capricho"></div>
+            {% elif categoria.slug == "dulces" %}
+                <div class="categoria-card__imagen categoria-card__imagen--tartas" style="--imagen-x:{{ categoria.imagen_pos_x }}px;--imagen-y:{{ categoria.imagen_pos_y }}px;--imagen-size:{{ categoria.imagen_tamano }}px;"><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-tartas.png{% endif %}" alt="Tartas Capricho"></div>
+            {% elif categoria.imagen_categoria %}
+                {% comment %}
+                Categorías sin arte dedicado (ej. Alfajores) usan la imagen de
+                portada subida desde el panel si existe; si no hay ninguna,
+                la tarjeta se muestra sin imagen decorativa (el layout ya
+                contempla ese caso, ver .categoria-card__imagen en el CSS).
+                {% endcomment %}
+                <div class="categoria-card__imagen categoria-card__imagen--empanadas" style="--imagen-x:{{ categoria.imagen_pos_x }}px;--imagen-y:{{ categoria.imagen_pos_y }}px;--imagen-size:{{ categoria.imagen_tamano }}px;"><img src="{{ categoria.imagen_categoria.url }}" alt="{{ categoria.nombre }} Capricho"></div>
+            {% endif %}
         </article>
         {% endfor %}
         <article class="categoria-card categoria-card--cta">
-            <span class="categoria-card__icono" aria-hidden="true">📱</span>
-            <h3>Pedidos</h3>
-            <p>Encargá tu docena fácil y rápido.</p>
-            <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener" class="categoria-card__enlace">Pedí ahora ♥</a>
+            <div class="categoria-card__cuerpo">
+                <span class="categoria-card__icono categoria-card__icono--pedidos" aria-hidden="true">📱</span>
+                <div class="categoria-card__texto">
+                    <h3>Pedidos</h3>
+                    <p>Encargá tu docena fácil y rápido.</p>
+                    <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener" class="categoria-card__enlace">Pedí ahora ♥</a>
+                </div>
+            </div>
+            <div class="categoria-card__imagen categoria-card__imagen--pedidos" style="--imagen-x:{{ configuracion_negocio.pedidos_imagen_pos_x }}px;--imagen-y:{{ configuracion_negocio.pedidos_imagen_pos_y }}px;--imagen-size:{{ configuracion_negocio.pedidos_imagen_tamano }}px;"><img src="{% if configuracion_negocio.pedidos_imagen %}{{ configuracion_negocio.pedidos_imagen.url }}{% else %}/media/productos/categoria-pedidos.png{% endif %}" alt="Pedidos Capricho"></div>
         </article>
     </div>
 </section>
@@ -65,11 +87,63 @@
 {% if destacados %}
 <section class="destacados">
     <div class="contenedor">
-        <h2 class="titulo-decorado"><span>❧</span> Productos destacados <span>❧</span></h2>
-        <p class="subtitulo-centrado">Lo más elegido por nuestros clientes</p>
+        <div class="seccion-titulo">
+            <svg class="seccion-titulo__corazon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z" fill="var(--color-terracota)"/></svg>
+            <h2 class="titulo-decorado titulo-decorado--destacados">
+                <svg class="titulo-decorado__rama" viewBox="0 0 64 24" aria-hidden="true">
+                    <path d="M2 12h42" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0-5 4-8 8-8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0 5 4 8 8 8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0-4 3-6 6-6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0 4 3 6 6 6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                </svg>
+                Productos destacados
+                <svg class="titulo-decorado__rama titulo-decorado__rama--derecha" viewBox="0 0 64 24" aria-hidden="true">
+                    <path d="M2 12h42" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0-5 4-8 8-8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0 5 4 8 8 8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0-4 3-6 6-6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0 4 3 6 6 6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                </svg>
+            </h2>
+            <p class="subtitulo-centrado">Lo más elegido por nuestros clientes</p>
+        </div>
         <div class="productos-grid productos-grid--destacados">
             {% for producto in destacados %}
                 {% include "catalogo/_producto_card.html" %}
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endif %}
+
+{% if combos %}
+<section class="destacados">
+    <div class="contenedor">
+        <div class="seccion-titulo">
+            <svg class="seccion-titulo__corazon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z" fill="var(--color-terracota)"/></svg>
+            <h2 class="titulo-decorado titulo-decorado--destacados">
+                <svg class="titulo-decorado__rama" viewBox="0 0 64 24" aria-hidden="true">
+                    <path d="M2 12h42" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0-5 4-8 8-8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0 5 4 8 8 8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0-4 3-6 6-6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0 4 3 6 6 6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                </svg>
+                Combos
+                <svg class="titulo-decorado__rama titulo-decorado__rama--derecha" viewBox="0 0 64 24" aria-hidden="true">
+                    <path d="M2 12h42" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0-5 4-8 8-8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M16 12c0 5 4 8 8 8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0-4 3-6 6-6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                    <path d="M32 12c0 4 3 6 6 6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                </svg>
+            </h2>
+            <p class="subtitulo-centrado">Aprovechá nuestras promociones</p>
+        </div>
+        <div class="productos-grid productos-grid--destacados">
+            {% for combo in combos %}
+                {% include "catalogo/_combo_card.html" %}
             {% endfor %}
         </div>
     </div>
