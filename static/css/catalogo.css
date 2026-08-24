@@ -23,7 +23,7 @@
     grid-template-columns: 1fr 1fr 1fr;
     align-items: center;
     gap: 24px;
-    padding: 30px 24px;
+    padding: calc(30px - 0.1cm) 24px;
 }
 
 .site-header__logo {
@@ -210,7 +210,7 @@
 .hero {
     position: relative;
     background: var(--color-crema-oscuro);
-    min-height: 560px;
+    aspect-ratio: 1440 / 375;
     display: grid;
     grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
     overflow: hidden;
@@ -225,87 +225,88 @@
     display: flex;
     align-items: center;
     justify-content: flex-start;
-    padding: 24px 32px 24px clamp(64px, 15vw, 247px);
+    padding: 0.9vw 2.222vw 1.667vw 9vw;
     box-sizing: border-box;
 }
 
 .hero__flores {
     position: absolute;
-    left: 3px;
-    top: 90px;
-    z-index: 3;
+    left: 0.21vw;
+    top: 4.19vw;
+    z-index: 1;
 }
 
 .hero__flores-img {
     display: block;
     width: auto;
-    height: 410px;
+    height: 19.08vw;
     max-height: 65vh;
     object-fit: contain;
-    transform: translateX(-40px);
+    transform: translateX(-2.78vw);
 }
 
 .hero__texto {
     position: relative;
+    z-index: 2;
     width: 100%;
     max-width: none;
     min-width: 0;
     text-align: center;
-    transform: translateX(-50px);
+    font-size: 0.8vw;
+    transform: translateY(-2vw);
 }
 
 .hero__decorativa {
     font-family: var(--fuente-titulos);
-    font-size: clamp(1.1rem, 2.1vw, 1.6rem);
+    font-size: 1.5em;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
     color: var(--color-marron);
-    margin: 0 0 4px;
+    margin: 0 0 0.24em;
 }
 
 .hero h1 {
-    font-size: clamp(1.9rem, 5.4vw, 4.2rem);
+    font-size: 3.6em;
     line-height: 1.15;
     letter-spacing: 0.01em;
     text-transform: uppercase;
     color: var(--color-oliva-oscuro);
-    margin: 16px 0 20px;
+    margin: 0.26em 0 0.33em;
 }
 
 .hero__divisor {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 12px;
-    margin-bottom: 24px;
+    gap: 0.71em;
+    margin-bottom: 1.43em;
 }
 
 .hero__divisor-linea {
-    width: 38px;
+    width: 2.26em;
     height: 1px;
     background: var(--color-oliva);
     opacity: 0.6;
 }
 
 .hero__divisor-flecha {
-    font-size: 0.85rem;
+    font-size: 0.81em;
     color: var(--color-terracota);
     opacity: 0.7;
 }
 
 .hero__descripcion {
-    max-width: 620px;
-    margin-bottom: 32px;
-    font-size: 1.05rem;
+    max-width: 36.9em;
+    margin-bottom: 1.9em;
     color: #6b5c4f;
 }
 
 .hero__boton {
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    font-size: 0.85rem;
-    padding: 16px 32px;
+    font-size: 0.81em;
+    padding: 1.18em 2.35em;
 }
 
 .hero__imagen {
@@ -334,7 +335,7 @@
     top: 0;
     left: 0;
     bottom: 0;
-    width: 200px;
+    width: 13.89vw;
     z-index: 1;
     pointer-events: none;
     background: linear-gradient(to right, var(--color-crema-oscuro) 0%, transparent 100%);
@@ -375,27 +376,29 @@
 
 /* ===== Categorías ===== */
 .categorias {
-    padding: 64px 40px;
+    padding: 1.4348vw 3.0372vw;
 }
 
 .categorias-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
+    gap: 1.8231vw;
 }
 
 .categoria-card {
     position: relative;
     overflow: hidden;
     display: flex;
-    align-items: center;
-    min-height: 240px;
+    align-items: flex-start;
+    --card-h: 16.2139vw;
+    min-height: var(--card-h);
     background: var(--color-blanco-calido);
     border: 1px solid var(--color-beige);
-    border-radius: 22px;
-    padding: 30px;
+    border-radius: 1.6704vw;
+    padding: 2.2779vw;
     text-align: left;
     box-shadow: 0 8px 24px -18px rgba(59, 46, 38, 0.4);
+    font-size: 1.0691vw;
 }
 
 .categoria-card__cuerpo {
@@ -403,10 +406,10 @@
     z-index: 2;
     display: flex;
     align-items: flex-start;
-    gap: 16px;
+    gap: 1.1364em;
     min-width: 0;
     width: 100%;
-    padding-right: 48%;
+    padding-right: 38%;
     box-sizing: border-box;
 }
 
@@ -414,13 +417,13 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    width: 48px;
-    height: 48px;
+    width: 3.6446vw;
+    height: 3.6446vw;
     border-radius: 50%;
     background: var(--color-oliva-oscuro);
-    font-size: 1.3rem;
+    font-size: 1.4773em;
     flex-shrink: 0;
-    margin-top: 2px;
+    margin-top: 0.1519vw;
 }
 
 .categoria-card__icono--budines {
@@ -439,56 +442,58 @@
 
 .categoria-card__imagen {
     position: absolute;
-    right: -185px;
-    bottom: -80px;
+    right: -14.0483vw;
+    bottom: -8.0836vw;
     z-index: 1;
     pointer-events: none;
     line-height: 0;
-    transform: translate(var(--imagen-x, 0px), var(--imagen-y, 0px));
+    transform: translate(calc(var(--imagen-x, 0) * 0.075929vw), calc(var(--imagen-y, 0) * 0.075929vw));
 }
 
 .categoria-card__imagen--empanadas {
-    right: -155px;
+    right: -10.2505vw;
 }
 
 .categoria-card__imagen--budines {
-    right: -149px;
+    right: -11.3149vw;
+    bottom: -5.9226vw;
 }
 
 .categoria-card__imagen--tartas {
-    right: -182px;
-    bottom: -115px;
+    right: -13.2454vw;
+    bottom: -9.4903vw;
 }
 
 .categoria-card__imagen--pedidos {
-    right: -160px;
+    right: -6.4092vw;
+    bottom: -4.9346vw;
 }
 
 .categoria-card__imagen img {
     display: block;
-    height: var(--imagen-size, 260px);
+    height: min(calc(var(--imagen-size, 260) * 0.075929vw), calc(var(--card-h) * 0.78));
     width: auto;
     object-fit: contain;
 }
 
 .categoria-card h3 {
-    font-size: 1.1rem;
+    font-size: 1.25em;
     text-transform: uppercase;
     letter-spacing: 0.03em;
-    margin-bottom: 10px;
+    margin-bottom: 0.5682em;
 }
 
 .categoria-card p {
-    font-size: 0.88rem;
+    font-size: 1em;
     line-height: 1.5;
     color: #6b5c4f;
-    margin: 0 0 16px;
+    margin: 0 0 1.1364em;
 }
 
 .categoria-card__enlace {
     color: var(--color-terracota);
     font-weight: 600;
-    font-size: 0.85rem;
+    font-size: 0.9659em;
     white-space: nowrap;
 }
 
@@ -827,6 +832,7 @@
 
     .hero {
         display: block;
+        aspect-ratio: auto;
         min-height: 0;
         padding: 40px 0 32px;
     }
@@ -837,6 +843,7 @@
 
     .hero__texto {
         max-width: 100%;
+        font-size: 1.05rem;
     }
 
     .hero__flores {
@@ -879,6 +886,7 @@
     }
 
     .categoria-card {
+        --card-h: 200px;
         min-height: 200px;
     }
 
@@ -948,6 +956,7 @@
     }
 
     .categoria-card {
+        --card-h: 180px;
         padding: 20px;
         min-height: 180px;
     }
