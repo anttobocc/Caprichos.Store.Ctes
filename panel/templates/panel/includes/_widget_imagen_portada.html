@@ -1,0 +1,23 @@
+{% comment %}
+Plantilla propia para ImagenPortadaWidget (subclase de ClearableFileInput):
+un botón "Seleccionar archivo" + el nombre del archivo actual + el checkbox
+"Eliminar imagen", todo en una sola fila, sin el markup por defecto de
+Django ("Currently:"/"Change:"). Ver panel/forms.py.
+{% endcomment %}
+<div class="admin-imagen-archivo">
+    <label class="admin-btn admin-btn--secondary admin-btn--sm admin-imagen-archivo__boton">
+        Seleccionar archivo
+        <input type="{{ widget.type }}" name="{{ widget.name }}" class="admin-imagen-archivo__input"{% include "django/forms/widgets/attrs.html" %}>
+    </label>
+    {% if widget.is_initial %}
+        <a href="{{ widget.value.url }}" target="_blank" rel="noopener" class="admin-imagen-archivo__nombre" data-nombre-archivo>{{ widget.value }}</a>
+        {% if not widget.required %}
+        <span class="admin-imagen-archivo__eliminar">
+            <input type="checkbox" name="{{ widget.checkbox_name }}" id="{{ widget.checkbox_id }}"{% if widget.attrs.disabled %} disabled{% endif %}>
+            <label for="{{ widget.checkbox_id }}">Eliminar imagen</label>
+        </span>
+        {% endif %}
+    {% else %}
+        <span class="admin-imagen-archivo__nombre admin-imagen-archivo__nombre--vacio" data-nombre-archivo>Ningún archivo seleccionado</span>
+    {% endif %}
+</div>

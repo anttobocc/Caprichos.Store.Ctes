@@ -20,6 +20,7 @@ from .forms import (
     ComboItemFormSet,
     ConfiguracionNegocioForm,
     PedidoEstadoForm,
+    PedidosImagenForm,
     PerfilAdminForm,
     ProductoForm,
     UsuarioCrearForm,
@@ -194,10 +195,13 @@ def categorias_lista(request):
     pagina = _paginar(request, categorias)
     for categoria in pagina:
         categoria.form_editar = CategoriaForm(instance=categoria, auto_id=f"id_categoria_{categoria.pk}_%s")
+    configuracion_negocio = ConfiguracionNegocio.get_solo()
     return render(request, "panel/categorias_lista.html", {
         "categorias": pagina,
         "q": query,
         "form_crear": CategoriaForm(),
+        "configuracion_negocio": configuracion_negocio,
+        "form_pedidos": PedidosImagenForm(instance=configuracion_negocio, auto_id="id_pedidos_%s"),
     })
 
 
@@ -226,6 +230,17 @@ def categoria_editar(request, pk):
     else:
         form = CategoriaForm(instance=categoria)
     return render(request, "panel/categoria_form.html", {"form": form, "modo": "editar", "categoria": categoria})
+
+
+@panel_admin_required
+@require_POST
+def pedidos_imagen_editar(request):
+    config = ConfiguracionNegocio.get_solo()
+    form = PedidosImagenForm(request.POST, request.FILES, instance=config)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Imagen de "Pedidos" actualizada correctamente.')
+    return redirect("panel:categorias")
 
 
 @panel_admin_required

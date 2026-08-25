@@ -11,6 +11,15 @@ from usuarios.models import Perfil
 from .models import ConfiguracionNegocio
 
 
+class ImagenPortadaWidget(forms.ClearableFileInput):
+    """ClearableFileInput con una plantilla propia (botón + nombre de
+    archivo + "Eliminar imagen" en una fila), en vez del markup por
+    defecto de Django ("Currently:"/"Change:"). Usado por la imagen de
+    portada de categorías y por la imagen de la tarjeta "Pedidos"."""
+
+    template_name = "panel/includes/_widget_imagen_portada.html"
+
+
 def _slug_unico(model, nombre, slug_ingresado, instance_pk=None):
     """Genera un slug a partir de `nombre` si no se ingresó uno, agregando un
     sufijo numérico ante colisión (excluyendo el propio registro al editar)."""
@@ -35,17 +44,20 @@ class CategoriaForm(forms.ModelForm):
         ]
         widgets = {
             "descripcion": forms.Textarea(attrs={"rows": 2}),
-            "imagen_pos_x": forms.HiddenInput(),
-            "imagen_pos_y": forms.HiddenInput(),
-            "imagen_tamano": forms.HiddenInput(),
+            "slug": forms.HiddenInput(),
+            "imagen_categoria": ImagenPortadaWidget(),
+            "imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
+            "imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
+            "imagen_tamano": forms.NumberInput(attrs={"step": 1, "min": 50, "max": 5000}),
         }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["slug"].required = False
-        # Los completa el editor visual de imagen (arrastrar/deslizador) vía
-        # JS; si llegan vacíos (por ejemplo un POST manual) se usa el
-        # default del modelo en lugar de exigirlos en el formulario.
+        # Estos tres campos los completa/actualiza el editor visual de
+        # imagen (arrastrar, botones −/+/↑/↓ y los campos numéricos) vía JS;
+        # si llegan vacíos (por ejemplo un POST manual) se usa el default
+        # del modelo en lugar de exigirlos en el formulario.
         self.fields["imagen_pos_x"].required = False
         self.fields["imagen_pos_y"].required = False
         self.fields["imagen_tamano"].required = False
@@ -61,6 +73,40 @@ class CategoriaForm(forms.ModelForm):
             cleaned["imagen_pos_y"] = 0
         if cleaned.get("imagen_tamano") in (None, ""):
             cleaned["imagen_tamano"] = 260
+        return cleaned
+
+
+class PedidosImagenForm(forms.ModelForm):
+    """Imagen y posición/tamaño de la tarjeta "Pedidos" de la portada. No es
+    una categoría (vive en ConfiguracionNegocio), pero se edita desde el
+    mismo listado de Categorías del panel, con el mismo editor visual."""
+
+    class Meta:
+        model = ConfiguracionNegocio
+        fields = [
+            "pedidos_imagen", "pedidos_imagen_pos_x", "pedidos_imagen_pos_y", "pedidos_imagen_tamano",
+        ]
+        widgets = {
+            "pedidos_imagen": ImagenPortadaWidget(),
+            "pedidos_imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
+            "pedidos_imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
+            "pedidos_imagen_tamano": forms.NumberInput(attrs={"step": 1, "min": 50, "max": 5000}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["pedidos_imagen_pos_x"].required = False
+        self.fields["pedidos_imagen_pos_y"].required = False
+        self.fields["pedidos_imagen_tamano"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("pedidos_imagen_pos_x") in (None, ""):
+            cleaned["pedidos_imagen_pos_x"] = 0
+        if cleaned.get("pedidos_imagen_pos_y") in (None, ""):
+            cleaned["pedidos_imagen_pos_y"] = 0
+        if cleaned.get("pedidos_imagen_tamano") in (None, ""):
+            cleaned["pedidos_imagen_tamano"] = 260
         return cleaned
 
 

@@ -32,7 +32,7 @@
 
         <div class="admin-table-wrap">
             <div class="admin-table-scroll">
-                <table class="admin-table">
+                <table class="admin-table admin-table--categorias">
                     <thead>
                         <tr><th>Nombre</th><th>Productos</th><th>Orden</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
@@ -52,6 +52,15 @@
                         {% empty %}
                         <tr><td colspan="5" class="admin-table__vacio">No se encontraron categorías.</td></tr>
                         {% endfor %}
+                        <tr>
+                            <td>Pedidos</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td class="admin-table__acciones">
+                                <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-pedidos-imagen">Editar</button>
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
@@ -66,6 +75,9 @@
     {% url 'panel:categoria_editar' categoria.pk as url_editar %}
     {% include "panel/includes/_panel_formulario.html" with id_base="panel-categoria" pk=categoria.pk modo="editar" titulo="Editar categoría" form=categoria.form_editar accion_url=url_editar enctype="multipart/form-data" cuerpo_template="panel/includes/_categoria_panel_campos.html" categoria=categoria %}
     {% endfor %}
+
+    {% url 'panel:pedidos_imagen_editar' as url_pedidos_imagen %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-pedidos" pk="imagen" modo="editar" titulo="Imagen de Pedidos" form=form_pedidos accion_url=url_pedidos_imagen enctype="multipart/form-data" cuerpo_template="panel/includes/_pedidos_panel_campos.html" configuracion_negocio=configuracion_negocio %}
 </div>
 
 {% for categoria in categorias %}

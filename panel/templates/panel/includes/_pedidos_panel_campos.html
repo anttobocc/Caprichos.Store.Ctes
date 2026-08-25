@@ -1,0 +1,58 @@
+{% comment %}
+Cuerpo del panel de edición de la tarjeta "Pedidos" de la portada: no es una
+categoría (imagen_pedidos/pos_x/pos_y/tamano viven en ConfiguracionNegocio),
+así que solo tiene imagen + el mismo editor visual de posición/tamaño que
+usan las categorías. Sincronizado por static/js/panel_categoria_imagen.js.
+{% endcomment %}
+<div class="admin-field">
+    <label>Imagen de portada</label>
+    {{ form.pedidos_imagen }}
+    <span class="admin-field__ayuda">Imagen mostrada en la tarjeta "Pedidos" de la página de inicio.</span>
+    {% for error in form.pedidos_imagen.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+</div>
+
+<div class="admin-imagen-editor" data-imagen-editor>
+    <span class="admin-field__ayuda">Arrastrá la imagen o usá los controles para elegir qué parte queda visible en la portada.</span>
+    <div class="admin-imagen-editor__lienzo" data-lienzo>
+        <img
+            data-imagen-preview
+            draggable="false"
+            alt=""
+            {% if not configuracion_negocio.pedidos_imagen %}hidden{% endif %}
+            {% if configuracion_negocio.pedidos_imagen %}src="{{ configuracion_negocio.pedidos_imagen.url }}"{% endif %}
+            style="height:{{ configuracion_negocio.pedidos_imagen_tamano|default:260 }}px; transform: translate({{ configuracion_negocio.pedidos_imagen_pos_x|default:0 }}px, {{ configuracion_negocio.pedidos_imagen_pos_y|default:0 }}px);"
+        >
+        <span class="admin-imagen-editor__vacio" data-imagen-vacio {% if configuracion_negocio.pedidos_imagen %}hidden{% endif %}>Elegí una imagen para previsualizarla acá</span>
+    </div>
+
+    <div class="admin-imagen-editor__ejes">
+        <div class="admin-imagen-editor__eje">
+            <span class="admin-imagen-editor__eje-label">Posición X</span>
+            <div class="admin-imagen-editor__controles">
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-x="-1" aria-label="Mover imagen a la izquierda">−</button>
+                {{ form.pedidos_imagen_pos_x }}
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-x="1" aria-label="Mover imagen a la derecha">+</button>
+            </div>
+            {% for error in form.pedidos_imagen_pos_x.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="admin-imagen-editor__eje">
+            <span class="admin-imagen-editor__eje-label">Posición Y</span>
+            <div class="admin-imagen-editor__controles">
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-y="-1" aria-label="Mover imagen hacia arriba">↑</button>
+                {{ form.pedidos_imagen_pos_y }}
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-y="1" aria-label="Mover imagen hacia abajo">↓</button>
+            </div>
+            {% for error in form.pedidos_imagen_pos_y.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="admin-imagen-editor__eje">
+            <span class="admin-imagen-editor__eje-label">Tamaño</span>
+            <div class="admin-imagen-editor__controles admin-imagen-editor__controles--tamano">
+                <input type="range" min="50" max="5000" step="1" value="{{ configuracion_negocio.pedidos_imagen_tamano|default:260 }}" data-tamano-slider>
+                {{ form.pedidos_imagen_tamano }}
+            </div>
+            {% for error in form.pedidos_imagen_tamano.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+        </div>
+    </div>
+</div>

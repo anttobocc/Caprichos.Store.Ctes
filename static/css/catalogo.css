@@ -231,16 +231,16 @@
 
 .hero__flores {
     position: absolute;
-    left: 0.21vw;
-    top: 4.19vw;
+    left: 0.1vw;
+    top: 3vw;
     z-index: 1;
 }
 
 .hero__flores-img {
     display: block;
     width: auto;
-    height: 19.08vw;
-    max-height: 65vh;
+    height: 30vw;
+    max-height: 80vh;
     object-fit: contain;
     transform: translateX(-2.78vw);
 }
@@ -252,13 +252,13 @@
     max-width: none;
     min-width: 0;
     text-align: center;
-    font-size: 0.8vw;
-    transform: translateY(-2vw);
+    font-size: 1.2vw;
+    transform: translateY(-2.5vw);
 }
 
 .hero__decorativa {
     font-family: var(--fuente-titulos);
-    font-size: 1.5em;
+    font-size: 1.8em;
     font-weight: 700;
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -377,6 +377,7 @@
 /* ===== Categorías ===== */
 .categorias {
     padding: 1.4348vw 3.0372vw;
+    zoom:0.90;
 }
 
 .categorias-grid {
@@ -398,7 +399,7 @@
     padding: 2.2779vw;
     text-align: left;
     box-shadow: 0 8px 24px -18px rgba(59, 46, 38, 0.4);
-    font-size: 1.0691vw;
+    font-size: 1.15vw;
 }
 
 .categoria-card__cuerpo {
@@ -447,7 +448,11 @@
     z-index: 1;
     pointer-events: none;
     line-height: 0;
-    transform: translate(calc(var(--imagen-x, 0) * 0.075929vw), calc(var(--imagen-y, 0) * 0.075929vw));
+
+    transform: translate(
+        calc(var(--imagen-x, 0) * 0.075929vw - 8vw),
+        calc(var(--imagen-y, 0) * 0.075929vw - 6vw)
+    );
 }
 
 .categoria-card__imagen--empanadas {
@@ -516,7 +521,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 24px;
     font-size: 1.8rem;
 }
 
@@ -526,8 +531,8 @@
 }
 
 .titulo-decorado__rama {
-    width: 46px;
-    height: 18px;
+    width: 58px;
+    height: 22px;
     color: var(--color-oliva);
     flex-shrink: 0;
 }
@@ -538,16 +543,16 @@
 
 .titulo-decorado--destacados {
     text-transform: uppercase;
-    letter-spacing: 0.03em;
-    font-size: 2.3rem;
+    letter-spacing: 0.02em;
+    font-size: 2.7rem;
     color: var(--color-oliva-oscuro);
 }
 
 .subtitulo-centrado {
     text-align: center;
     color: #6b5c4f;
-    margin-top: 6px;
-    margin-bottom: 36px;
+    margin-top: 8px;
+    margin-bottom: 40px;
 }
 
 /* ===== Destacados / grillas de producto ===== */
@@ -569,17 +574,73 @@
 }
 
 .productos-grid--destacados {
-    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
     justify-content: center;
-    gap: 28px;
+    gap: 32px;
 }
 
 .productos-grid--destacados .producto-card {
-    border-radius: 22px;
+    position: relative;
+    border-radius: 24px;
 }
 
 .productos-grid--destacados .producto-card__imagen-link {
-    border-radius: 22px 22px 0 0;
+    aspect-ratio: 6 / 7;
+    border-radius: 24px 24px 0 0;
+}
+
+.productos-grid--destacados .producto-card__cuerpo {
+    position: relative;
+    z-index: 1;
+    padding: 22px 22px 26px;
+    gap: 6px;
+}
+
+.productos-grid--destacados .producto-card__categoria {
+    color: var(--color-terracota);
+    font-weight: 600;
+    font-size: 0.8rem;
+}
+
+.productos-grid--destacados .producto-card h3 {
+    font-size: 1.35rem;
+    margin-top: 2px;
+}
+
+.productos-grid--destacados .producto-card__precio {
+    font-size: 1.55rem;
+    margin-top: 6px;
+}
+
+.productos-grid--destacados .producto-card__unidad {
+    font-size: 0.85rem;
+    margin-bottom: 14px;
+}
+
+.productos-grid--destacados .producto-card__boton {
+    padding: 12px 24px;
+    font-size: 0.85rem;
+}
+
+.productos-grid--destacados .producto-card__boton::after {
+    content: " ♥";
+}
+
+.producto-card__decor {
+    display: none;
+}
+
+.productos-grid--destacados .producto-card__decor {
+    display: block;
+    position: absolute;
+    right: -4px;
+    bottom: -4px;
+    width: 64px;
+    height: 88px;
+    color: var(--color-beige);
+    opacity: 0.9;
+    pointer-events: none;
+    z-index: 0;
 }
 
 .producto-card {

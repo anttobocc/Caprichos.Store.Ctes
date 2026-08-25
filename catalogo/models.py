@@ -31,7 +31,7 @@ class Categoria(models.Model):
     imagen_tamano = models.PositiveIntegerField(
         verbose_name="tamaño",
         default=260,
-        validators=[MinValueValidator(50), MaxValueValidator(600)],
+        validators=[MinValueValidator(50), MaxValueValidator(5000)],
         help_text="Alto de la imagen en px (el ancho se ajusta proporcionalmente).",
     )
 

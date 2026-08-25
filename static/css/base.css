@@ -27,6 +27,7 @@ body {
     background: var(--color-crema);
     color: var(--color-marron);
     overflow-x: hidden;
+    zoom: 0.67;
 }
 
 h1, h2, h3, h4 {
