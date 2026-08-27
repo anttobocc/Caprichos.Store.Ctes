@@ -6,7 +6,7 @@
 <section class="hero">
     <div class="hero__imagen" aria-hidden="true">
         <div class="hero__imagen-marco">
-            <img src="/media/productos/portada.png" alt="">
+            <img src="{% if configuracion_negocio.portada_imagen %}{{ configuracion_negocio.portada_imagen.url }}{% else %}/media/productos/portada.png{% endif %}" alt="" style="--img-x:{{ configuracion_negocio.portada_imagen_pos_x }};--img-y:{{ configuracion_negocio.portada_imagen_pos_y }};--img-zoom:{{ configuracion_negocio.portada_imagen_zoom }};"{% if modo_edicion %} data-editable-imagen data-entidad="configuracion" data-prefijo="portada_imagen" data-modo="recorte" data-nombre="Foto principal del hero"{% endif %}>
         </div>
     </div>
 
@@ -54,11 +54,11 @@
                 </div>
             </div>
             {% if categoria.slug == "empanadas" %}
-                <div class="categoria-card__imagen categoria-card__imagen--empanadas" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-empanadas.png{% endif %}" alt="Empanadas Capricho"></div>
+                <div class="categoria-card__imagen categoria-card__imagen--empanadas" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"{% if modo_edicion %} data-editable-imagen data-entidad="categoria" data-id="{{ categoria.pk }}" data-prefijo="imagen" data-modo="flotante" data-nombre="{{ categoria.nombre }}"{% endif %}><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-empanadas.png{% endif %}" alt="Empanadas Capricho"></div>
             {% elif categoria.slug == "budines" %}
-                <div class="categoria-card__imagen categoria-card__imagen--budines" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-budines.png{% endif %}" alt="Budines Capricho"></div>
+                <div class="categoria-card__imagen categoria-card__imagen--budines" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"{% if modo_edicion %} data-editable-imagen data-entidad="categoria" data-id="{{ categoria.pk }}" data-prefijo="imagen" data-modo="flotante" data-nombre="{{ categoria.nombre }}"{% endif %}><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-budines.png{% endif %}" alt="Budines Capricho"></div>
             {% elif categoria.slug == "dulces" %}
-                <div class="categoria-card__imagen categoria-card__imagen--tartas" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-tartas.png{% endif %}" alt="Tartas Capricho"></div>
+                <div class="categoria-card__imagen categoria-card__imagen--tartas" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"{% if modo_edicion %} data-editable-imagen data-entidad="categoria" data-id="{{ categoria.pk }}" data-prefijo="imagen" data-modo="flotante" data-nombre="{{ categoria.nombre }}"{% endif %}><img src="{% if categoria.imagen_categoria %}{{ categoria.imagen_categoria.url }}{% else %}/media/productos/categoria-tartas.png{% endif %}" alt="Tartas Capricho"></div>
             {% elif categoria.imagen_categoria %}
                 {% comment %}
                 Categorías sin arte dedicado (ej. Alfajores) usan la imagen de
@@ -66,7 +66,7 @@
                 la tarjeta se muestra sin imagen decorativa (el layout ya
                 contempla ese caso, ver .categoria-card__imagen en el CSS).
                 {% endcomment %}
-                <div class="categoria-card__imagen categoria-card__imagen--empanadas" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"><img src="{{ categoria.imagen_categoria.url }}" alt="{{ categoria.nombre }} Capricho"></div>
+                <div class="categoria-card__imagen categoria-card__imagen--empanadas" style="--imagen-x:{{ categoria.imagen_pos_x }};--imagen-y:{{ categoria.imagen_pos_y }};--imagen-size:{{ categoria.imagen_tamano }};"{% if modo_edicion %} data-editable-imagen data-entidad="categoria" data-id="{{ categoria.pk }}" data-prefijo="imagen" data-modo="flotante" data-nombre="{{ categoria.nombre }}"{% endif %}><img src="{{ categoria.imagen_categoria.url }}" alt="{{ categoria.nombre }} Capricho"></div>
             {% endif %}
         </article>
         {% endfor %}
@@ -79,7 +79,7 @@
                     <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener" class="categoria-card__enlace">Pedí ahora ♥</a>
                 </div>
             </div>
-            <div class="categoria-card__imagen categoria-card__imagen--pedidos" style="--imagen-x:{{ configuracion_negocio.pedidos_imagen_pos_x }};--imagen-y:{{ configuracion_negocio.pedidos_imagen_pos_y }};--imagen-size:{{ configuracion_negocio.pedidos_imagen_tamano }};"><img src="{% if configuracion_negocio.pedidos_imagen %}{{ configuracion_negocio.pedidos_imagen.url }}{% else %}/media/productos/categoria-pedidos.png{% endif %}" alt="Pedidos Capricho"></div>
+            <div class="categoria-card__imagen categoria-card__imagen--pedidos" style="--imagen-x:{{ configuracion_negocio.pedidos_imagen_pos_x }};--imagen-y:{{ configuracion_negocio.pedidos_imagen_pos_y }};--imagen-size:{{ configuracion_negocio.pedidos_imagen_tamano }};"{% if modo_edicion %} data-editable-imagen data-entidad="configuracion" data-prefijo="pedidos_imagen" data-modo="flotante" data-nombre="Pedidos"{% endif %}><img src="{% if configuracion_negocio.pedidos_imagen %}{{ configuracion_negocio.pedidos_imagen.url }}{% else %}/media/productos/categoria-pedidos.png{% endif %}" alt="Pedidos Capricho"></div>
         </article>
     </div>
 </section>

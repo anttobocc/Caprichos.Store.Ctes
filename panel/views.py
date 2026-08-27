@@ -4,12 +4,15 @@ from django.contrib import messages
 from django.contrib.auth.forms import SetPasswordForm
 from django.contrib.auth.models import User
 from django.contrib.auth.views import LoginView, LogoutView
+from django.core.exceptions import ValidationError
 from django.core.paginator import Paginator
 from django.db import models
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse_lazy
 from django.views.decorators.http import require_POST
 
+from catalogo import views as catalogo_views
 from catalogo.models import Categoria, Combo, Producto
 from pedidos.models import Pedido
 from usuarios.models import Perfil
@@ -22,6 +25,7 @@ from .forms import (
     PedidoEstadoForm,
     PedidosImagenForm,
     PerfilAdminForm,
+    PortadaImagenForm,
     ProductoForm,
     UsuarioCrearForm,
     UsuarioEditarForm,
@@ -202,6 +206,7 @@ def categorias_lista(request):
         "form_crear": CategoriaForm(),
         "configuracion_negocio": configuracion_negocio,
         "form_pedidos": PedidosImagenForm(instance=configuracion_negocio, auto_id="id_pedidos_%s"),
+        "form_portada": PortadaImagenForm(instance=configuracion_negocio, auto_id="id_portada_%s"),
     })
 
 
@@ -240,6 +245,17 @@ def pedidos_imagen_editar(request):
     if form.is_valid():
         form.save()
         messages.success(request, 'Imagen de "Pedidos" actualizada correctamente.')
+    return redirect("panel:categorias")
+
+
+@panel_admin_required
+@require_POST
+def portada_imagen_editar(request):
+    config = ConfiguracionNegocio.get_solo()
+    form = PortadaImagenForm(request.POST, request.FILES, instance=config)
+    if form.is_valid():
+        form.save()
+        messages.success(request, "Imagen principal de la portada actualizada correctamente.")
     return redirect("panel:categorias")
 
 
@@ -302,7 +318,10 @@ def _validar_coherencia_precio(prod_form, formset):
 @panel_admin_required
 def productos_lista(request):
     query = request.GET.get("q", "").strip()
-    productos = Producto.objects.select_related("categoria").order_by("nombre")
+    # Ordenado por categoría primero para que el template pueda agruparlos
+    # visualmente con {% ifchanged %} sin tocar la estructura de datos ni
+    # duplicar productos.
+    productos = Producto.objects.select_related("categoria").order_by("categoria__orden", "categoria__nombre", "nombre")
     if query:
         productos = productos.filter(nombre__icontains=query)
     pagina = _paginar(request, productos)
@@ -566,3 +585,102 @@ def combo_eliminar(request, pk):
     combo.delete()
     messages.success(request, f'El combo "{nombre}" fue eliminado.')
     return redirect("panel:combos")
+
+
+# ===== Preview real con modo edición de imágenes =====
+# Estas vistas NO duplican lógica: llaman directamente a las vistas públicas
+# de catalogo/views.py (mismo template, mismo CSS, mismo contexto) pidiendo
+# modo_edicion=True. Las URLs públicas normales nunca pasan ese parámetro,
+# así que un cliente agregando ?edit=1 a la home no logra nada: ese query
+# param no lo lee ninguna vista pública, solo estas de acá, que ya están
+# detrás de @panel_admin_required.
+
+@panel_admin_required
+def preview_home(request):
+    return catalogo_views.home(request, modo_edicion=True)
+
+
+@panel_admin_required
+def preview_productos(request):
+    return catalogo_views.lista_productos(request, modo_edicion=True)
+
+
+@panel_admin_required
+def preview_categoria(request, slug):
+    return catalogo_views.categoria_detalle(request, slug, modo_edicion=True)
+
+
+@panel_admin_required
+def preview_producto(request, slug):
+    return catalogo_views.producto_detalle(request, slug, modo_edicion=True)
+
+
+# Lista blanca de qué se puede editar desde la preview: entidad -> (modelo,
+# lookup por pk o "singleton", {prefijo_de_campo: modo}). No se acepta
+# ningún otro nombre de entidad/prefijo, ni siquiera si el modelo tuviera
+# más campos de imagen en el futuro sin agregarlos acá explícitamente.
+_ENTIDADES_EDITABLES = {
+    "categoria": (Categoria, "pk", {"imagen": "flotante"}),
+    "producto": (Producto, "pk", {"imagen": "recorte"}),
+    "combo": (Combo, "pk", {"imagen": "recorte"}),
+    "configuracion": (ConfiguracionNegocio, "singleton", {
+        "pedidos_imagen": "flotante",
+        "portada_imagen": "recorte",
+    }),
+}
+
+
+@panel_admin_required
+@require_POST
+def preview_guardar_imagen(request):
+    try:
+        datos = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "error": "Cuerpo de la petición inválido."}, status=400)
+
+    entidad = datos.get("entidad")
+    prefijo = datos.get("prefijo")
+    entrada = _ENTIDADES_EDITABLES.get(entidad)
+    if not entrada:
+        return JsonResponse({"ok": False, "error": "Entidad no editable."}, status=400)
+
+    modelo, lookup, prefijos_validos = entrada
+    modo = prefijos_validos.get(prefijo)
+    if not modo:
+        return JsonResponse({"ok": False, "error": "Campo no editable para esta entidad."}, status=400)
+
+    if lookup == "singleton":
+        instancia = modelo.get_solo()
+    else:
+        instancia = get_object_or_404(modelo, pk=datos.get("id"))
+
+    campo_x = f"{prefijo}_pos_x"
+    campo_y = f"{prefijo}_pos_y"
+    campo_tercero = f"{prefijo}_tamano" if modo == "flotante" else f"{prefijo}_zoom"
+
+    try:
+        valor_x = int(datos.get("pos_x"))
+        valor_y = int(datos.get("pos_y"))
+        valor_tercero = int(datos.get("valor"))
+    except (TypeError, ValueError):
+        return JsonResponse({"ok": False, "error": "Los valores de posición/zoom deben ser numéricos."}, status=400)
+
+    errores = {}
+    for nombre_campo, valor in ((campo_x, valor_x), (campo_y, valor_y), (campo_tercero, valor_tercero)):
+        try:
+            modelo._meta.get_field(nombre_campo).run_validators(valor)
+        except ValidationError as error:
+            errores[nombre_campo] = error.messages
+
+    if errores:
+        return JsonResponse({"ok": False, "error": "Valores fuera de rango.", "detalles": errores}, status=400)
+
+    setattr(instancia, campo_x, valor_x)
+    setattr(instancia, campo_y, valor_y)
+    setattr(instancia, campo_tercero, valor_tercero)
+    instancia.save(update_fields=[campo_x, campo_y, campo_tercero])
+
+    return JsonResponse({
+        "ok": True,
+        "pos_x": valor_x, "pos_y": valor_y, "valor": valor_tercero,
+    })

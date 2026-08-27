@@ -345,7 +345,22 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    object-position: center 32%;
+    /* object-position ya cubre el recorte disponible a zoom 100% (en esta
+       foto eso alcanza para mover Y, pero X no tiene margen porque el
+       ancho de la imagen ya calza justo con el del marco — es una
+       limitación geométrica del "cover", no un bug). El translate() de
+       abajo solo entra en juego cuando --img-zoom supera 100: al agrandar
+       la imagen más de lo necesario para cubrir el marco se genera margen
+       nuevo en AMBOS ejes que X/Y puede usar para paneo. A zoom 100 el
+       translate da 0 siempre, así que el resultado por defecto es
+       idéntico al de antes. */
+    object-position: calc(var(--img-x, 50) * 1%) calc(var(--img-y, 32) * 1%);
+    transform:
+        translate(
+            calc((50 - var(--img-x, 50)) * (var(--img-zoom, 100) - 100) * 0.01%),
+            calc((50 - var(--img-y, 32)) * (var(--img-zoom, 100) - 100) * 0.01%)
+        )
+        scale(calc(var(--img-zoom, 100) / 100));
 }
 
 .sello-pedidos {
@@ -449,9 +464,12 @@
     pointer-events: none;
     line-height: 0;
 
+    /* --imagen-x/--imagen-y llegan en % (0-100, 50 = centro/sin ajuste) desde
+       el panel; se reescalan a vw para que el desplazamiento sea siempre
+       proporcional al viewport, nunca en px físicos. */
     transform: translate(
-        calc(var(--imagen-x, 0) * 0.075929vw - 8vw),
-        calc(var(--imagen-y, 0) * 0.075929vw - 6vw)
+        calc((var(--imagen-x, 50) - 50) * 1.51858vw - 8vw),
+        calc((var(--imagen-y, 50) - 50) * 1.51858vw - 6vw)
     );
 }
 
@@ -569,7 +587,7 @@
 
 .productos-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(270px, 1fr));
     gap: 24px;
 }
 
@@ -586,6 +604,8 @@
 
 .productos-grid--destacados .producto-card__imagen-link {
     aspect-ratio: 6 / 7;
+    min-height: 0;
+    overflow: hidden;
     border-radius: 24px 24px 0 0;
 }
 
@@ -655,7 +675,11 @@
 
 .producto-card__imagen-link {
     display: block;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    overflow: hidden;
+    object-fit: cover;
+    object-position: calc(var(--img-x, 50) * 1%) calc(var(--img-y, 50) * 1%);
     background: var(--color-crema-oscuro);
 }
 
@@ -663,6 +687,12 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
+    /* --img-x/--img-y/--img-zoom llegan del panel en % (x/y: 0-100, 50 =
+       centro; zoom: 100-200, 100 = sin acercar). object-position mueve el
+       foco dentro del recorte y el scale() amplía sin deformar ni afectar
+       el layout de la página. */
+    object-position: calc(var(--img-x, 50) * 1%) calc(var(--img-y, 50) * 1%);
+    transform: scale(calc(var(--img-zoom, 100) / 100));
 }
 
 .producto-card__sin-imagen {
@@ -770,7 +800,7 @@
 /* ===== Detalle de producto ===== */
 .producto-detalle {
     display: grid;
-    grid-template-columns: minmax(0, 460px) 1fr;
+    grid-template-columns: minmax(0, 560px) 1fr;
     gap: 40px;
     padding: 40px 24px;
     align-items: start;
@@ -780,13 +810,15 @@
     border-radius: 16px;
     overflow: hidden;
     background: var(--color-crema-oscuro);
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 1 / 1;
 }
 
 .producto-detalle__imagen img {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    object-position: calc(var(--img-x, 50) * 1%) calc(var(--img-y, 50) * 1%);
+    transform: scale(calc(var(--img-zoom, 100) / 100));
 }
 
 .producto-detalle__sin-imagen {

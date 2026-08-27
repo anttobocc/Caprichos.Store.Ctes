@@ -1,7 +1,7 @@
 {% load static %}
 <article class="producto-card">
     {% if combo.imagen %}
-        <img src="{{ combo.imagen.url }}" alt="{{ combo.nombre }}" class="producto-card__imagen-link">
+        <img src="{{ combo.imagen.url }}" alt="{{ combo.nombre }}" class="producto-card__imagen-link" style="--img-x:{{ combo.imagen_pos_x }};--img-y:{{ combo.imagen_pos_y }};--img-zoom:{{ combo.imagen_zoom }};"{% if modo_edicion %} data-editable-imagen data-entidad="combo" data-id="{{ combo.pk }}" data-prefijo="imagen" data-modo="recorte" data-nombre="{{ combo.nombre }}"{% endif %}>
     {% else %}
         <div class="producto-card__sin-imagen" aria-hidden="true">🎁</div>
     {% endif %}

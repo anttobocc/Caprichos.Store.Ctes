@@ -2,7 +2,7 @@
 <article class="producto-card">
     <a href="{% url 'catalogo:producto_detalle' producto.slug %}" class="producto-card__imagen-link">
         {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="--img-x:{{ producto.imagen_pos_x }};--img-y:{{ producto.imagen_pos_y }};--img-zoom:{{ producto.imagen_zoom }};"{% if modo_edicion %} data-editable-imagen data-entidad="producto" data-id="{{ producto.pk }}" data-prefijo="imagen" data-modo="recorte" data-nombre="{{ producto.nombre }}"{% endif %}>
         {% else %}
             <div class="producto-card__sin-imagen" aria-hidden="true">🍰</div>
         {% endif %}
@@ -10,7 +10,6 @@
     <div class="producto-card__cuerpo">
         <p class="producto-card__categoria">{{ producto.categoria.nombre }}</p>
         <h3><a href="{% url 'catalogo:producto_detalle' producto.slug %}">{{ producto.nombre }}</a></h3>
-        {% if producto.descripcion_corta %}<p class="producto-card__descripcion">{{ producto.descripcion_corta }}</p>{% endif %}
 
         {% if not producto.disponible %}
             <p class="producto-card__no-disponible">No disponible</p>

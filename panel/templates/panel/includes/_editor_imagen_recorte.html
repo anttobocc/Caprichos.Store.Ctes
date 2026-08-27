@@ -1,0 +1,68 @@
+{% comment %}
+Editor visual de imagen en modo "recorte" (X/Y % + zoom %), reutilizable
+para cualquier imagen que se muestre recortada dentro de una caja de
+aspect-ratio fijo (portada del hero, producto, combo). Ver
+static/js/panel_categoria_imagen.js para la lógica y
+panel/includes/_categoria_panel_campos.html para el equivalente en modo
+"flotante" (imágenes decorativas de categoría/pedidos).
+
+Contexto esperado:
+  campo_imagen   -> BoundField del ImageField (ej. form.imagen)
+  campo_pos_x    -> BoundField de la posición X en % (0-100)
+  campo_pos_y    -> BoundField de la posición Y en % (0-100)
+  campo_zoom     -> BoundField del zoom en % (100-200)
+  imagen_actual  -> el ImageField ya resuelto de la instancia (o vacío si es nuevo)
+  aspecto        -> relación de aspecto del recuadro real, ej. "4 / 3" (opcional, default 4/3)
+  etiqueta       -> texto del <label> de la imagen (opcional)
+{% endcomment %}
+<div class="admin-field">
+    <label>{{ etiqueta|default:"Imagen" }}</label>
+    {{ campo_imagen }}
+    {% if campo_imagen.help_text %}<span class="admin-field__ayuda">{{ campo_imagen.help_text|safe }}</span>{% endif %}
+    {% for error in campo_imagen.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+</div>
+
+<div class="admin-imagen-editor" data-imagen-editor data-modo="recorte" style="--admin-editor-aspecto:{{ aspecto|default:"4 / 3" }};">
+    <span class="admin-field__ayuda">Arrastrá la imagen o usá los controles para elegir qué parte queda visible y cuánto zoom aplicar.</span>
+    <div class="admin-imagen-editor__lienzo" data-lienzo>
+        <img
+            data-imagen-preview
+            draggable="false"
+            alt=""
+            {% if not imagen_actual %}hidden{% endif %}
+            {% if imagen_actual %}src="{{ imagen_actual.url }}"{% endif %}
+        >
+        <span class="admin-imagen-editor__vacio" data-imagen-vacio {% if imagen_actual %}hidden{% endif %}>Elegí una imagen para previsualizarla acá</span>
+    </div>
+
+    <div class="admin-imagen-editor__ejes">
+        <div class="admin-imagen-editor__eje">
+            <span class="admin-imagen-editor__eje-label">Posición X</span>
+            <div class="admin-imagen-editor__controles">
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-x="-1" aria-label="Mover imagen a la izquierda">−</button>
+                {{ campo_pos_x }}
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-x="1" aria-label="Mover imagen a la derecha">+</button>
+            </div>
+            {% for error in campo_pos_x.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="admin-imagen-editor__eje">
+            <span class="admin-imagen-editor__eje-label">Posición Y</span>
+            <div class="admin-imagen-editor__controles">
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-y="-1" aria-label="Mover imagen hacia arriba">↑</button>
+                {{ campo_pos_y }}
+                <button type="button" class="admin-imagen-editor__boton" data-ajustar-y="1" aria-label="Mover imagen hacia abajo">↓</button>
+            </div>
+            {% for error in campo_pos_y.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="admin-imagen-editor__eje">
+            <span class="admin-imagen-editor__eje-label">Zoom</span>
+            <div class="admin-imagen-editor__controles admin-imagen-editor__controles--tamano">
+                <input type="range" min="100" max="200" step="1" value="{{ campo_zoom.value|default:100 }}" data-tamano-slider>
+                {{ campo_zoom }}
+            </div>
+            {% for error in campo_zoom.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+        </div>
+    </div>
+</div>

@@ -28,8 +28,13 @@
     <fieldset class="admin-fieldset">
         <legend>Información del producto</legend>
         <div class="admin-form__grid">
-            {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+            {% for field in form %}
+                {% if field.name != "imagen" and field.name != "imagen_pos_x" and field.name != "imagen_pos_y" and field.name != "imagen_zoom" %}
+                    {% include "panel/includes/_campo.html" %}
+                {% endif %}
+            {% endfor %}
         </div>
+        {% include "panel/includes/_editor_imagen_recorte.html" with campo_imagen=form.imagen campo_pos_x=form.imagen_pos_x campo_pos_y=form.imagen_pos_y campo_zoom=form.imagen_zoom imagen_actual=producto.imagen aspecto="4 / 3" etiqueta="Foto del producto" %}
     </fieldset>
 
     <fieldset class="admin-fieldset">
@@ -72,5 +77,8 @@
 </form>
 
 <script>window.CAPRICHO_PLANTILLAS_VARIANTES = {{ plantillas_variantes_json|safe }};</script>
-{% block panel_extra_js %}<script src="{% static 'js/panel_variantes.js' %}" defer></script>{% endblock %}
+{% block panel_extra_js %}
+<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>
+<script src="{% static 'js/panel_variantes.js' %}" defer></script>
+{% endblock %}
 {% endblock %}

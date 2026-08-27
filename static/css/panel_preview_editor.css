@@ -1,0 +1,200 @@
+/* Capa de edición para la previsualización real (/panel/preview/...).
+ * Se carga SOLO cuando modo_edicion es verdadero (ver
+ * catalogo/templates/catalogo/base_catalogo.html) — un cliente real nunca
+ * descarga ni ejecuta nada de este archivo. No modifica ningún estilo del
+ * sitio público: todo vive bajo el namespace .modo-edicion / .ppe-*. */
+
+.modo-edicion {
+    padding-top: 40px;
+}
+
+.ppe-aviso {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 9998;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    background: #1f2a1f;
+    color: #f5efe6;
+    font: 600 0.85rem/1 "Poppins", sans-serif;
+    letter-spacing: 0.02em;
+}
+
+.ppe-aviso__punto {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #e0704a;
+}
+
+.ppe-aviso__volver {
+    color: #f5efe6;
+    text-decoration: underline;
+    margin-left: 8px;
+}
+
+.modo-edicion [data-editable-imagen] {
+    /* Las imágenes "flotantes" de categoría/pedidos tienen
+       pointer-events:none en el sitio público (para no tapar el enlace
+       "Ver más" de la tarjeta) — en modo edición sí deben poder
+       seleccionarse y arrastrarse. */
+    pointer-events: auto;
+    cursor: grab;
+    outline: 2px dashed transparent;
+    outline-offset: -2px;
+    transition: outline-color 0.12s ease;
+}
+
+.modo-edicion [data-editable-imagen]:hover {
+    outline-color: rgba(224, 112, 74, 0.85);
+}
+
+.modo-edicion [data-editable-imagen].ppe-seleccionada {
+    outline: 3px solid #e0704a;
+    outline-offset: -3px;
+    cursor: grabbing;
+}
+
+.modo-edicion [data-editable-imagen]:active {
+    cursor: grabbing;
+}
+
+.ppe-panel {
+    position: fixed;
+    z-index: 9999;
+    width: 250px;
+    background: #fffaf3;
+    border: 1px solid #e4d7c4;
+    border-radius: 14px;
+    box-shadow: 0 18px 40px -12px rgba(31, 22, 12, 0.35);
+    padding: 14px;
+    font: 400 0.85rem/1.3 "Poppins", sans-serif;
+    color: #3b2e26;
+}
+
+.ppe-panel[hidden] {
+    display: none;
+}
+
+.ppe-panel__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    gap: 8px;
+}
+
+.ppe-panel__nombre {
+    font-weight: 700;
+    font-size: 0.9rem;
+    overflow-wrap: anywhere;
+}
+
+.ppe-panel__cerrar {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    border: none;
+    background: transparent;
+    color: #8a7a6b;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.ppe-panel__eje {
+    display: grid;
+    grid-template-columns: 20px 26px 1fr 26px;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 8px;
+}
+
+.ppe-panel__eje label {
+    font-weight: 600;
+    color: #6b5c4f;
+}
+
+.ppe-panel__eje button {
+    width: 26px;
+    height: 26px;
+    border: 1px solid #e4d7c4;
+    border-radius: 6px;
+    background: #fff;
+    color: #3b2e26;
+    cursor: pointer;
+    font-size: 0.9rem;
+    line-height: 1;
+}
+
+.ppe-panel__eje button:hover {
+    border-color: #e0704a;
+    color: #e0704a;
+}
+
+.ppe-panel__eje input {
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
+    text-align: center;
+    border: 1px solid #e4d7c4;
+    border-radius: 6px;
+    padding: 4px 2px;
+    font: inherit;
+    color: inherit;
+}
+
+.ppe-panel__acciones {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 10px;
+}
+
+.ppe-panel__acciones button {
+    flex: 1 1 auto;
+    padding: 7px 8px;
+    border-radius: 8px;
+    border: 1px solid #e4d7c4;
+    background: #fff;
+    color: #3b2e26;
+    font: 600 0.78rem/1 "Poppins", sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.ppe-panel__guardar {
+    flex-basis: 100%;
+    background: #e0704a;
+    border-color: #e0704a;
+    color: #fff;
+}
+
+.ppe-panel__guardar:hover {
+    background: #c85e3a;
+}
+
+.ppe-panel__acciones button:not(.ppe-panel__guardar):hover {
+    border-color: #e0704a;
+    color: #e0704a;
+}
+
+.ppe-panel__estado {
+    margin: 8px 0 0;
+    font-size: 0.78rem;
+    min-height: 1.1em;
+    color: #6b5c4f;
+}
+
+.ppe-panel__estado--ok {
+    color: #3a7d44;
+}
+
+.ppe-panel__estado--error {
+    color: #b23a3a;
+}

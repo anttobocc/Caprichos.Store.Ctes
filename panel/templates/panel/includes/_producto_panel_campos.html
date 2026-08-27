@@ -3,7 +3,13 @@ Cuerpo del panel de Producto: campos del producto + formset de variantes.
 Se usa como "cuerpo_template" de _panel_formulario.html (espera "form" y
 "formset" en el contexto).
 {% endcomment %}
-{% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+{% for field in form %}
+    {% if field.name != "imagen" and field.name != "imagen_pos_x" and field.name != "imagen_pos_y" and field.name != "imagen_zoom" %}
+        {% include "panel/includes/_campo.html" %}
+    {% endif %}
+{% endfor %}
+
+{% include "panel/includes/_editor_imagen_recorte.html" with campo_imagen=form.imagen campo_pos_x=form.imagen_pos_x campo_pos_y=form.imagen_pos_y campo_zoom=form.imagen_zoom imagen_actual=producto.imagen aspecto="4 / 3" etiqueta="Foto del producto" %}
 
 <div class="admin-panel-form__seccion">
     <h3>Variantes</h3>

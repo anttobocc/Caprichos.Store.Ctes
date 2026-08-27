@@ -46,6 +46,7 @@
                             <td>{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=categoria.activo %}</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-categoria-{{ categoria.pk }}">Editar</button>
+                                <a href="{% url 'panel:preview_home' %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>
                                 <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-modal-target="#modal-eliminar-categoria-{{ categoria.pk }}">Eliminar</button>
                             </td>
                         </tr>
@@ -59,6 +60,17 @@
                             <td>—</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-pedidos-imagen">Editar</button>
+                                <a href="{% url 'panel:preview_home' %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Portada / Hero</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td>—</td>
+                            <td class="admin-table__acciones">
+                                <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-portada-imagen">Editar</button>
+                                <a href="{% url 'panel:preview_home' %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>
                             </td>
                         </tr>
                     </tbody>
@@ -78,6 +90,9 @@
 
     {% url 'panel:pedidos_imagen_editar' as url_pedidos_imagen %}
     {% include "panel/includes/_panel_formulario.html" with id_base="panel-pedidos" pk="imagen" modo="editar" titulo="Imagen de Pedidos" form=form_pedidos accion_url=url_pedidos_imagen enctype="multipart/form-data" cuerpo_template="panel/includes/_pedidos_panel_campos.html" configuracion_negocio=configuracion_negocio %}
+
+    {% url 'panel:portada_imagen_editar' as url_portada_imagen %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-portada" pk="imagen" modo="editar" titulo="Foto principal de la portada" form=form_portada accion_url=url_portada_imagen enctype="multipart/form-data" cuerpo_template="panel/includes/_portada_panel_campos.html" configuracion_negocio=configuracion_negocio %}
 </div>
 
 {% for categoria in categorias %}

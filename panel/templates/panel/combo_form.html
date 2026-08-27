@@ -1,4 +1,5 @@
 {% extends "panel/base_panel.html" %}
+{% load static %}
 
 {% block title %}{% if modo == "crear" %}Nuevo combo{% else %}Editar combo{% endif %} | Panel Capricho{% endblock %}
 
@@ -27,8 +28,13 @@
     <fieldset class="admin-fieldset">
         <legend>Información del combo</legend>
         <div class="admin-form__grid">
-            {% for field in form %}{% include "panel/includes/_campo.html" %}{% endfor %}
+            {% for field in form %}
+                {% if field.name != "imagen" and field.name != "imagen_pos_x" and field.name != "imagen_pos_y" and field.name != "imagen_zoom" %}
+                    {% include "panel/includes/_campo.html" %}
+                {% endif %}
+            {% endfor %}
         </div>
+        {% include "panel/includes/_editor_imagen_recorte.html" with campo_imagen=form.imagen campo_pos_x=form.imagen_pos_x campo_pos_y=form.imagen_pos_y campo_zoom=form.imagen_zoom imagen_actual=combo.imagen aspecto="4 / 3" etiqueta="Foto del combo" %}
     </fieldset>
 
     <fieldset class="admin-fieldset">
@@ -63,4 +69,6 @@
         <a href="{% url 'panel:combos' %}" class="admin-btn admin-btn--secondary">Cancelar</a>
     </div>
 </form>
+
+{% block panel_extra_js %}<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>{% endblock %}
 {% endblock %}

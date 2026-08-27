@@ -11,7 +11,7 @@ usan las categorías. Sincronizado por static/js/panel_categoria_imagen.js.
     {% for error in form.pedidos_imagen.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
 </div>
 
-<div class="admin-imagen-editor" data-imagen-editor>
+<div class="admin-imagen-editor" data-imagen-editor data-modo="flotante">
     <span class="admin-field__ayuda">Arrastrá la imagen o usá los controles para elegir qué parte queda visible en la portada.</span>
     <div class="admin-imagen-editor__lienzo" data-lienzo>
         <img

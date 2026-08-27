@@ -760,6 +760,21 @@ fieldset.admin-fieldset .admin-field__ayuda--intro {
     background: var(--admin-surface-soft);
 }
 
+.admin-table__grupo td {
+    background: var(--admin-surface-soft);
+    color: var(--admin-terracota);
+    font-weight: 700;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 8px 16px;
+    border-top: none;
+}
+
+.admin-table__grupo:hover td {
+    background: var(--admin-surface-soft);
+}
+
 .admin-table__vacio {
     text-align: center;
     color: var(--admin-text-soft);
@@ -1258,6 +1273,34 @@ dialog.admin-modal::backdrop {
     cursor: grabbing;
 }
 
+/* Modo "recorte" (portada del hero, productos, combos): la caja del
+   preview respeta la misma relación de aspecto que su lugar real en el
+   sitio (ver data-aspecto en el template) y la imagen llena esa caja con
+   object-fit:cover + object-position/scale — la MISMA técnica que usa el
+   frontend público, así que el preview es una vista fiel del resultado. */
+.admin-imagen-editor[data-modo="recorte"] .admin-imagen-editor__lienzo {
+    height: auto;
+    aspect-ratio: var(--admin-editor-aspecto, 4 / 3);
+}
+
+.admin-imagen-editor[data-modo="recorte"] .admin-imagen-editor__lienzo img {
+    position: absolute;
+    inset: 0;
+    right: auto;
+    bottom: auto;
+    width: 100%;
+    height: 100%;
+    max-width: none;
+    object-fit: cover;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.admin-imagen-editor[data-modo="recorte"] .admin-imagen-editor__lienzo img:active {
+    cursor: grabbing;
+}
+
 .admin-imagen-editor__vacio {
     position: absolute;
     inset: 0;
@@ -1268,6 +1311,10 @@ dialog.admin-modal::backdrop {
     padding: 12px;
     font-size: 0.82rem;
     color: var(--admin-text-soft);
+}
+
+.admin-imagen-editor__vacio[hidden] {
+    display: none;
 }
 
 .admin-imagen-editor__ejes {

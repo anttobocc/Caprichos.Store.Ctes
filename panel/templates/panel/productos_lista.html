@@ -41,6 +41,11 @@
                     </thead>
                     <tbody>
                         {% for producto in productos %}
+                        {% ifchanged producto.categoria_id %}
+                        <tr class="admin-table__grupo">
+                            <td colspan="7">{{ producto.categoria.nombre }}</td>
+                        </tr>
+                        {% endifchanged %}
                         {% url 'panel:producto_toggle_activo' producto.pk as url_toggle %}
                         <tr>
                             <td>{{ producto.nombre }}</td>
@@ -51,6 +56,7 @@
                             <td>{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=producto.activo %}</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-producto-{{ producto.pk }}">Editar</button>
+                                <a href="{% url 'panel:preview_producto' producto.slug %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>
                                 <button type="button" class="admin-btn admin-btn--danger admin-btn--sm" data-modal-target="#modal-eliminar-producto-{{ producto.pk }}">Eliminar</button>
                             </td>
                         </tr>
@@ -69,7 +75,7 @@
 
     {% for producto in productos %}
     {% url 'panel:producto_editar' producto.pk as url_editar %}
-    {% include "panel/includes/_panel_formulario.html" with id_base="panel-producto" pk=producto.pk modo="editar" titulo="Editar producto" form=producto.form_editar formset=producto.formset_editar accion_url=url_editar enctype="multipart/form-data" cuerpo_template="panel/includes/_producto_panel_campos.html" %}
+    {% include "panel/includes/_panel_formulario.html" with id_base="panel-producto" pk=producto.pk modo="editar" titulo="Editar producto" form=producto.form_editar formset=producto.formset_editar accion_url=url_editar enctype="multipart/form-data" cuerpo_template="panel/includes/_producto_panel_campos.html" producto=producto %}
     {% endfor %}
 </div>
 
@@ -79,5 +85,8 @@
 {% endfor %}
 
 <script>window.CAPRICHO_PLANTILLAS_VARIANTES = {{ plantillas_variantes_json|safe }};</script>
-{% block panel_extra_js %}<script src="{% static 'js/panel_variantes.js' %}" defer></script>{% endblock %}
+{% block panel_extra_js %}
+<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>
+<script src="{% static 'js/panel_variantes.js' %}" defer></script>
+{% endblock %}
 {% endblock %}

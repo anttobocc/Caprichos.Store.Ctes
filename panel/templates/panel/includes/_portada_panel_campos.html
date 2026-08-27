@@ -1,0 +1,8 @@
+{% comment %}
+Cuerpo del panel de edición de la foto principal del hero (portada) de la
+página de inicio. Vive en ConfiguracionNegocio (portada_imagen/pos_x/pos_y/
+zoom), igual que la imagen de "Pedidos", pero en modo "recorte" porque la
+foto del hero llena una caja de aspect-ratio fijo (no es una decoración
+flotante). Sincronizado por static/js/panel_categoria_imagen.js.
+{% endcomment %}
+{% include "panel/includes/_editor_imagen_recorte.html" with campo_imagen=form.portada_imagen campo_pos_x=form.portada_imagen_pos_x campo_pos_y=form.portada_imagen_pos_y campo_zoom=form.portada_imagen_zoom imagen_actual=configuracion_negocio.portada_imagen aspecto="960 / 375" etiqueta="Foto principal de la portada" %}

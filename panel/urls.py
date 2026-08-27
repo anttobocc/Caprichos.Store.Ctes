@@ -17,6 +17,7 @@ urlpatterns = [
     path("categorias/", views.categorias_lista, name="categorias"),
     path("categorias/nueva/", views.categoria_crear, name="categoria_crear"),
     path("categorias/pedidos-imagen/", views.pedidos_imagen_editar, name="pedidos_imagen_editar"),
+    path("categorias/portada-imagen/", views.portada_imagen_editar, name="portada_imagen_editar"),
     path("categorias/<int:pk>/editar/", views.categoria_editar, name="categoria_editar"),
     path("categorias/<int:pk>/activo/", views.categoria_toggle_activo, name="categoria_toggle_activo"),
     path("categorias/<int:pk>/eliminar/", views.categoria_eliminar, name="categoria_eliminar"),
@@ -38,4 +39,9 @@ urlpatterns = [
     path("combos/<int:pk>/editar/", views.combo_editar, name="combo_editar"),
     path("combos/<int:pk>/activo/", views.combo_toggle_activo, name="combo_toggle_activo"),
     path("combos/<int:pk>/eliminar/", views.combo_eliminar, name="combo_eliminar"),
+    path("preview/home/", views.preview_home, name="preview_home"),
+    path("preview/productos/", views.preview_productos, name="preview_productos"),
+    path("preview/categoria/<slug:slug>/", views.preview_categoria, name="preview_categoria"),
+    path("preview/producto/<slug:slug>/", views.preview_producto, name="preview_producto"),
+    path("preview/guardar-imagen/", views.preview_guardar_imagen, name="preview_guardar_imagen"),
 ]

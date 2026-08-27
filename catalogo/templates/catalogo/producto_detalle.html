@@ -6,7 +6,7 @@
 <section class="contenedor producto-detalle">
     <div class="producto-detalle__imagen">
         {% if producto.imagen %}
-            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}">
+            <img src="{{ producto.imagen.url }}" alt="{{ producto.nombre }}" style="--img-x:{{ producto.imagen_pos_x }};--img-y:{{ producto.imagen_pos_y }};--img-zoom:{{ producto.imagen_zoom }};"{% if modo_edicion %} data-editable-imagen data-entidad="producto" data-id="{{ producto.pk }}" data-prefijo="imagen" data-modo="recorte" data-nombre="{{ producto.nombre }}"{% endif %}>
         {% else %}
             <div class="producto-card__sin-imagen producto-detalle__sin-imagen" aria-hidden="true">🍰</div>
         {% endif %}

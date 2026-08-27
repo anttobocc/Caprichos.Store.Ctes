@@ -46,8 +46,8 @@ class CategoriaForm(forms.ModelForm):
             "descripcion": forms.Textarea(attrs={"rows": 2}),
             "slug": forms.HiddenInput(),
             "imagen_categoria": ImagenPortadaWidget(),
-            "imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
-            "imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
+            "imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
             "imagen_tamano": forms.NumberInput(attrs={"step": 1, "min": 50, "max": 5000}),
         }
 
@@ -68,9 +68,9 @@ class CategoriaForm(forms.ModelForm):
         if nombre:
             cleaned["slug"] = _slug_unico(Categoria, nombre, cleaned.get("slug"), self.instance.pk)
         if cleaned.get("imagen_pos_x") in (None, ""):
-            cleaned["imagen_pos_x"] = 0
+            cleaned["imagen_pos_x"] = 50
         if cleaned.get("imagen_pos_y") in (None, ""):
-            cleaned["imagen_pos_y"] = 0
+            cleaned["imagen_pos_y"] = 50
         if cleaned.get("imagen_tamano") in (None, ""):
             cleaned["imagen_tamano"] = 260
         return cleaned
@@ -88,8 +88,8 @@ class PedidosImagenForm(forms.ModelForm):
         ]
         widgets = {
             "pedidos_imagen": ImagenPortadaWidget(),
-            "pedidos_imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
-            "pedidos_imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": -1000, "max": 1000}),
+            "pedidos_imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "pedidos_imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
             "pedidos_imagen_tamano": forms.NumberInput(attrs={"step": 1, "min": 50, "max": 5000}),
         }
 
@@ -102,11 +102,46 @@ class PedidosImagenForm(forms.ModelForm):
     def clean(self):
         cleaned = super().clean()
         if cleaned.get("pedidos_imagen_pos_x") in (None, ""):
-            cleaned["pedidos_imagen_pos_x"] = 0
+            cleaned["pedidos_imagen_pos_x"] = 50
         if cleaned.get("pedidos_imagen_pos_y") in (None, ""):
-            cleaned["pedidos_imagen_pos_y"] = 0
+            cleaned["pedidos_imagen_pos_y"] = 50
         if cleaned.get("pedidos_imagen_tamano") in (None, ""):
             cleaned["pedidos_imagen_tamano"] = 260
+        return cleaned
+
+
+class PortadaImagenForm(forms.ModelForm):
+    """Imagen principal del hero (portada) + su posición/zoom. Igual patrón
+    que PedidosImagenForm, pero en modo "recorte" (object-position % + zoom),
+    ya que la foto del hero es una imagen recortada dentro de una caja de
+    aspect-ratio fijo, no una decoración flotante como categorías/pedidos."""
+
+    class Meta:
+        model = ConfiguracionNegocio
+        fields = [
+            "portada_imagen", "portada_imagen_pos_x", "portada_imagen_pos_y", "portada_imagen_zoom",
+        ]
+        widgets = {
+            "portada_imagen": ImagenPortadaWidget(),
+            "portada_imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "portada_imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "portada_imagen_zoom": forms.NumberInput(attrs={"step": 1, "min": 100, "max": 200}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["portada_imagen_pos_x"].required = False
+        self.fields["portada_imagen_pos_y"].required = False
+        self.fields["portada_imagen_zoom"].required = False
+
+    def clean(self):
+        cleaned = super().clean()
+        if cleaned.get("portada_imagen_pos_x") in (None, ""):
+            cleaned["portada_imagen_pos_x"] = 50
+        if cleaned.get("portada_imagen_pos_y") in (None, ""):
+            cleaned["portada_imagen_pos_y"] = 32
+        if cleaned.get("portada_imagen_zoom") in (None, ""):
+            cleaned["portada_imagen_zoom"] = 100
         return cleaned
 
 
@@ -120,22 +155,42 @@ class ProductoForm(forms.ModelForm):
             "descripcion_corta",
             "descripcion",
             "imagen",
+            "imagen_pos_x",
+            "imagen_pos_y",
+            "imagen_zoom",
             "precio",
             "unidad_venta",
             "destacado",
         ]
-        widgets = {"descripcion": forms.Textarea(attrs={"rows": 3})}
+        widgets = {
+            "descripcion": forms.Textarea(attrs={"rows": 3}),
+            "imagen": ImagenPortadaWidget(),
+            "imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "imagen_zoom": forms.NumberInput(attrs={"step": 1, "min": 100, "max": 200}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["slug"].required = False
         self.fields["precio"].required = False
+        # Los completa/actualiza el editor visual de imagen (mismo mecanismo
+        # que Categoria); si llegan vacíos se usa el default del modelo.
+        self.fields["imagen_pos_x"].required = False
+        self.fields["imagen_pos_y"].required = False
+        self.fields["imagen_zoom"].required = False
 
     def clean(self):
         cleaned = super().clean()
         nombre = cleaned.get("nombre")
         if nombre:
             cleaned["slug"] = _slug_unico(Producto, nombre, cleaned.get("slug"), self.instance.pk)
+        if cleaned.get("imagen_pos_x") in (None, ""):
+            cleaned["imagen_pos_x"] = 50
+        if cleaned.get("imagen_pos_y") in (None, ""):
+            cleaned["imagen_pos_y"] = 50
+        if cleaned.get("imagen_zoom") in (None, ""):
+            cleaned["imagen_zoom"] = 100
         return cleaned
 
 
@@ -151,18 +206,36 @@ VarianteProductoFormSet = inlineformset_factory(
 class ComboForm(forms.ModelForm):
     class Meta:
         model = Combo
-        fields = ["nombre", "slug", "descripcion", "imagen", "precio_promocional"]
-        widgets = {"descripcion": forms.Textarea(attrs={"rows": 3})}
+        fields = [
+            "nombre", "slug", "descripcion", "imagen",
+            "imagen_pos_x", "imagen_pos_y", "imagen_zoom", "precio_promocional",
+        ]
+        widgets = {
+            "descripcion": forms.Textarea(attrs={"rows": 3}),
+            "imagen": ImagenPortadaWidget(),
+            "imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
+            "imagen_zoom": forms.NumberInput(attrs={"step": 1, "min": 100, "max": 200}),
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields["slug"].required = False
+        self.fields["imagen_pos_x"].required = False
+        self.fields["imagen_pos_y"].required = False
+        self.fields["imagen_zoom"].required = False
 
     def clean(self):
         cleaned = super().clean()
         nombre = cleaned.get("nombre")
         if nombre:
             cleaned["slug"] = _slug_unico(Combo, nombre, cleaned.get("slug"), self.instance.pk)
+        if cleaned.get("imagen_pos_x") in (None, ""):
+            cleaned["imagen_pos_x"] = 50
+        if cleaned.get("imagen_pos_y") in (None, ""):
+            cleaned["imagen_pos_y"] = 50
+        if cleaned.get("imagen_zoom") in (None, ""):
+            cleaned["imagen_zoom"] = 100
         return cleaned
 
 

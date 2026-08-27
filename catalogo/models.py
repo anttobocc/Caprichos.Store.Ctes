@@ -16,17 +16,17 @@ class Categoria(models.Model):
         null=True,
         help_text="Imagen mostrada en la tarjeta de esta categoría en la página de inicio.",
     )
-    imagen_pos_x = models.IntegerField(
+    imagen_pos_x = models.PositiveSmallIntegerField(
         verbose_name="posición horizontal (X)",
-        default=0,
-        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
-        help_text="Ajuste horizontal en px sobre la posición actual. Negativo = izquierda, positivo = derecha.",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición horizontal en % (0 = izquierda, 50 = centro, 100 = derecha).",
     )
-    imagen_pos_y = models.IntegerField(
+    imagen_pos_y = models.PositiveSmallIntegerField(
         verbose_name="posición vertical (Y)",
-        default=0,
-        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
-        help_text="Ajuste vertical en px sobre la posición actual. Negativo = arriba, positivo = abajo.",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición vertical en % (0 = arriba, 50 = centro, 100 = abajo).",
     )
     imagen_tamano = models.PositiveIntegerField(
         verbose_name="tamaño",
@@ -61,6 +61,24 @@ class Producto(models.Model):
     descripcion = models.TextField(blank=True)
     descripcion_corta = models.CharField(max_length=255, blank=True)
     imagen = models.ImageField(upload_to="productos/", blank=True, null=True)
+    imagen_pos_x = models.PositiveSmallIntegerField(
+        verbose_name="posición horizontal (X)",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición horizontal en % (0 = izquierda, 50 = centro, 100 = derecha).",
+    )
+    imagen_pos_y = models.PositiveSmallIntegerField(
+        verbose_name="posición vertical (Y)",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición vertical en % (0 = arriba, 50 = centro, 100 = abajo).",
+    )
+    imagen_zoom = models.PositiveSmallIntegerField(
+        verbose_name="zoom",
+        default=100,
+        validators=[MinValueValidator(100), MaxValueValidator(200)],
+        help_text="Escala de la imagen dentro de su recuadro, en % (100 = ajuste normal).",
+    )
     # Solo se usa cuando el producto NO tiene variantes; si tiene variantes,
     # el precio real lo determina cada VarianteProducto. Esta regla se
     # valida en los formularios/servicios del panel y del checkout, no acá.
@@ -146,6 +164,24 @@ class Combo(models.Model):
     slug = models.SlugField(unique=True)
     descripcion = models.TextField(blank=True)
     imagen = models.ImageField(upload_to="combos/", blank=True, null=True)
+    imagen_pos_x = models.PositiveSmallIntegerField(
+        verbose_name="posición horizontal (X)",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición horizontal en % (0 = izquierda, 50 = centro, 100 = derecha).",
+    )
+    imagen_pos_y = models.PositiveSmallIntegerField(
+        verbose_name="posición vertical (Y)",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición vertical en % (0 = arriba, 50 = centro, 100 = abajo).",
+    )
+    imagen_zoom = models.PositiveSmallIntegerField(
+        verbose_name="zoom",
+        default=100,
+        validators=[MinValueValidator(100), MaxValueValidator(200)],
+        help_text="Escala de la imagen dentro de su recuadro, en % (100 = ajuste normal).",
+    )
     precio_promocional = models.DecimalField(max_digits=10, decimal_places=2)
     activo = models.BooleanField(default=True)
     fecha_creacion = models.DateTimeField(auto_now_add=True)

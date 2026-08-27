@@ -31,23 +31,48 @@ class ConfiguracionNegocio(models.Model):
         null=True,
         help_text="Imagen de la tarjeta 'Pedidos' en la página de inicio.",
     )
-    pedidos_imagen_pos_x = models.IntegerField(
+    pedidos_imagen_pos_x = models.PositiveSmallIntegerField(
         verbose_name="posición horizontal (X)",
-        default=0,
-        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
-        help_text="Ajuste horizontal en px sobre la posición actual. Negativo = izquierda, positivo = derecha.",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición horizontal en % (0 = izquierda, 50 = centro, 100 = derecha).",
     )
-    pedidos_imagen_pos_y = models.IntegerField(
+    pedidos_imagen_pos_y = models.PositiveSmallIntegerField(
         verbose_name="posición vertical (Y)",
-        default=0,
-        validators=[MinValueValidator(-1000), MaxValueValidator(1000)],
-        help_text="Ajuste vertical en px sobre la posición actual. Negativo = arriba, positivo = abajo.",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición vertical en % (0 = arriba, 50 = centro, 100 = abajo).",
     )
     pedidos_imagen_tamano = models.PositiveIntegerField(
         verbose_name="tamaño",
         default=260,
         validators=[MinValueValidator(50), MaxValueValidator(5000)],
         help_text="Alto de la imagen en px (el ancho se ajusta proporcionalmente).",
+    )
+    portada_imagen = models.ImageField(
+        verbose_name="imagen principal de la portada",
+        upload_to="productos/",
+        blank=True,
+        null=True,
+        help_text="Foto principal del hero en la página de inicio. Si no se sube ninguna, se usa la imagen por defecto del sitio.",
+    )
+    portada_imagen_pos_x = models.PositiveSmallIntegerField(
+        verbose_name="posición horizontal (X)",
+        default=50,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición horizontal en % (0 = izquierda, 50 = centro, 100 = derecha).",
+    )
+    portada_imagen_pos_y = models.PositiveSmallIntegerField(
+        verbose_name="posición vertical (Y)",
+        default=32,
+        validators=[MinValueValidator(0), MaxValueValidator(100)],
+        help_text="Posición vertical en % (0 = arriba, 50 = centro, 100 = abajo).",
+    )
+    portada_imagen_zoom = models.PositiveSmallIntegerField(
+        verbose_name="zoom",
+        default=100,
+        validators=[MinValueValidator(100), MaxValueValidator(200)],
+        help_text="Escala de la imagen dentro de su recuadro, en % (100 = ajuste normal).",
     )
     fecha_actualizacion = models.DateTimeField(auto_now=True)
 

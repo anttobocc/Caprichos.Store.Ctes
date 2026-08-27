@@ -3,7 +3,10 @@
 
 {% block extra_css %}
     <link rel="stylesheet" href="{% static 'css/catalogo.css' %}">
+    {% if modo_edicion %}<link rel="stylesheet" href="{% static 'css/panel_preview_editor.css' %}">{% endif %}
 {% endblock %}
+
+{% block body_class %}{% if modo_edicion %}modo-edicion{% endif %}{% endblock %}
 
 {% block content %}
 <input type="checkbox" id="menu-toggle" class="menu-toggle" hidden>
@@ -101,4 +104,9 @@
         </div>
     </div>
 </footer>
+
+{% if modo_edicion %}
+<script>window.CAPRICHO_CSRF_TOKEN = "{{ csrf_token }}"; window.CAPRICHO_GUARDAR_IMAGEN_URL = "{% url 'panel:preview_guardar_imagen' %}";</script>
+<script src="{% static 'js/panel_preview_editor.js' %}" defer></script>
+{% endif %}
 {% endblock %}
