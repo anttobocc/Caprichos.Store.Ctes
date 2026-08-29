@@ -10,7 +10,7 @@
 (function () {
     "use strict";
 
-    function abrirPanel(panel) {
+    function abrirPanel(panel, categoriaPreseleccionada) {
         const contenedor = panel.closest(".admin-lista-con-formulario");
         if (contenedor) {
             contenedor.querySelectorAll(".admin-panel-form").forEach(function (otro) {
@@ -19,6 +19,12 @@
                 }
             });
             contenedor.classList.add("tiene-formulario-abierto");
+        }
+        if (categoriaPreseleccionada) {
+            const selectCategoria = panel.querySelector('select[name="categoria"]');
+            if (selectCategoria) {
+                selectCategoria.value = categoriaPreseleccionada;
+            }
         }
         panel.hidden = false;
         panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -46,7 +52,7 @@
         if (abridorPanel) {
             const panel = document.querySelector(abridorPanel.getAttribute("data-panel-target"));
             if (panel) {
-                abrirPanel(panel);
+                abrirPanel(panel, abridorPanel.getAttribute("data-panel-preset-categoria"));
             }
             return;
         }

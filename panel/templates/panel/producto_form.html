@@ -27,47 +27,7 @@
 
     <fieldset class="admin-fieldset">
         <legend>Información del producto</legend>
-        <div class="admin-form__grid">
-            {% for field in form %}
-                {% if field.name != "imagen" and field.name != "imagen_pos_x" and field.name != "imagen_pos_y" and field.name != "imagen_zoom" %}
-                    {% include "panel/includes/_campo.html" %}
-                {% endif %}
-            {% endfor %}
-        </div>
-        {% include "panel/includes/_editor_imagen_recorte.html" with campo_imagen=form.imagen campo_pos_x=form.imagen_pos_x campo_pos_y=form.imagen_pos_y campo_zoom=form.imagen_zoom imagen_actual=producto.imagen aspecto="4 / 3" etiqueta="Foto del producto" %}
-    </fieldset>
-
-    <fieldset class="admin-fieldset">
-        <legend>Variantes</legend>
-        <p class="admin-field__ayuda admin-field__ayuda--intro">Un producto sin variantes debe tener un precio. Un producto con variantes debe tener el precio del producto vacío: cada variante define el suyo.</p>
-
-        {{ formset.management_form }}
-        {% if formset.non_form_errors %}
-            <div class="admin-alert admin-alert--error">{{ formset.non_form_errors }}</div>
-        {% endif %}
-
-        <div class="admin-table-wrap">
-            <div class="admin-table-scroll">
-                <table class="admin-table">
-                    <thead>
-                        <tr><th>Cantidad</th><th>Modalidad</th><th>Precio</th><th>Orden</th><th>Activa</th><th>Eliminar</th></tr>
-                    </thead>
-                    <tbody data-variantes-body>
-                        {% for variante_form in formset %}
-                        <tr>
-                            {{ variante_form.id }}
-                            <td>{{ variante_form.nombre }}{% for error in variante_form.nombre.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
-                            <td>{{ variante_form.modalidad }}{% for error in variante_form.modalidad.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
-                            <td>{{ variante_form.precio }}{% for error in variante_form.precio.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
-                            <td>{{ variante_form.orden }}</td>
-                            <td>{{ variante_form.activo }}</td>
-                            <td>{% if variante_form.instance.pk %}{{ variante_form.DELETE }}{% endif %}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
+        {% include "panel/includes/_producto_panel_campos.html" %}
     </fieldset>
 
     <div class="admin-form__acciones">
@@ -77,8 +37,9 @@
 </form>
 
 <script>window.CAPRICHO_PLANTILLAS_VARIANTES = {{ plantillas_variantes_json|safe }};</script>
+{% endblock %}
+
 {% block panel_extra_js %}
 <script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>
 <script src="{% static 'js/panel_variantes.js' %}" defer></script>
-{% endblock %}
 {% endblock %}

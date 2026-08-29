@@ -24,11 +24,23 @@
     "use strict";
 
     var FACTOR_VW_FLOTANTE = 0.0151858; // 1 unidad (de 100) = 1.51858vw, igual que catalogo.css
-    var TERCERO_DEFAULT = {flotante: 260, recorte: 100};
-    var TERCERO_RANGO = {flotante: [50, 5000], recorte: [100, 200]};
-    var PASO_BOTON_POS = {flotante: 1, recorte: 2};
-    var PASO_BOTON_TERCERO = {flotante: 10, recorte: 5};
-    var SIGNO_DRAG = {flotante: 1, recorte: -1};
+    // "flotante-movil": mismo concepto que "flotante" (traduce a
+    // --imagen-x/-y/-size, ver estadoInicial/aplicarEstado) pero para las
+    // imágenes de .m-card en catalogo.css. A diferencia de "flotante"
+    // (recorte fijo dentro de la tarjeta desktop) y "recorte" (0-100
+    // siempre), acá la imagen es una capa libre sobre TODA la tarjeta
+    // mobile: el rango de posición se extiende bien afuera de 0-100 (ver
+    // POS_RANGO) para poder arrastrarla completamente hacia cualquier
+    // lado, y el de tamaño no tiene techo atado a ningún recuadro fijo.
+    var TERCERO_DEFAULT = {flotante: 260, recorte: 100, "flotante-movil": 100};
+    var TERCERO_RANGO = {flotante: [50, 5000], recorte: [100, 200], "flotante-movil": [20, 400]};
+    // Rango de X/Y por modo — "flotante" y "recorte" se quedan en 0-100
+    // (comportamiento desktop sin cambios); "flotante-movil" es el único
+    // que se extiende afuera de ese rango.
+    var POS_RANGO = {flotante: [0, 100], recorte: [0, 100], "flotante-movil": [-100, 200]};
+    var PASO_BOTON_POS = {flotante: 1, recorte: 2, "flotante-movil": 2};
+    var PASO_BOTON_TERCERO = {flotante: 10, recorte: 5, "flotante-movil": 10};
+    var SIGNO_DRAG = {flotante: 1, recorte: -1, "flotante-movil": 1};
 
     function clamp(valor, minimo, maximo) {
         return Math.min(maximo, Math.max(minimo, valor));
@@ -86,8 +98,30 @@
         var aviso = document.createElement("div");
         aviso.className = "ppe-aviso";
         aviso.innerHTML = '<span class="ppe-aviso__punto"></span> Modo edición — hacé click en cualquier imagen marcada para moverla o hacer zoom' +
+            ' <label class="ppe-aviso__vista">Vista: ' +
+                '<select data-ppe-vista>' +
+                    '<option value="desktop">Desktop</option>' +
+                    '<option value="mobile">Mobile</option>' +
+                '</select>' +
+            "</label>" +
             ' <a href="/panel/" class="ppe-aviso__volver">← Volver al panel</a>';
         document.body.appendChild(aviso);
+
+        // Selector Desktop/Mobile: agrega body.ppe-vista-mobile o
+        // body.ppe-vista-desktop, que en catalogo.css fuerzan cuál de
+        // .home-desktop/.home-mobile se ve, sin depender del ancho real
+        // de la ventana (el panel normalmente se abre en un navegador de
+        // escritorio, así que sin esto nunca se podría ni ver ni tocar
+        // las imágenes de .home-mobile para editarlas). Arranca en
+        // "desktop" explícito (no ambiguo) para que el primer cambio de
+        // vista sea siempre predecible.
+        document.body.classList.add("ppe-vista-desktop");
+        var selectVista = aviso.querySelector("[data-ppe-vista]");
+        selectVista.addEventListener("change", function () {
+            cerrarPanel();
+            document.body.classList.remove("ppe-vista-desktop", "ppe-vista-mobile");
+            document.body.classList.add("ppe-vista-" + selectVista.value);
+        });
 
         var panel = document.createElement("div");
         panel.className = "ppe-panel";
@@ -145,7 +179,7 @@
             campoX.value = Math.round(estado.actual.x);
             campoY.value = Math.round(estado.actual.y);
             campoTercero.value = Math.round(estado.actual.tercero);
-            labelTercero.textContent = modo === "flotante" ? "Tamaño" : "Zoom";
+            labelTercero.textContent = modo === "recorte" ? "Zoom" : "Tamaño";
             nombreEl.textContent = actual.getAttribute("data-nombre") || "Imagen";
         }
 
@@ -206,55 +240,89 @@
             var estado = estados.get(actual);
             var modo = actual.getAttribute("data-modo");
             var limites = limitesTercero(modo);
-            estado.actual.x = clamp(estado.actual.x, 0, 100);
-            estado.actual.y = clamp(estado.actual.y, 0, 100);
+            var limitesPos = POS_RANGO[modo];
+            estado.actual.x = clamp(estado.actual.x, limitesPos[0], limitesPos[1]);
+            estado.actual.y = clamp(estado.actual.y, limitesPos[0], limitesPos[1]);
             estado.actual.tercero = clamp(estado.actual.tercero, limites[0], limites[1]);
             aplicarEstado(actual, estado.actual);
             refrescarPanel();
+        }
+
+        // Estado de arrastre ÚNICO a nivel módulo (no una closure por
+        // pointerdown): antes cada pointerdown agregaba su propio par de
+        // listeners mover/soltar a document, y si un pointerup no llegaba a
+        // disparar ese soltar puntual (drag interrumpido, dos clicks muy
+        // seguidos, etc.) el listener quedaba pegado escuchando para
+        // siempre — un mousemove de OTRA imagen lo disparaba igual y
+        // terminaba reescribiendo estado de la imagen equivocada. Con un
+        // único estado compartido, un pointerdown nuevo simplemente
+        // reemplaza al anterior en vez de acumularse.
+        var arrastre = null;
+
+        function iniciarArrastre(el, evento) {
+            var estado = estados.get(el);
+            var modo = el.getAttribute("data-modo");
+            var rect = el.getBoundingClientRect();
+            arrastre = {
+                el: el,
+                pointerId: evento.pointerId,
+                estado: estado,
+                signo: SIGNO_DRAG[modo],
+                inicioX: evento.clientX,
+                inicioY: evento.clientY,
+                origenX: estado.actual.x,
+                origenY: estado.actual.y,
+                // refAncho/refAlto son los px que equivalen a un recorrido
+                // COMPLETO de 0 a 100 (no a 1 punto): más abajo se divide
+                // deltaX/deltaY por esto y se multiplica por 100, así que acá
+                // ya hay que dar la referencia "completa". En "recorte" eso
+                // es el ancho/alto real del recuadro (a lo ancho del
+                // recuadro = 0 a 100%). En "flotante" el CSS público mueve
+                // la imagen 1.51858vw por cada punto (ver catalogo.css,
+                // .categoria-card__imagen), o sea 151.858vw en los 100
+                // puntos completos. En "flotante-movil" el CSS mueve la
+                // imagen 1% de SU PROPIO recuadro por cada punto (ver
+                // .m-card__imagen img), o sea el 100% de ese recuadro —
+                // rect.width/height, igual que "recorte" pero sin invertir
+                // el signo (ver SIGNO_DRAG).
+                refAncho: modo === "flotante" ? (window.innerWidth * FACTOR_VW_FLOTANTE * 100) : (rect.width || 1),
+                refAlto: modo === "flotante" ? (window.innerWidth * FACTOR_VW_FLOTANTE * 100) : (rect.height || 1),
+            };
         }
 
         elementos.forEach(function (el) {
             el.addEventListener("pointerdown", function (evento) {
                 evento.preventDefault();
                 seleccionar(el);
-
-                var estado = estados.get(el);
-                var modo = el.getAttribute("data-modo");
-                var signo = SIGNO_DRAG[modo];
-                var inicioX = evento.clientX;
-                var inicioY = evento.clientY;
-                var origenX = estado.actual.x;
-                var origenY = estado.actual.y;
-                var rect = el.getBoundingClientRect();
-                var refAncho = modo === "recorte" ? (rect.width || 1) : (window.innerWidth * FACTOR_VW_FLOTANTE);
-                var refAlto = modo === "recorte" ? (rect.height || 1) : (window.innerWidth * FACTOR_VW_FLOTANTE);
-                var movido = false;
-
-                function mover(e) {
-                    var deltaX = e.clientX - inicioX;
-                    var deltaY = e.clientY - inicioY;
-                    if (Math.abs(deltaX) > 2 || Math.abs(deltaY) > 2) {
-                        movido = true;
-                    }
-                    var deltaPorcentualX = (deltaX / refAncho) * 100;
-                    var deltaPorcentualY = (deltaY / refAlto) * 100;
-                    estado.actual.x = origenX + signo * deltaPorcentualX;
-                    estado.actual.y = origenY + signo * deltaPorcentualY;
-                    actualizarDesdeEstado();
-                    if (actual === el) {
-                        posicionarPanel();
-                    }
-                }
-
-                function soltar() {
-                    document.removeEventListener("pointermove", mover);
-                    document.removeEventListener("pointerup", soltar);
-                }
-
-                document.addEventListener("pointermove", mover);
-                document.addEventListener("pointerup", soltar);
+                iniciarArrastre(el, evento);
             });
         });
+
+        document.addEventListener("pointermove", function (evento) {
+            if (!arrastre || evento.pointerId !== arrastre.pointerId) {
+                return;
+            }
+            var deltaX = evento.clientX - arrastre.inicioX;
+            var deltaY = evento.clientY - arrastre.inicioY;
+            var deltaPorcentualX = (deltaX / arrastre.refAncho) * 100;
+            var deltaPorcentualY = (deltaY / arrastre.refAlto) * 100;
+            arrastre.estado.actual.x = arrastre.origenX + arrastre.signo * deltaPorcentualX;
+            arrastre.estado.actual.y = arrastre.origenY + arrastre.signo * deltaPorcentualY;
+            actualizarDesdeEstado();
+            if (actual === arrastre.el) {
+                posicionarPanel();
+            }
+        });
+
+        function terminarArrastre(evento) {
+            if (!arrastre || (evento && evento.pointerId !== arrastre.pointerId)) {
+                return;
+            }
+            arrastre = null;
+        }
+
+        document.addEventListener("pointerup", terminarArrastre);
+        document.addEventListener("pointercancel", terminarArrastre);
 
         // Mientras se edita, ninguna imagen editable debe navegar (algunas
         // están envueltas en un <a> que en el sitio normal lleva al

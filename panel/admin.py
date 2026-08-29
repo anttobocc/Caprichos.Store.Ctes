@@ -12,12 +12,22 @@ class ConfiguracionNegocioAdmin(admin.ModelAdmin):
         ("WhatsApp y pedidos", {"fields": ("whatsapp_numero", "dias_anticipacion_pedido")}),
         ("Envíos (preparado para uso futuro)", {"fields": ("envio_habilitado", "costo_envio", "envio_gratis_desde")}),
         (
-            "Imagen de pedidos en portada",
+            "Imagen de pedidos en portada (desktop)",
             {
                 "fields": ("pedidos_imagen", "pedidos_imagen_pos_x", "pedidos_imagen_pos_y", "pedidos_imagen_tamano"),
                 "description": (
                     "Usá estos valores para ajustar manualmente la posición de la imagen dentro "
-                    "de la tarjeta 'Pedidos' de la portada."
+                    "de la tarjeta 'Pedidos' de la portada de escritorio."
+                ),
+            },
+        ),
+        (
+            "Imagen de pedidos en portada (mobile)",
+            {
+                "fields": ("pedidos_imagen_mobile_pos_x", "pedidos_imagen_mobile_pos_y", "pedidos_imagen_mobile_tamano"),
+                "description": (
+                    "Posición/escala independientes de las de desktop, para la misma imagen "
+                    "dentro de la tarjeta 'Pedidos' de la portada mobile (grilla 2×2)."
                 ),
             },
         ),

@@ -14,13 +14,24 @@ class CategoriaAdmin(admin.ModelAdmin):
     fieldsets = (
         (None, {"fields": ("nombre", "slug", "descripcion", "orden", "activo")}),
         (
-            "Imagen en la portada",
+            "Imagen en la portada (desktop)",
             {
                 "fields": ("imagen_categoria", "imagen_pos_x", "imagen_pos_y", "imagen_tamano"),
                 "description": (
                     "Usá estos valores para ajustar manualmente la posición de la imagen dentro "
-                    "de la tarjeta de esta categoría en la portada. No reemplazan el diseño base "
-                    "de la tarjeta, solo lo desplazan/escalan."
+                    "de la tarjeta de esta categoría en la portada de escritorio. No reemplazan "
+                    "el diseño base de la tarjeta, solo lo desplazan/escalan."
+                ),
+            },
+        ),
+        (
+            "Imagen en la portada (mobile)",
+            {
+                "fields": ("imagen_mobile_pos_x", "imagen_mobile_pos_y", "imagen_mobile_tamano"),
+                "description": (
+                    "Posición/escala independientes de las de desktop, para la misma imagen "
+                    "dentro de la tarjeta de esta categoría en la portada mobile (grilla 2×2). "
+                    "Editable también con el selector Desktop/Mobile del editor visual del panel."
                 ),
             },
         ),

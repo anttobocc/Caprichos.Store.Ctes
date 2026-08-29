@@ -1,14 +1,12 @@
 {% comment %}
-Cuerpo del panel de Categoría: Nombre + Orden, Descripción, Imagen de
-portada y el editor visual de posición/tamaño (arrastrar, botones −/+/↑/↓
-y campos numéricos). No se muestra el slug (se autogenera desde el nombre,
-ver CategoriaForm._slug_unico); solo viven los campos de este layout.
-Todo se mantiene sincronizado por static/js/panel_categoria_imagen.js.
+Cuerpo del panel de Categoría: Nombre, Descripción, Imagen de portada y el
+editor visual de posición/tamaño (arrastrar, botones −/+/↑/↓ y campos
+numéricos) — sin tocar esa lógica, sigue sincronizada por
+static/js/panel_categoria_imagen.js. No se muestra el slug (se autogenera
+desde el nombre, ver CategoriaForm._slug_unico) ni "orden" (se arrastra y
+suelta en la lista, ver panel_categorias_orden.js).
 {% endcomment %}
-<div class="admin-form__grid">
-    {% include "panel/includes/_campo.html" with field=form.nombre %}
-    {% include "panel/includes/_campo.html" with field=form.orden %}
-</div>
+{% include "panel/includes/_campo.html" with field=form.nombre %}
 {% include "panel/includes/_campo.html" with field=form.descripcion %}
 {{ form.slug }}
 
@@ -65,4 +63,12 @@ Todo se mantiene sincronizado por static/js/panel_categoria_imagen.js.
             {% for error in form.imagen_tamano.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
         </div>
     </div>
+</div>
+
+<hr class="admin-divisor">
+
+<div class="admin-panel-form__seccion">
+    <h3>Visibilidad</h3>
+    {% include "panel/includes/_campo.html" with field=form.mostrar_en_productos %}
+    {% include "panel/includes/_campo.html" with field=form.mostrar_en_inicio %}
 </div>

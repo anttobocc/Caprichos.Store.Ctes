@@ -68,6 +68,6 @@
 {% url 'panel:combo_eliminar' combo.pk as url_eliminar %}
 {% include "panel/includes/_confirmar_eliminar.html" with id_base="modal-eliminar-combo" pk=combo.pk titulo="¿Eliminar combo?" objeto_nombre=combo.nombre accion_url=url_eliminar %}
 {% endfor %}
+{% endblock %}
 
 {% block panel_extra_js %}<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>{% endblock %}
-{% endblock %}

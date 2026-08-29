@@ -43,18 +43,12 @@
     flex-shrink: 0;
 }
 
-.site-header__vapor {
-    width: 35px;
-    height: 16px;
-    margin-bottom: -4px;
-}
-
-.site-header__isotipo-letra {
-    font-family: var(--fuente-titulos);
-    font-size: 2.7rem;
-    font-weight: 700;
-    line-height: 0.8;
-    color: var(--color-marron);
+.site-header__isotipo-img {
+    width: 58px;
+    height: 58px;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
 }
 
 .site-header__marca {
@@ -363,32 +357,6 @@
         scale(calc(var(--img-zoom, 100) / 100));
 }
 
-.sello-pedidos {
-    position: absolute;
-    bottom: -18px;
-    right: 12px;
-    width: 130px;
-    height: 130px;
-    border-radius: 50%;
-    background: var(--color-terracota);
-    color: var(--color-blanco-calido);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    text-align: center;
-    font-size: 0.75rem;
-    line-height: 1.3;
-    padding: 12px;
-    box-shadow: 0 10px 24px -10px rgba(59, 46, 38, 0.5);
-}
-
-.sello-pedidos strong {
-    font-family: var(--fuente-titulos);
-    font-size: 1.1rem;
-    margin: 2px 0;
-}
-
 /* ===== Categorías ===== */
 .categorias {
     padding: 1.4348vw 3.0372vw;
@@ -396,6 +364,7 @@
 }
 
 .categorias-grid {
+    position: relative;
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 1.8231vw;
@@ -458,43 +427,61 @@
 
 .categoria-card__imagen {
     position: absolute;
-    right: -14.0483vw;
-    bottom: -8.0836vw;
+    /* right/bottom son el "ancla" calibrada de cada categoría: la posición
+       que le corresponde cuando --imagen-x/--imagen-y están en 50 (centro,
+       "sin ajuste"). Antes el transform de abajo sumaba SIEMPRE una
+       constante fija (-8vw/-6vw) además de estos valores, así que 50 nunca
+       era realmente el centro — quedaba corrido por esa constante. Estos
+       right/bottom ya incorporan esa corrección (se recalibraron +8vw/+6vw
+       respecto de los valores anteriores) para que el aspecto visual actual
+       del sitio no cambie, pero ahora sí: en 50, transform da (0,0). */
+    right: -6.0483vw;
+    bottom: -2.0836vw;
     z-index: 1;
     pointer-events: none;
     line-height: 0;
 
     /* --imagen-x/--imagen-y llegan en % (0-100, 50 = centro/sin ajuste) desde
        el panel; se reescalan a vw para que el desplazamiento sea siempre
-       proporcional al viewport, nunca en px físicos. */
+       proporcional al viewport, nunca en px físicos. En 50 el resultado es
+       exactamente 0: no hay offset oculto sumado aparte. */
     transform: translate(
-        calc((var(--imagen-x, 50) - 50) * 1.51858vw - 8vw),
-        calc((var(--imagen-y, 50) - 50) * 1.51858vw - 6vw)
+        calc((var(--imagen-x, 50) - 50) * 1.51858vw),
+        calc((var(--imagen-y, 50) - 50) * 1.51858vw)
     );
 }
 
 .categoria-card__imagen--empanadas {
-    right: -10.2505vw;
+    right: -2.2505vw;
 }
 
 .categoria-card__imagen--budines {
-    right: -11.3149vw;
-    bottom: -5.9226vw;
+    right: -3.3149vw;
+    bottom: 0.0774vw;
 }
 
 .categoria-card__imagen--tartas {
-    right: -13.2454vw;
-    bottom: -9.4903vw;
+    right: -5.2454vw;
+    bottom: -3.4903vw;
 }
 
 .categoria-card__imagen--pedidos {
-    right: -6.4092vw;
-    bottom: -4.9346vw;
+    right: 1.5908vw;
+    bottom: 1.0654vw;
 }
 
 .categoria-card__imagen img {
     display: block;
-    height: min(calc(var(--imagen-size, 260) * 0.075929vw), calc(var(--card-h) * 0.78));
+    /* Lineal, sin techo oculto. Antes había un min(..., var(--card-h)*0.78)
+       que actuaba como techo "de seguridad", pero el valor por defecto del
+       modelo (imagen_tamano=260) YA lo superaba: cualquier valor de 260
+       para arriba se veía SIEMPRE igual (por eso "el tamaño no respondía").
+       El coeficiente de acá (0.003) se eligió para que 260 dé exactamente
+       ese mismo 78% de alto de tarjeta que quedaba fijo antes -> mismo
+       aspecto visual de hoy, pero ahora la escala completa responde. La
+       tarjeta (.categoria-card) ya tiene overflow:hidden, así que un valor
+       extremo se recorta ahí en vez de depender de otro techo acá. */
+    height: calc(var(--imagen-size, 260) * var(--card-h) * 0.003);
     width: auto;
     object-fit: contain;
 }
@@ -522,6 +509,49 @@
 
 .categoria-card--cta {
     background: var(--color-crema-oscuro);
+}
+
+/* ===== Sello de anticipación (sello circular sobre la grilla de categorías) ===== */
+/* Hijo directo de .categorias-grid (su padre position:relative, ver
+   regla de esa clase): left:75% cae exactamente en el borde entre la
+   3ra y 4ta columna de esta grilla de 4 columnas iguales — el límite
+   real entre "Empanadas" y "Pedidos" — a cualquier ancho de pantalla,
+   sin ningún vw/px calculado a mano ni depender del viewport completo.
+   translateX(-50%) centra el círculo (no su borde izquierdo) sobre esa
+   línea. Vertical: "top" negativo lo hace sobresalir por encima de la
+   grilla, el mismo tipo de superposición que antes tenía sobre el
+   borde del hero, solo que ahora contra este contenedor. */
+.sello-pedidos {
+    position: absolute;
+    top: -6vw;
+    left: 75%;
+    transform: translateX(-50%);
+    z-index: 6;
+    width: 9vw;
+    height: 9vw;
+    min-width: 110px;
+    min-height: 110px;
+    max-width: 150px;
+    max-height: 150px;
+    border-radius: 50%;
+    background: var(--color-terracota);
+    color: var(--color-blanco-calido);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    font-size: 0.75rem;
+    line-height: 1.3;
+    padding: 10px;
+    box-shadow: 0 10px 24px -10px rgba(59, 46, 38, 0.5);
+    border: 3px solid var(--color-crema-oscuro);
+}
+
+.sello-pedidos strong {
+    font-family: var(--fuente-titulos);
+    font-size: 1.15rem;
+    margin: 2px 0;
 }
 
 /* ===== Título decorado ===== */
@@ -575,7 +605,9 @@
 
 /* ===== Destacados / grillas de producto ===== */
 .destacados {
-    padding: 96px 24px 64px;
+    /* El padding-top era 96px: dejaba un salto muy grande entre la sección
+       de categorías y el corazón decorativo de "Productos destacados". */
+    padding: 40px 24px 64px;
     background: var(--color-crema-oscuro);
 }
 
@@ -838,12 +870,12 @@
     gap: 12px;
 }
 
-.producto-detalle__cantidad input {
-    width: 70px;
-    margin-left: 6px;
-    padding: 4px 8px;
-    border: 1px solid var(--color-beige);
-    border-radius: 6px;
+.producto-detalle__cantidad {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 600;
+    color: var(--color-oliva-oscuro);
 }
 
 .variantes-lista {
@@ -888,20 +920,758 @@
     opacity: 0.9;
 }
 
+.site-footer__marca-bloque {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 10px;
+    padding-bottom: 28px;
+}
+
+.site-footer__logo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 130px;
+    height: 130px;
+    border-radius: 50%;
+    border: 3px solid var(--color-blanco-calido);
+    box-shadow: 0 8px 20px -8px rgba(0, 0, 0, 0.35);
+    overflow: hidden;
+}
+
+.site-footer__logo-img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
+}
+
+.site-footer__tagline {
+    margin: 0;
+    font-size: 0.95rem !important;
+    opacity: 1 !important;
+}
+
+.site-footer__divisor {
+    /* Esta clase se usa en dos lugares: dentro de .site-footer__marca-bloque
+       (donde queda centrada porque el padre es un flex-column con
+       align-items:center) y como bloque suelto envuelto en .contenedor
+       (donde depende de que .contenedor pueda centrarse solo con
+       margin:0 auto). El "0" horizontal de un margin shorthand de 3
+       valores pisaba ESE auto con un 0px fijo — por eso en desktop el
+       segundo divisor (entre la grilla de columnas y los íconos
+       sociales) quedaba pegado a la izquierda en vez de centrado; en
+       mobile no se notaba porque .contenedor pierde su padding lateral
+       amplio y la desviación es mínima. Con "auto" explícito acá, ambos
+       casos quedan centrados sin depender de la cascada. */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin: 4px auto 28px;
+}
+
+.site-footer__divisor-linea {
+    width: 90px;
+    height: 1px;
+    background: rgba(250, 243, 232, 0.35);
+}
+
 .site-footer__grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
+    text-align: center;
 }
 
-.site-footer .site-header__marca--footer {
-    border-color: var(--color-blanco-calido);
+.site-footer__col {
+    padding: 0 16px;
+    border-left: 1px solid rgba(250, 243, 232, 0.2);
+}
+
+.site-footer__col:first-child {
+    border-left: none;
+}
+
+.site-footer__col h4 {
+    font-family: var(--fuente-titulos);
+    font-size: 1.05rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    margin: 0 0 8px;
+}
+
+.site-footer__col-divisor {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-bottom: 14px;
+}
+
+.site-footer__col-divisor-linea {
+    width: 34px;
+    height: 1px;
+    background: rgba(250, 243, 232, 0.4);
+}
+
+.site-footer__whatsapp {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(250, 243, 232, 0.4);
+    border-radius: 999px;
+    padding: 8px 18px;
+    font-size: 0.85rem;
+    margin-top: 4px;
+}
+
+.site-footer__whatsapp:hover {
+    border-color: var(--color-terracota);
+}
+
+.site-footer__social {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+    margin-top: 28px;
+}
+
+.site-footer__social-icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 1px solid rgba(250, 243, 232, 0.4);
+}
+
+.site-footer__social-icono:hover {
+    border-color: var(--color-terracota);
+}
+
+.site-footer__creditos {
+    margin-top: 28px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(250, 243, 232, 0.2);
+    text-align: center;
+    font-size: 0.78rem;
+    opacity: 0.85;
+}
+
+/* ===== Carrito: panel lateral (drawer) ===== */
+.carrito-drawer-abierto {
+    overflow: hidden;
+}
+
+.carrito-drawer {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+}
+
+.carrito-drawer[hidden] {
+    display: none;
+}
+
+.carrito-drawer__fondo {
+    position: absolute;
+    inset: 0;
+    background: rgba(59, 46, 38, 0.45);
+    opacity: 0;
+    transition: opacity 0.28s ease;
+}
+
+.carrito-drawer__panel {
+    position: absolute;
+    top: 0;
+    right: 0;
+    height: 100%;
+    width: min(420px, 92vw);
+    background: var(--color-blanco-calido);
+    box-shadow: -12px 0 32px -12px rgba(59, 46, 38, 0.4);
+    display: flex;
+    flex-direction: column;
+    transform: translateX(100%);
+    transition: transform 0.32s ease;
+}
+
+.carrito-drawer--abierto .carrito-drawer__fondo {
+    opacity: 1;
+}
+
+.carrito-drawer--abierto .carrito-drawer__panel {
+    transform: translateX(0);
+}
+
+.carrito-drawer__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--color-beige);
+    flex-shrink: 0;
+}
+
+.carrito-drawer__header h2 {
+    margin: 0;
+    font-size: 1.3rem;
+}
+
+.carrito-drawer__cerrar {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    line-height: 1;
+    color: var(--color-marron);
+    cursor: pointer;
+    padding: 6px;
+}
+
+.carrito-drawer__cerrar:hover {
+    color: var(--color-terracota);
+}
+
+.carrito-drawer__cuerpo {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.carrito-drawer__vacio {
+    text-align: center;
+    padding: 32px 0;
+    color: #6b5c4f;
+}
+
+.carrito-drawer__vacio .boton {
+    margin-top: 12px;
+}
+
+.carrito-drawer__lista {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+}
+
+.carrito-drawer__item {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--color-beige);
+}
+
+.carrito-drawer__item-imagen {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--color-crema-oscuro);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+}
+
+.carrito-drawer__item-imagen img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.carrito-drawer__item-info {
+    min-width: 0;
+    flex: 1 1 auto;
+}
+
+.carrito-drawer__item-nombre {
+    margin: 0 0 2px;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.carrito-drawer__item-variante {
+    margin: 0 0 2px;
+    font-size: 0.82rem;
+    color: var(--color-terracota);
+}
+
+.carrito-drawer__item-detalle {
+    margin: 0 0 8px;
+    font-size: 0.82rem;
+    color: #6b5c4f;
+}
+
+.carrito-drawer__item-acciones {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.carrito-drawer__item-subtotal {
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.carrito-drawer__quitar {
+    background: none;
+    border: none;
+    color: #9a8a7a;
+    cursor: pointer;
+    font-size: 0.95rem;
+    padding: 2px 4px;
+    line-height: 1;
+}
+
+.carrito-drawer__quitar:hover {
+    color: var(--color-terracota);
+}
+
+.carrito-drawer__resumen {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-beige);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.carrito-drawer__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.05rem;
+}
+
+.carrito-drawer__boton {
+    justify-content: center;
+    width: 100%;
+}
+
+/* ----- Control de cantidad "− N +", reutilizable en cualquier página ----- */
+.stepper-cantidad {
+    display: inline-flex;
+    align-items: center;
+    gap: 0;
+    border: 1px solid var(--color-beige);
+    border-radius: 999px;
+    overflow: hidden;
+    width: fit-content;
+}
+
+.stepper-cantidad__boton {
+    width: 30px;
+    height: 30px;
+    border: none;
+    background: var(--color-crema);
+    color: var(--color-marron);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.stepper-cantidad__boton:hover {
+    background: var(--color-terracota);
     color: var(--color-blanco-calido);
-    margin-bottom: 8px;
 }
 
-/* ===== Responsive: tablet ===== */
-@media (max-width: 900px) {
+.stepper-cantidad__valor {
+    width: 34px;
+    height: 30px;
+    border: none;
+    border-left: 1px solid var(--color-beige);
+    border-right: 1px solid var(--color-beige);
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.85rem;
+    background: var(--color-blanco-calido);
+    color: var(--color-marron);
+    /* readonly: se cambia únicamente con los botones −/+, nunca tipeando
+       (evita cantidades inválidas y mantiene una sola fuente de verdad). */
+    pointer-events: none;
+    -moz-appearance: textfield;
+}
+
+.stepper-cantidad__valor::-webkit-outer-spin-button,
+.stepper-cantidad__valor::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* ----- Datos del cliente + finalizar (inline, sin página aparte) ----- */
+.carrito-drawer__checkout {
+    margin-top: auto;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-beige);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.carrito-drawer__checkout h3 {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.carrito-drawer__campo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.carrito-drawer__campo label {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--color-marron);
+}
+
+.carrito-drawer__campo input {
+    padding: 9px 12px;
+    border: 1px solid var(--color-beige);
+    border-radius: 8px;
+    font-family: var(--fuente-texto);
+    font-size: 0.88rem;
+    background: var(--color-blanco-calido);
+    color: var(--color-marron);
+}
+
+.carrito-drawer__campo input:focus {
+    outline: none;
+    border-color: var(--color-terracota);
+}
+
+.carrito-drawer__ayuda {
+    font-size: 0.72rem;
+    color: #6b5c4f;
+}
+
+.carrito-drawer__error-general {
+    color: #a33;
+    font-size: 0.82rem;
+    margin: 0;
+}
+
+/* ----- Confirmación tras finalizar el pedido ----- */
+.carrito-drawer__confirmacion {
+    text-align: center;
+    padding: 24px 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+}
+
+.carrito-drawer__confirmacion-icono {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: var(--color-oliva);
+    color: var(--color-blanco-calido);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+}
+
+.carrito-drawer__confirmacion .boton {
+    width: 100%;
+    justify-content: center;
+    margin-top: 6px;
+}
+
+.carrito-drawer__seguir {
+    background: none;
+    border: none;
+    color: var(--color-oliva-oscuro);
+    text-decoration: underline;
+    cursor: pointer;
+    font-size: 0.85rem;
+    padding: 4px;
+}
+
+/* ============================================================
+   RESPONSIVE — un solo quiebre (767px) separa dos interfaces:
+
+   - Por encima de 767px: SIEMPRE el diseño de escritorio de
+     siempre. Ninguna regla de acá abajo lo toca.
+   - 767px y por debajo: la home usa .home-mobile (clases "m-*",
+     ver catalogo/home.html) en vez de .home-desktop; el resto
+     del sitio (header, footer, grillas de producto) se adapta
+     con reglas puntuales, sin encimar breakpoints.
+
+   Antes había un quiebre de tablet (900px) y otro de mobile
+   (600px), cada uno pisando/afinando valores del anterior para
+   .hero/.categoria-card/.sello-pedidos — esa cadena de parches
+   se eliminó por completo junto con el hero/categorías de
+   desktop reducido que intentaban adaptar: .home-mobile es una
+   interfaz nueva, no una versión más chica de esa.
+   ============================================================ */
+.home-mobile {
+    display: none;
+}
+
+/* ============================================================
+   Estilos de .m-* (contenido de .home-mobile): a propósito FUERA
+   de cualquier @media. Lo que se ve (tamaños, grilla, imágenes)
+   queda separado de CUÁNDO se ve (el @media de más abajo para
+   visitantes reales, o la clase ppe-vista-mobile del panel para
+   previsualizar/editar mobile desde un navegador de escritorio).
+   Como las clases "m-*" solo existen dentro de .home-mobile, no
+   hay riesgo de que esto se filtre a desktop.
+   ============================================================ */
+
+/* ---------- m-hero: portada mobile ---------- */
+.m-hero__imagen {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 1 / 1.05;
+        overflow: hidden;
+    }
+
+    .m-hero__imagen img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 35%;
+        display: block;
+    }
+
+    .m-sello {
+        position: absolute;
+        right: 18px;
+        bottom: -22px;
+        z-index: 2;
+        width: 118px;
+        height: 118px;
+        border-radius: 50%;
+        background: var(--color-terracota);
+        color: var(--color-blanco-calido);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        text-align: center;
+        font-size: 0.56rem;
+        line-height: 1.2;
+        padding: 8px;
+        border: 3px solid var(--color-crema);
+        box-shadow: 0 10px 22px -10px rgba(59, 46, 38, 0.5);
+    }
+
+    .m-sello strong {
+        font-family: var(--fuente-titulos);
+        font-size: 0.95rem;
+        margin: 2px 0;
+    }
+
+    .m-hero__texto {
+        text-align: center;
+        padding: 40px 24px 32px;
+    }
+
+    .m-hero__decorativa {
+        margin: 0 0 6px;
+        font-family: var(--fuente-titulos);
+        font-size: 1.05rem;
+        font-weight: 700;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+        color: var(--color-marron);
+    }
+
+    .m-hero__texto h1 {
+        margin: 0 0 14px;
+        font-size: 2rem;
+        line-height: 1.15;
+        text-transform: uppercase;
+        color: var(--color-oliva-oscuro);
+    }
+
+    .m-hero__descripcion {
+        margin: 0 0 22px;
+        color: #6b5c4f;
+        font-size: 0.95rem;
+    }
+
+    .m-hero__boton {
+        display: inline-block;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        font-size: 0.82rem;
+    }
+
+    /* ---------- m-categorias: grilla 2x2 con imagen grande ---------- */
+    .m-categorias {
+        padding: 0 16px 40px;
+    }
+
+    .m-categorias__grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .m-card {
+        /* overflow:hidden acá (no en .m-card__imagen, ver abajo): con
+           min-height en vez de height, el texto de más líneas a 320px
+           sigue empujando la tarjeta hacia abajo en vez de recortarse
+           (el motivo original de por qué esto estaba en "sin
+           overflow:hidden" antes) — este overflow solo entra en juego
+           para la CAPA de imagen, que ahora puede arrastrarse bien
+           afuera de los límites de la tarjeta: sin este límite se saldría
+           por encima de la tarjeta vecina o produciría scroll horizontal. */
+        position: relative;
+        overflow: hidden;
+        min-height: 212px;
+        border-radius: 18px;
+        background: var(--color-blanco-calido);
+        border: 1px solid var(--color-beige);
+        box-shadow: 0 8px 20px -16px rgba(59, 46, 38, 0.4);
+        padding: 14px;
+        box-sizing: border-box;
+    }
+
+    .m-card--cta {
+        background: var(--color-crema-oscuro);
+    }
+
+    .m-card__cuerpo {
+        /* Franja para el texto a la izquierda: el MISMO % que el width de
+           .m-card__imagen (abajo), ambos resueltos contra la misma caja
+           border-box de .m-card — así la imagen nunca puede invadir esta
+           columna, a cualquier ancho de pantalla. */
+        position: relative;
+        z-index: 2;
+        padding-right: 50%;
+    }
+
+    .m-card__icono {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: var(--color-oliva-oscuro);
+        font-size: 1.05rem;
+        margin-bottom: 8px;
+    }
+
+    .m-card__icono--budines {
+        background: var(--color-marron);
+    }
+
+    .m-card__icono--dulces {
+        background: var(--color-terracota);
+    }
+
+    .m-card h3 {
+        margin: 0 0 4px;
+        font-size: 1rem;
+        text-transform: uppercase;
+        letter-spacing: 0.02em;
+    }
+
+    .m-card p {
+        margin: 0 0 8px;
+        font-size: 0.82rem;
+        line-height: 1.35;
+        color: #6b5c4f;
+    }
+
+    .m-card__enlace {
+        color: var(--color-terracota);
+        font-weight: 600;
+        font-size: 0.85rem;
+        white-space: normal;
+    }
+
+    .m-card__imagen {
+        /* Capa libre sobre TODA la tarjeta (no una caja recortada a un
+           rincón): inset:0 la hace coincidir en tamaño con .m-card (el
+           editor visual usa el propio getBoundingClientRect() de este
+           elemento como referencia de arrastre — ver panel_preview_editor.js
+           — así que haciéndolo del tamaño de la tarjeta, esa referencia
+           YA ES .m-card sin tener que enseñarle al JS a mirar otro
+           elemento). El translate/scale de --imagen-x/-y/-size (ver abajo)
+           se aplica ACÁ, no en el <img>, exactamente como
+           .categoria-card__imagen en desktop: mover/escalar el contenedor
+           entero en vez del <img> es lo que permite que el % de
+           translate() se resuelva contra el tamaño de LA TARJETA (ya que
+           translate() en % siempre es relativo a la propia caja del
+           elemento transformado) en vez de contra el tamaño chico de la
+           foto. pointer-events:none replica el mismo patrón de desktop:
+           en el sitio público esta capa no debe interceptar clicks (el
+           enlace "Ver más" vive en .m-card__cuerpo); el modo edición del
+           panel lo reactiva (ver panel_preview_editor.css,
+           .modo-edicion [data-editable-imagen]). */
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        transform:
+            translate(
+                calc((var(--imagen-x, 50) - 50) * 1%),
+                calc((var(--imagen-y, 50) - 50) * 1%)
+            )
+            scale(calc(var(--imagen-size, 100) / 100));
+    }
+
+    .m-card__imagen img {
+        /* Posición BASE (antes de que el translate/scale de arriba mueva
+           nada): abajo a la derecha, la mitad del ancho de la tarjeta,
+           igual que el diseño ya aprobado — el alto sale solo del aspect
+           ratio real de la foto (1536x1024, 3:2, verificado con PIL, las
+           4 fotos idénticas) porque no hay ningún alto forzado. Con
+           --imagen-x/-y en 50 y --imagen-size en 100 (los valores por
+           defecto) el transform del padre da translate(0,0) scale(1):
+           el resultado es EXACTAMENTE esta posición base, sin mover
+           nada — recién se corre/escala cuando el panel guarda otro
+           valor. object-fit:contain es un resguardo para una imagen
+           subida a mano con otra proporción (categorías sin arte
+           dedicado): nunca la recorta, como mucho dej a un margen
+           dentro de su propio ancho/alto. */
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        width: 50%;
+        height: auto;
+        max-height: 100%;
+        object-fit: contain;
+        object-position: bottom right;
+        display: block;
+    }
+
+/* ============================================================
+   Responsive del resto del sitio (no exclusivo de home): sí
+   depende del ancho real de pantalla, así que se queda dentro
+   de @media. Separado del bloque .m-* de arriba a propósito.
+   ============================================================ */
+@media (max-width: 767px) {
+    /* ---------- Header / navegación (compartido en todo el sitio) ---------- */
+    .site-header__fila {
+        padding: 12px 16px;
+    }
+
     .site-nav:not(.site-nav--mobile) {
         display: none;
     }
@@ -915,105 +1685,21 @@
     }
 
     .site-header__logo {
-        justify-self: start;
+        justify-self: center;
+        gap: 8px;
+    }
+
+    .site-header__isotipo-img {
+        width: 40px;
+        height: 40px;
+    }
+
+    .site-header__nombre {
+        font-size: 0.95rem;
     }
 
     .site-header__acciones {
         justify-self: end;
-        gap: 10px;
-    }
-
-    .hero {
-        display: block;
-        aspect-ratio: auto;
-        min-height: 0;
-        padding: 40px 0 32px;
-    }
-
-    .hero__grid {
-        padding: 0 24px;
-    }
-
-    .hero__texto {
-        max-width: 100%;
-        font-size: 1.05rem;
-    }
-
-    .hero__flores {
-        display: none;
-    }
-
-    .hero__divisor {
-        justify-content: center;
-    }
-
-    .hero__descripcion {
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-    .hero h1 {
-        font-size: 2.8rem;
-    }
-
-    .titulo-decorado--destacados {
-        font-size: 2rem;
-    }
-
-    .hero__imagen {
-        width: 100%;
-        margin-top: 32px;
-    }
-
-    .hero__imagen-marco {
-        aspect-ratio: 4 / 3;
-        border-radius: 18px;
-    }
-
-    .hero__imagen-marco::before {
-        display: none;
-    }
-
-    .categorias-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .categoria-card {
-        --card-h: 200px;
-        min-height: 200px;
-    }
-
-    .categoria-card__imagen {
-        right: -10px;
-        bottom: -55px;
-        transform: none;
-    }
-
-    .categoria-card__imagen--tartas {
-        bottom: -85px;
-    }
-
-    .categoria-card__imagen img {
-        height: 200px;
-    }
-
-    .producto-detalle {
-        grid-template-columns: 1fr;
-    }
-
-    .site-footer__grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-}
-
-/* ===== Responsive: mobile ===== */
-@media (max-width: 600px) {
-    .site-header__fila {
-        padding: 12px 16px;
-    }
-
-    .site-header__nombre {
-        font-size: 1.1rem;
     }
 
     .anuncio-envios {
@@ -1021,55 +1707,22 @@
         padding: 6px 12px;
     }
 
-    .hero {
-        padding: 32px 0;
+    /* ---------- Home: apaga desktop, prende mobile ---------- */
+    .home-desktop {
+        display: none;
     }
 
-    .hero__decorativa {
-        font-size: 1.05rem;
+    .home-mobile {
+        display: block;
     }
 
-    .hero h1 {
-        font-size: 2.2rem;
+    /* ---------- Resto del sitio (compartido, no exclusivo de home) ---------- */
+    .titulo-decorado {
+        font-size: 1.4rem;
     }
 
-    .hero__descripcion {
-        font-size: 1rem;
-    }
-
-    .sello-pedidos {
-        width: 100px;
-        height: 100px;
-        font-size: 0.65rem;
-        right: 4px;
-    }
-
-    .categorias-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .categoria-card {
-        --card-h: 180px;
-        padding: 20px;
-        min-height: 180px;
-    }
-
-    .categoria-card__cuerpo {
-        padding-right: 40%;
-    }
-
-    .categoria-card__imagen {
-        right: -8px;
-        bottom: -35px;
-        transform: none;
-    }
-
-    .categoria-card__imagen--tartas {
-        bottom: -55px;
-    }
-
-    .categoria-card__imagen img {
-        height: 150px;
+    .titulo-decorado--destacados {
+        font-size: 1.6rem;
     }
 
     .productos-grid {
@@ -1086,16 +1739,55 @@
         font-size: 0.75rem;
     }
 
+    .producto-detalle {
+        grid-template-columns: 1fr;
+    }
+
     .site-footer__grid {
         grid-template-columns: 1fr;
+        gap: 28px;
         text-align: center;
     }
 
-    .titulo-decorado {
-        font-size: 1.4rem;
+    .site-footer__col {
+        border-left: none;
+        padding: 0;
     }
 
-    .titulo-decorado--destacados {
-        font-size: 1.6rem;
+    .site-footer__logo {
+        width: 80px;
+        height: 80px;
     }
+}
+
+/* ============================================================
+   Panel: selector Desktop/Mobile del editor visual (ver
+   panel_preview_editor.js). Fuerza cuál de las dos interfaces se
+   ve SIN depender del ancho real de la ventana del navegador del
+   admin — por eso .m-* está fuera del @media (arriba): así esta
+   clase alcanza para activar el look mobile completo aunque la
+   ventana sea de escritorio. No afecta a visitantes reales (esta
+   clase nunca se agrega fuera del modo edición del panel).
+   ============================================================ */
+body.ppe-vista-mobile .home-desktop {
+    display: none;
+}
+
+body.ppe-vista-mobile .home-mobile {
+    display: block;
+    /* El editor normalmente se abre en un navegador de escritorio: sin
+       este límite, .home-mobile (pensado para ~320-430px) se estiraría al
+       ancho completo de esa ventana — una foto de portada de 1500px de
+       alto, por ejemplo — en vez de parecerse a un teléfono real. */
+    max-width: 430px;
+    margin: 0 auto;
+    box-shadow: 0 0 0 1px var(--color-beige);
+}
+
+body.ppe-vista-desktop .home-mobile {
+    display: none;
+}
+
+body.ppe-vista-desktop .home-desktop {
+    display: block;
 }

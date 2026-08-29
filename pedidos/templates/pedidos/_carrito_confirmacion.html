@@ -1,0 +1,21 @@
+{% comment %}
+Estado de "pedido confirmado" dentro del drawer (reemplaza el contenido de
+[data-carrito-cuerpo] después de un checkout AJAX exitoso). El link de
+WhatsApp llega armado por completo desde el servidor (whatsapp.construir_url,
+ver pedidos/views.py) — abrir wa.me con un mensaje precompletado requiere
+que el USUARIO haga el click (los navegadores bloquean popups/nuevas
+pestañas abiertas por JS fuera de un click real), así que este es un botón
+real que el cliente presiona para mandar el mensaje, no un envío automático
+silencioso. Ver la explicación completa en el resumen de la tarea.
+{% endcomment %}
+<div class="carrito-drawer__confirmacion">
+    <span class="carrito-drawer__confirmacion-icono" aria-hidden="true">✓</span>
+    <h3>¡Pedido registrado!</h3>
+    <p>Pedido #{{ pedido.pk }} a nombre de {{ pedido.nombre }} {{ pedido.apellido }}.</p>
+    <p>Ahora enviá el mensaje por WhatsApp para confirmarlo con nosotros:</p>
+    <a href="{{ whatsapp_url }}" target="_blank" rel="noopener" class="boton carrito-drawer__boton" data-carrito-whatsapp>
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.3.4-.4.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5s-.6-1.4-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>
+        Enviar por WhatsApp
+    </a>
+    <button type="button" class="carrito-drawer__seguir" data-carrito-cerrar>Seguir comprando</button>
+</div>

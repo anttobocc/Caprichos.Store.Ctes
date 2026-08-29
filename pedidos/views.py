@@ -3,8 +3,9 @@ from decimal import Decimal
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
-from django.http import Http404
+from django.http import Http404, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
 from catalogo.models import Producto, VarianteProducto
@@ -40,6 +41,26 @@ def _cantidad_valida(valor):
     return cantidad
 
 
+def _es_ajax(request):
+    return request.headers.get("X-Requested-With") == "XMLHttpRequest"
+
+
+def _respuesta_drawer_json(request, error=None):
+    """Arma la respuesta JSON que usa el panel lateral del carrito
+    (static/js/carrito_drawer.js) para refrescarse sin recargar la página:
+    el HTML ya renderizado del drawer + la cantidad total de unidades."""
+    if error:
+        return JsonResponse({"ok": False, "error": error}, status=400)
+    carrito = Carrito(request)
+    lineas = carrito.items()
+    html = render_to_string("pedidos/_carrito_drawer.html", {
+        "carrito_lineas": lineas,
+        "carrito_total": carrito.total(),
+        "carrito_hay_no_disponibles": carrito.hay_no_disponibles(),
+    }, request=request)
+    return JsonResponse({"ok": True, "cantidad": sum(l.cantidad for l in lineas), "html": html})
+
+
 def carrito_ver(request):
     carrito = Carrito(request)
     avisos = []
@@ -56,28 +77,39 @@ def carrito_ver(request):
 @require_POST
 def carrito_agregar(request, producto_id):
     producto = get_object_or_404(Producto, pk=producto_id, activo=True)
+    es_ajax = _es_ajax(request)
 
     variante = None
     variante_id = request.POST.get("variante_id")
     if producto.tiene_variantes:
         if not variante_id:
+            if es_ajax:
+                return _respuesta_drawer_json(request, error="Elegí una opción antes de agregar este producto.")
             messages.error(request, "Elegí una opción antes de agregar este producto.")
             return redirect("catalogo:producto_detalle", slug=producto.slug)
         variante = VarianteProducto.objects.filter(pk=variante_id, producto=producto, activo=True).first()
         if variante is None:
+            if es_ajax:
+                return _respuesta_drawer_json(request, error="La opción elegida ya no está disponible.")
             messages.error(request, "La opción elegida ya no está disponible.")
             return redirect("catalogo:producto_detalle", slug=producto.slug)
     elif variante_id:
         # El producto no tiene variantes activas: cualquier variante_id enviado se ignora/rechaza.
+        if es_ajax:
+            return _respuesta_drawer_json(request, error="Este producto no tiene opciones para elegir.")
         messages.error(request, "Este producto no tiene opciones para elegir.")
         return redirect("catalogo:producto_detalle", slug=producto.slug)
 
     cantidad = _cantidad_valida(request.POST.get("cantidad", 1))
     if cantidad is None:
+        if es_ajax:
+            return _respuesta_drawer_json(request, error="La cantidad debe ser un número entero mayor o igual a 1.")
         messages.error(request, "La cantidad debe ser un número entero mayor o igual a 1.")
         return redirect("catalogo:producto_detalle", slug=producto.slug)
 
     Carrito(request).agregar(producto, variante, cantidad)
+    if es_ajax:
+        return _respuesta_drawer_json(request)
     messages.success(request, f'"{producto.nombre}" se agregó al carrito.')
     return redirect("pedidos:carrito")
 
@@ -86,15 +118,21 @@ def carrito_agregar(request, producto_id):
 def carrito_actualizar(request, clave):
     cantidad = _cantidad_valida(request.POST.get("cantidad"))
     if cantidad is None:
+        if _es_ajax(request):
+            return _respuesta_drawer_json(request, error="La cantidad debe ser un número entero mayor o igual a 1.")
         messages.error(request, "La cantidad debe ser un número entero mayor o igual a 1.")
         return redirect("pedidos:carrito")
     Carrito(request).actualizar_cantidad(clave, cantidad)
+    if _es_ajax(request):
+        return _respuesta_drawer_json(request)
     return redirect("pedidos:carrito")
 
 
 @require_POST
 def carrito_eliminar(request, clave):
     Carrito(request).eliminar(clave)
+    if _es_ajax(request):
+        return _respuesta_drawer_json(request)
     return redirect("pedidos:carrito")
 
 
@@ -107,12 +145,20 @@ def carrito_vaciar(request):
 def checkout(request):
     carrito = Carrito(request)
     lineas = carrito.items()
+    es_ajax = _es_ajax(request)
 
     if not lineas:
+        if es_ajax:
+            return JsonResponse({"ok": False, "error": "Tu carrito está vacío."}, status=400)
         messages.warning(request, "Tu carrito está vacío.")
         return redirect("pedidos:carrito")
 
     if carrito.hay_no_disponibles():
+        if es_ajax:
+            return JsonResponse(
+                {"ok": False, "error": "Hay productos no disponibles en tu carrito. Quitalos para poder continuar."},
+                status=400,
+            )
         messages.error(request, "Hay productos no disponibles en tu carrito. Quitalos para poder continuar.")
         return redirect("pedidos:carrito")
 
@@ -130,9 +176,16 @@ def checkout(request):
             # confía en lo que se mostró antes.
             lineas = carrito.items()
             if not lineas:
+                if es_ajax:
+                    return JsonResponse({"ok": False, "error": "Tu carrito está vacío."}, status=400)
                 messages.warning(request, "Tu carrito está vacío.")
                 return redirect("pedidos:carrito")
             if carrito.hay_no_disponibles():
+                if es_ajax:
+                    return JsonResponse({
+                        "ok": False,
+                        "error": "Hay productos no disponibles en tu carrito. Quitalos para poder continuar.",
+                    }, status=400)
                 messages.error(request, "Hay productos no disponibles en tu carrito. Quitalos para poder continuar.")
                 return redirect("pedidos:carrito")
 
@@ -161,13 +214,27 @@ def checkout(request):
 
             carrito.vaciar()
             request.session[SESSION_KEY_ULTIMO_PEDIDO] = pedido.pk
+            if es_ajax:
+                whatsapp_url = whatsapp.construir_url(pedido)
+                return JsonResponse({
+                    "ok": True,
+                    "pedido_id": pedido.pk,
+                    "whatsapp_url": whatsapp_url,
+                    "html": render_to_string(
+                        "pedidos/_carrito_confirmacion.html",
+                        {"pedido": pedido, "whatsapp_url": whatsapp_url},
+                        request=request,
+                    ),
+                })
             messages.success(request, "¡Tu pedido fue confirmado!")
             return redirect("pedidos:pedido_detalle", pk=pedido.pk)
+        elif es_ajax:
+            errores = {campo: list(map(str, lista)) for campo, lista in form.errors.items()}
+            return JsonResponse({"ok": False, "errors": errores}, status=400)
     else:
         perfil = getattr(usuario, "perfil", None) if usuario else None
         initial = {
-            "nombre": usuario.first_name if usuario else "",
-            "apellido": usuario.last_name if usuario else "",
+            "nombre_completo": f"{usuario.first_name} {usuario.last_name}".strip() if usuario else "",
             "telefono": perfil.telefono if perfil else "",
         }
         form = CheckoutForm(initial=initial)

@@ -220,8 +220,7 @@ class CheckoutTests(TestCase):
 
     def _datos_checkout(self, **overrides):
         datos = {
-            "nombre": "Ana",
-            "apellido": "Test",
+            "nombre_completo": "Ana Test",
             "telefono": "111222333",
             "tipo_entrega": "retiro",
             "direccion_envio": "",
@@ -337,7 +336,7 @@ class CreacionPedidoTests(TestCase):
         producto = crear_producto(self.categoria, precio=1500)
         self.client.post(reverse("pedidos:carrito_agregar", args=[producto.pk]), {"cantidad": 3})
         datos = {
-            "nombre": "Ana", "apellido": "Test", "telefono": "111222333",
+            "nombre_completo": "Ana Test", "telefono": "111222333",
             "tipo_entrega": "retiro", "direccion_envio": "", "fecha_pedido": fecha_valida(), "observaciones": "obs",
         }
         self.client.post(reverse("pedidos:checkout"), datos)
@@ -359,7 +358,7 @@ class CreacionPedidoTests(TestCase):
         producto = crear_producto(self.categoria)
         self.client.post(reverse("pedidos:carrito_agregar", args=[producto.pk]), {"cantidad": 1})
         datos = {
-            "nombre": "Ana", "apellido": "Test", "telefono": "111222333",
+            "nombre_completo": "Ana Test", "telefono": "111222333",
             "tipo_entrega": "retiro", "direccion_envio": "", "fecha_pedido": fecha_valida(), "observaciones": "",
         }
         self.client.post(reverse("pedidos:checkout"), datos)
@@ -370,7 +369,7 @@ class CreacionPedidoTests(TestCase):
         producto = crear_producto(self.categoria, nombre="Nombre Original", precio=1000)
         self.client.post(reverse("pedidos:carrito_agregar", args=[producto.pk]), {"cantidad": 1})
         datos = {
-            "nombre": "Ana", "apellido": "Test", "telefono": "111222333",
+            "nombre_completo": "Ana Test", "telefono": "111222333",
             "tipo_entrega": "retiro", "direccion_envio": "", "fecha_pedido": fecha_valida(), "observaciones": "",
         }
         self.client.post(reverse("pedidos:checkout"), datos)
@@ -391,7 +390,7 @@ class CreacionPedidoTests(TestCase):
             reverse("pedidos:carrito_agregar", args=[producto.pk]), {"variante_id": variante.pk, "cantidad": 1}
         )
         datos = {
-            "nombre": "Ana", "apellido": "Test", "telefono": "111222333",
+            "nombre_completo": "Ana Test", "telefono": "111222333",
             "tipo_entrega": "retiro", "direccion_envio": "", "fecha_pedido": fecha_valida(), "observaciones": "",
         }
         self.client.post(reverse("pedidos:checkout"), datos)
@@ -411,7 +410,7 @@ class CreacionPedidoTests(TestCase):
         producto.disponible = False
         producto.save(update_fields=["disponible"])
         datos = {
-            "nombre": "Ana", "apellido": "Test", "telefono": "111222333",
+            "nombre_completo": "Ana Test", "telefono": "111222333",
             "tipo_entrega": "retiro", "direccion_envio": "", "fecha_pedido": fecha_valida(), "observaciones": "",
         }
         self.client.post(reverse("pedidos:checkout"), datos)

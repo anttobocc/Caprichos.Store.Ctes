@@ -16,20 +16,29 @@
     <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
         <path d="M3 7h11v9H3z"/><path d="M14 10h4l3 3v3h-7z"/><circle cx="7" cy="18" r="1.8"/><circle cx="18" cy="18" r="1.8"/>
     </svg>
-    <span>Hacemos envíos a domicilio{% if configuracion_negocio.direccion %} — {{ configuracion_negocio.direccion }}{% endif %} ♥</span>
+    <span>Hacemos envíos a domicilio en Corrientes Capital.</span>
 </div>
 {% endif %}
 
 <header class="site-header">
     <div class="site-header__fila contenedor">
+        {% comment %}
+        El botón hamburguesa es hijo directo de esta grilla (no de
+        .site-header__acciones): en desktop queda display:none (no
+        participa del grid, cero impacto en el layout de 3 columnas
+        logo/nav/acciones). En mobile, con .site-nav oculto, los tres
+        hijos visibles (hamburguesa/logo/acciones) caen solos en las
+        columnas 1/2/3 de esa misma grilla — hamburguesa-izquierda,
+        logo-centro, carrito-derecha — sin necesitar grid-column
+        explícito ni tocar el layout de desktop.
+        {% endcomment %}
+        <label for="menu-toggle" class="boton-hamburguesa" aria-label="Abrir menú">
+            <span></span><span></span><span></span>
+        </label>
+
         <a href="{% url 'catalogo:home' %}" class="site-header__logo">
             <span class="site-header__isotipo" aria-hidden="true">
-                <svg class="site-header__vapor" viewBox="0 0 40 18" aria-hidden="true">
-                    <path d="M6 17c-3.2-4-1-8.4 2-12.4" stroke="var(--color-terracota)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-                    <path d="M20 17c-3.2-5-1-9.4 2-14.4" stroke="var(--color-terracota)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-                    <path d="M34 17c-3.2-4-1-8.4 2-12.4" stroke="var(--color-terracota)" stroke-width="1.6" fill="none" stroke-linecap="round"/>
-                </svg>
-                <span class="site-header__isotipo-letra">C</span>
+                <img src="{% static 'img/logo.png' %}" alt="" class="site-header__isotipo-img">
             </span>
             <span class="site-header__nombre">
                 CAPRICHO
@@ -40,27 +49,26 @@
         <nav class="site-nav">
             <a href="{% url 'catalogo:home' %}" class="{% if request.resolver_match.url_name == 'home' %}site-nav__link--activo{% endif %}">Inicio</a>
             <a href="{% url 'catalogo:productos' %}">Productos</a>
-            <a href="{% url 'catalogo:home' %}#contacto">Contacto</a>
+            <a href="{% url 'catalogo:home' %}#destacados">Destacados</a>
+            {% if hay_combos_activos %}<a href="{% url 'catalogo:home' %}#combos">Combos</a>{% endif %}
         </nav>
 
         <div class="site-header__acciones">
-            <a href="{% url 'pedidos:carrito' %}" class="icono-accion icono-accion--carrito" aria-label="Ver carrito">
+            <a href="{% url 'pedidos:carrito' %}" class="icono-accion icono-accion--carrito" aria-label="Ver carrito" data-carrito-abrir>
                 <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
                     <circle cx="9" cy="20" r="1.4"/><circle cx="18" cy="20" r="1.4"/>
                     <path d="M2.5 3h2l2.2 11.2a2 2 0 0 0 2 1.6h8a2 2 0 0 0 2-1.6L21 7H6"/>
                 </svg>
                 <span class="icono-accion__contador">{{ carrito_cantidad|default:0 }}</span>
             </a>
-            <label for="menu-toggle" class="boton-hamburguesa" aria-label="Abrir menú">
-                <span></span><span></span><span></span>
-            </label>
         </div>
     </div>
 
     <nav class="site-nav site-nav--mobile">
         <a href="{% url 'catalogo:home' %}">Inicio</a>
         <a href="{% url 'catalogo:productos' %}">Productos</a>
-        <a href="{% url 'catalogo:home' %}#contacto">Contacto</a>
+        <a href="{% url 'catalogo:home' %}#destacados">Destacados</a>
+        {% if hay_combos_activos %}<a href="{% url 'catalogo:home' %}#combos">Combos</a>{% endif %}
         {% if user.is_authenticated %}
             <a href="{% url 'pedidos:mis_pedidos' %}">Mis pedidos</a>
             <a href="{% url 'usuarios:perfil' %}">Mi perfil</a>
@@ -76,32 +84,92 @@
 </div>
 {% endif %}
 
+<div class="carrito-drawer" data-carrito-drawer hidden>
+    <div class="carrito-drawer__fondo" data-carrito-cerrar></div>
+    <aside class="carrito-drawer__panel" role="dialog" aria-modal="true" aria-label="Carrito de compras">
+        <header class="carrito-drawer__header">
+            <h2>Tu carrito</h2>
+            <button type="button" class="carrito-drawer__cerrar" data-carrito-cerrar aria-label="Cerrar carrito">✕</button>
+        </header>
+        <div class="carrito-drawer__cuerpo" data-carrito-cuerpo>
+            {% include "pedidos/_carrito_drawer.html" %}
+        </div>
+    </aside>
+</div>
+
+<script src="{% static 'js/carrito_drawer.js' %}" defer></script>
+
 <main>
     {% block catalogo_content %}{% endblock %}
 </main>
 
 <footer class="site-footer" id="contacto">
-    <div class="contenedor site-footer__grid">
-        <div>
-            <span class="site-header__marca site-header__marca--footer">C</span>
-            <p>Pedí tu capricho y lo llevamos hasta vos.</p>
+    <div class="contenedor site-footer__marca-bloque">
+        <span class="site-footer__logo" aria-hidden="true">
+            <img src="{% static 'img/logo.png' %}" alt="" class="site-footer__logo-img">
+        </span>
+        <p class="site-footer__tagline">Pedí tu capricho y lo llevamos hasta vos.</p>
+        <div class="site-footer__divisor" aria-hidden="true">
+            <span class="site-footer__divisor-linea"></span>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--color-terracota)"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z"/></svg>
+            <span class="site-footer__divisor-linea"></span>
         </div>
-        <div id="nosotros">
+    </div>
+
+    <div class="contenedor site-footer__grid">
+        <div class="site-footer__col" id="nosotros">
             <h4>Nosotros</h4>
+            <span class="site-footer__col-divisor" aria-hidden="true">
+                <span class="site-footer__col-divisor-linea"></span>
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="var(--color-terracota)"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z"/></svg>
+                <span class="site-footer__col-divisor-linea"></span>
+            </span>
             <p>{{ configuracion_negocio.nombre_negocio }} — {{ configuracion_negocio.eslogan }}</p>
         </div>
-        <div>
+        <div class="site-footer__col">
             <h4>Contacto</h4>
-            <p>
-                <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener">WhatsApp: {{ configuracion_negocio.whatsapp_numero }}</a>
-            </p>
+            <span class="site-footer__col-divisor" aria-hidden="true">
+                <span class="site-footer__col-divisor-linea"></span>
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="var(--color-terracota)"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z"/></svg>
+                <span class="site-footer__col-divisor-linea"></span>
+            </span>
+            <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener" class="site-footer__whatsapp">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.3.4-.4.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5s-.6-1.4-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>
+                Escribinos
+            </a>
             {% if configuracion_negocio.direccion %}<p>{{ configuracion_negocio.direccion }}</p>{% endif %}
         </div>
-        <div>
+        <div class="site-footer__col">
             <h4>Pedidos</h4>
+            <span class="site-footer__col-divisor" aria-hidden="true">
+                <span class="site-footer__col-divisor-linea"></span>
+                <svg viewBox="0 0 24 24" width="10" height="10" fill="var(--color-terracota)"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z"/></svg>
+                <span class="site-footer__col-divisor-linea"></span>
+            </span>
             <p>Se toman pedidos con {{ configuracion_negocio.dias_anticipacion_pedido }} día{{ configuracion_negocio.dias_anticipacion_pedido|pluralize }} de anticipación.</p>
-            {% if configuracion_negocio.envio_habilitado %}<p>Hacemos envíos a domicilio.</p>{% endif %}
+            {% if configuracion_negocio.envio_habilitado %}<p>Hacemos envíos a domicilio en Corrientes Capital.</p>{% endif %}
         </div>
+    </div>
+
+    <div class="contenedor site-footer__divisor" aria-hidden="true">
+        <span class="site-footer__divisor-linea"></span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="var(--color-terracota)"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z"/></svg>
+        <span class="site-footer__divisor-linea"></span>
+    </div>
+
+    <div class="contenedor site-footer__social">
+        {% if configuracion_negocio.instagram %}
+        <a href="{{ configuracion_negocio.instagram }}" target="_blank" rel="noopener" class="site-footer__social-icono" aria-label="Instagram">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1"/></svg>
+        </a>
+        {% endif %}
+        <a href="{{ whatsapp_link_general }}" target="_blank" rel="noopener" class="site-footer__social-icono" aria-label="WhatsApp">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true"><path d="M12 2a10 10 0 0 0-8.6 15.1L2 22l5.1-1.3A10 10 0 1 0 12 2Zm0 18.2a8.2 8.2 0 0 1-4.2-1.2l-.3-.2-3 .8.8-2.9-.2-.3A8.2 8.2 0 1 1 12 20.2Zm4.5-6.1c-.2-.1-1.5-.7-1.7-.8-.2-.1-.4-.1-.6.1-.2.2-.7.8-.8 1-.2.2-.3.2-.5.1-.2-.1-1-.4-1.9-1.2-.7-.6-1.2-1.4-1.3-1.6-.1-.2 0-.4.1-.5.1-.1.2-.3.4-.4.1-.2.2-.3.2-.5.1-.2 0-.4 0-.5s-.6-1.4-.8-1.9c-.2-.5-.4-.4-.6-.4h-.5c-.2 0-.5.1-.7.3-.2.2-.9.9-.9 2.2s1 2.6 1.1 2.7c.1.2 2 3 4.8 4.3.7.3 1.2.5 1.6.6.7.2 1.3.2 1.8.1.5-.1 1.5-.6 1.7-1.2.2-.6.2-1.1.2-1.2-.1-.1-.3-.2-.5-.3Z"/></svg>
+        </a>
+    </div>
+
+    <div class="site-footer__creditos">
+        <span>Desarrollado y diseñado por @anttobocc</span>
     </div>
 </footer>
 

@@ -1,4 +1,5 @@
 {% extends "catalogo/base_catalogo.html" %}
+{% load catalogo_extras %}
 
 {% block title %}{{ producto.nombre }} | Capricho{% endblock %}
 
@@ -14,7 +15,7 @@
 
     <div class="producto-detalle__info">
         <p class="producto-card__categoria"><a href="{% url 'catalogo:categoria_detalle' producto.categoria.slug %}">{{ producto.categoria.nombre }}</a></p>
-        <h1>{{ producto.nombre }}</h1>
+        <h1>{{ producto|nombre_sin_categoria }}</h1>
 
         {% if producto.descripcion_corta %}<p class="producto-detalle__descripcion-corta"><em>{{ producto.descripcion_corta }}</em></p>{% endif %}
         {% if producto.descripcion %}<p>{{ producto.descripcion }}</p>{% endif %}
@@ -58,7 +59,14 @@
                 </div>
 
                 <p class="producto-card__precio" data-precio-mostrado>$—</p>
-                <label class="producto-detalle__cantidad">Cantidad a pedir: <input type="number" name="cantidad" value="1" min="1"></label>
+                <div class="producto-detalle__cantidad">
+                    <span>Cantidad a pedir:</span>
+                    <div class="stepper-cantidad">
+                        <button type="button" class="stepper-cantidad__boton" data-stepper-menos aria-label="Restar una unidad">−</button>
+                        <input type="number" name="cantidad" value="1" min="1" class="stepper-cantidad__valor" data-stepper-valor readonly>
+                        <button type="button" class="stepper-cantidad__boton" data-stepper-mas aria-label="Sumar una unidad">+</button>
+                    </div>
+                </div>
                 <button type="submit" class="boton" data-boton-agregar disabled>Agregar al carrito</button>
             </form>
         {% elif variantes %}
@@ -75,14 +83,28 @@
                     </li>
                     {% endfor %}
                 </ul>
-                <label class="producto-detalle__cantidad">Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
+                <div class="producto-detalle__cantidad">
+                    <span>Cantidad:</span>
+                    <div class="stepper-cantidad">
+                        <button type="button" class="stepper-cantidad__boton" data-stepper-menos aria-label="Restar una unidad">−</button>
+                        <input type="number" name="cantidad" value="1" min="1" class="stepper-cantidad__valor" data-stepper-valor readonly>
+                        <button type="button" class="stepper-cantidad__boton" data-stepper-mas aria-label="Sumar una unidad">+</button>
+                    </div>
+                </div>
                 <button type="submit" class="boton">Agregar al carrito</button>
             </form>
         {% else %}
             <p class="producto-card__precio">${{ producto.precio }}</p>
             <form method="post" action="{% url 'pedidos:carrito_agregar' producto.pk %}" class="producto-detalle__form">
                 {% csrf_token %}
-                <label class="producto-detalle__cantidad">Cantidad: <input type="number" name="cantidad" value="1" min="1"></label>
+                <div class="producto-detalle__cantidad">
+                    <span>Cantidad:</span>
+                    <div class="stepper-cantidad">
+                        <button type="button" class="stepper-cantidad__boton" data-stepper-menos aria-label="Restar una unidad">−</button>
+                        <input type="number" name="cantidad" value="1" min="1" class="stepper-cantidad__valor" data-stepper-valor readonly>
+                        <button type="button" class="stepper-cantidad__boton" data-stepper-mas aria-label="Sumar una unidad">+</button>
+                    </div>
+                </div>
                 <button type="submit" class="boton">Agregar al carrito</button>
             </form>
         {% endif %}

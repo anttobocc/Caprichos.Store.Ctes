@@ -6,7 +6,7 @@ from .models import Categoria, Combo, Producto
 
 
 def home(request, modo_edicion=False):
-    categorias = Categoria.objects.filter(activo=True)
+    categorias = Categoria.objects.filter(activo=True, mostrar_en_inicio=True)
     destacados = Producto.objects.filter(activo=True, destacado=True).select_related("categoria")
     combos = Combo.objects.filter(activo=True).prefetch_related("items__producto")
     return render(request, "catalogo/home.html", {
@@ -20,18 +20,18 @@ def lista_productos(request, modo_edicion=False):
     categoria_slug = request.GET.get("categoria")
     categoria_actual = None
     if categoria_slug:
-        categoria_actual = get_object_or_404(Categoria, slug=categoria_slug, activo=True)
+        categoria_actual = get_object_or_404(Categoria, slug=categoria_slug, activo=True, mostrar_en_productos=True)
         productos = productos.filter(categoria=categoria_actual)
     return render(request, "catalogo/productos_lista.html", {
         "productos": productos,
-        "categorias": Categoria.objects.filter(activo=True),
+        "categorias": Categoria.objects.filter(activo=True, mostrar_en_productos=True),
         "categoria_actual": categoria_actual,
         "modo_edicion": modo_edicion,
     })
 
 
 def categoria_detalle(request, slug, modo_edicion=False):
-    categoria = get_object_or_404(Categoria, slug=slug, activo=True)
+    categoria = get_object_or_404(Categoria, slug=slug, activo=True, mostrar_en_productos=True)
     productos = categoria.productos.filter(activo=True)
     return render(request, "catalogo/categoria_detalle.html", {
         "categoria": categoria, "productos": productos, "modo_edicion": modo_edicion,

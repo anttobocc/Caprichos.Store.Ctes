@@ -2,6 +2,46 @@
     width: 60px;
 }
 
+/* Mismo control "− N +" que en el drawer/detalle de producto (ver
+   static/css/catalogo.css); se repite acá porque esta página no carga
+   catalogo.css. */
+.stepper-cantidad {
+    display: inline-flex;
+    align-items: center;
+    border: 1px solid #e9dcc3;
+    border-radius: 999px;
+    overflow: hidden;
+    width: fit-content;
+    vertical-align: middle;
+}
+
+.stepper-cantidad__boton {
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: #faf3e8;
+    color: #3b2e26;
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.stepper-cantidad__boton:hover {
+    background: #c1663f;
+    color: #fffaf2;
+}
+
+.stepper-cantidad__valor {
+    width: 34px !important;
+    height: 28px;
+    border: none;
+    border-left: 1px solid #e9dcc3;
+    border-right: 1px solid #e9dcc3;
+    text-align: center;
+    font-weight: 600;
+    pointer-events: none;
+}
+
 .form-error {
     color: #a33;
 }

@@ -1,0 +1,87 @@
+{% comment %}
+Contenido del panel lateral del carrito. Se usa en tres lugares:
+- base_catalogo.html lo incluye directamente (primer render de cada página).
+- pedidos/views.py lo vuelve a renderizar (render_to_string) y lo manda como
+  "html" en la respuesta JSON de carrito_agregar/carrito_actualizar/
+  carrito_eliminar, para refrescar el panel sin recargar la página.
+- El propio carrito_checkout_form (ver pedidos/context_processors.py) se
+  usa acá para pedir nombre/apellido/teléfono/fecha SIN salir del carrito:
+  es el mismo CheckoutForm que ya validaba esto (anticipación mínima,
+  etc.) en el checkout de página completa — no hay lógica duplicada.
+Espera en el contexto: carrito_lineas, carrito_total,
+carrito_hay_no_disponibles, carrito_checkout_form.
+{% endcomment %}
+{% if not carrito_lineas %}
+<div class="carrito-drawer__vacio">
+    <p>Tu carrito está vacío.</p>
+    <a href="{% url 'catalogo:productos' %}" class="boton" data-carrito-cerrar>Ver productos</a>
+</div>
+{% else %}
+<ul class="carrito-drawer__lista">
+    {% for linea in carrito_lineas %}
+    <li class="carrito-drawer__item">
+        <div class="carrito-drawer__item-imagen">
+            {% if linea.producto.imagen %}
+                <img src="{{ linea.producto.imagen.url }}" alt="">
+            {% else %}
+                <span aria-hidden="true">🍰</span>
+            {% endif %}
+        </div>
+        <div class="carrito-drawer__item-info">
+            <p class="carrito-drawer__item-nombre">{{ linea.producto.nombre }}</p>
+            {% if linea.variante %}<p class="carrito-drawer__item-variante">{{ linea.variante.nombre }}</p>{% endif %}
+            <p class="carrito-drawer__item-detalle">${{ linea.precio_unitario }} c/u</p>
+            {% if not linea.disponible %}<p class="producto-card__no-disponible">No disponible</p>{% endif %}
+
+            <form method="post" action="{% url 'pedidos:carrito_actualizar' linea.clave %}" class="stepper-cantidad" data-carrito-actualizar-form>
+                {% csrf_token %}
+                <button type="button" class="stepper-cantidad__boton" data-stepper-menos aria-label="Restar una unidad">−</button>
+                <input type="number" name="cantidad" value="{{ linea.cantidad }}" min="1" class="stepper-cantidad__valor" data-stepper-valor readonly>
+                <button type="button" class="stepper-cantidad__boton" data-stepper-mas aria-label="Sumar una unidad">+</button>
+            </form>
+        </div>
+        <div class="carrito-drawer__item-acciones">
+            <span class="carrito-drawer__item-subtotal">${{ linea.subtotal }}</span>
+            <form method="post" action="{% url 'pedidos:carrito_eliminar' linea.clave %}" data-carrito-eliminar-form>
+                {% csrf_token %}
+                <button type="submit" class="carrito-drawer__quitar" aria-label="Quitar del carrito">✕</button>
+            </form>
+        </div>
+    </li>
+    {% endfor %}
+</ul>
+
+{% if carrito_hay_no_disponibles %}
+<p class="form-error">Hay productos no disponibles en tu carrito. Quitalos para poder confirmar el pedido.</p>
+{% else %}
+<form method="post" action="{% url 'pedidos:checkout' %}" class="carrito-drawer__checkout" data-carrito-checkout-form novalidate>
+    {% csrf_token %}
+    <input type="hidden" name="tipo_entrega" value="retiro">
+    <h3>Tus datos</h3>
+
+    <div class="carrito-drawer__campo">
+        <label for="cd-nombre-completo">Nombre y apellido</label>
+        <input type="text" id="cd-nombre-completo" name="nombre_completo" value="{{ carrito_checkout_form.nombre_completo.value|default:'' }}" required>
+        <span class="admin-field__error" data-error-para="nombre_completo"></span>
+    </div>
+    <div class="carrito-drawer__campo">
+        <label for="cd-telefono">Teléfono</label>
+        <input type="tel" id="cd-telefono" name="telefono" value="{{ carrito_checkout_form.telefono.value|default:'' }}" required>
+        <span class="admin-field__error" data-error-para="telefono"></span>
+    </div>
+    <div class="carrito-drawer__campo">
+        <label for="cd-fecha">Fecha del pedido</label>
+        <input type="date" id="cd-fecha" name="fecha_pedido" min="{{ carrito_checkout_form.fecha_minima|date:'Y-m-d' }}" value="{{ carrito_checkout_form.fecha_pedido.value|default:'' }}" required>
+        <span class="admin-field__error" data-error-para="fecha_pedido"></span>
+        <span class="carrito-drawer__ayuda">Se toman pedidos con al menos {{ carrito_checkout_form.config.dias_anticipacion_pedido }} día{{ carrito_checkout_form.config.dias_anticipacion_pedido|pluralize }} de anticipación.</span>
+    </div>
+
+    <p class="carrito-drawer__error-general" data-error-general hidden></p>
+
+    <div class="carrito-drawer__resumen">
+        <div class="carrito-drawer__total"><span>Total</span><strong>${{ carrito_total }}</strong></div>
+        <button type="submit" class="boton carrito-drawer__boton" data-carrito-finalizar-boton>Finalizar pedido</button>
+    </div>
+</form>
+{% endif %}
+{% endif %}

@@ -1,45 +1,69 @@
 {% comment %}
 Cuerpo del panel de Producto: campos del producto + formset de variantes.
 Se usa como "cuerpo_template" de _panel_formulario.html (espera "form" y
-"formset" en el contexto).
+"formset" en el contexto), y también lo reutiliza panel/producto_form.html
+(la página completa que sirve de fallback cuando la validación falla).
+
+Formulario deliberadamente compacto: no incluye slug, descripción (corta
+ni larga), ni el estado activo/inactivo del producto (ver
+[[panel-productos-form-compacto]]). El orden va:
+Categoría/Nombre, Precio/Unidad, Variantes, Destacado, Imagen.
 {% endcomment %}
-{% for field in form %}
-    {% if field.name != "imagen" and field.name != "imagen_pos_x" and field.name != "imagen_pos_y" and field.name != "imagen_zoom" %}
-        {% include "panel/includes/_campo.html" %}
-    {% endif %}
-{% endfor %}
+<div class="admin-producto-form__fila">
+    {% include "panel/includes/_campo.html" with field=form.categoria %}
+    {% include "panel/includes/_campo.html" with field=form.nombre %}
+</div>
 
-{% include "panel/includes/_editor_imagen_recorte.html" with campo_imagen=form.imagen campo_pos_x=form.imagen_pos_x campo_pos_y=form.imagen_pos_y campo_zoom=form.imagen_zoom imagen_actual=producto.imagen aspecto="4 / 3" etiqueta="Foto del producto" %}
+<div class="admin-producto-form__fila admin-producto-form__fila--precio">
+    {% include "panel/includes/_campo.html" with field=form.precio %}
+    {% include "panel/includes/_campo.html" with field=form.unidad_venta %}
+</div>
 
-<div class="admin-panel-form__seccion">
+<div class="admin-panel-form__seccion admin-variantes" data-variantes-seccion>
     <h3>Variantes</h3>
-    <p class="admin-field__ayuda">Un producto sin variantes debe tener un precio. Un producto con variantes debe tener el precio del producto vacío: cada variante define el suyo.</p>
+    <p class="admin-field__ayuda">Un producto sin variantes debe tener un precio. Un producto con variantes debe tener el precio del producto vacío: cada variante define el suyo. Arrastrá ⠿⠿ para reordenarlas.</p>
 
     {{ formset.management_form }}
     {% if formset.non_form_errors %}
         <div class="admin-alert admin-alert--error">{{ formset.non_form_errors }}</div>
     {% endif %}
 
-    <div class="admin-table-wrap">
-        <div class="admin-table-scroll">
-            <table class="admin-table" data-variantes-tabla>
-                <thead>
-                    <tr><th>Cantidad</th><th>Modalidad</th><th>Precio</th><th>Orden</th><th>Activa</th><th>Eliminar</th></tr>
-                </thead>
-                <tbody data-variantes-body>
-                    {% for variante_form in formset %}
-                    <tr>
-                        {{ variante_form.id }}
-                        <td>{{ variante_form.nombre }}{% for error in variante_form.nombre.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
-                        <td>{{ variante_form.modalidad }}{% for error in variante_form.modalidad.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
-                        <td>{{ variante_form.precio }}{% for error in variante_form.precio.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}</td>
-                        <td>{{ variante_form.orden }}</td>
-                        <td>{{ variante_form.activo }}</td>
-                        <td>{% if variante_form.instance.pk %}{{ variante_form.DELETE }}{% endif %}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <div class="admin-variantes-lista" data-variantes-body>
+        {% for variante_form in formset %}
+        <div class="admin-variante-fila" data-variante-fila>
+            {{ variante_form.id }}
+            {{ variante_form.orden }}
+            <button type="button" class="admin-variante-fila__handle" data-arrastrar aria-label="Arrastrar para reordenar">⠿⠿</button>
+
+            <div class="admin-variante-fila__campo">
+                <label>Modalidad</label>
+                {{ variante_form.modalidad }}
+                {% for error in variante_form.modalidad.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="admin-variante-fila__campo">
+                <label>Cantidad</label>
+                {{ variante_form.nombre }}
+                {% for error in variante_form.nombre.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+            </div>
+            <div class="admin-variante-fila__campo">
+                <label>Precio</label>
+                {{ variante_form.precio }}
+                {% for error in variante_form.precio.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+            </div>
+
+            {% if variante_form.instance.pk %}
+            <label class="admin-variante-fila__eliminar" title="Eliminar variante">
+                {{ variante_form.DELETE }}
+                <span aria-hidden="true">🗑</span>
+            </label>
+            {% else %}
+            <span class="admin-variante-fila__eliminar admin-variante-fila__eliminar--vacio" aria-hidden="true"></span>
+            {% endif %}
         </div>
+        {% endfor %}
     </div>
 </div>
+
+{% include "panel/includes/_campo.html" with field=form.destacado %}
+
+{% include "panel/includes/_editor_imagen_recorte.html" with campo_imagen=form.imagen campo_pos_x=form.imagen_pos_x campo_pos_y=form.imagen_pos_y campo_zoom=form.imagen_zoom imagen_actual=producto.imagen aspecto="4 / 3" etiqueta="Imagen" %}

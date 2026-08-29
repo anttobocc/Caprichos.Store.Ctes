@@ -6,7 +6,6 @@ from django.utils.text import slugify
 
 from catalogo.models import Categoria, Combo, ComboItem, Producto, VarianteProducto
 from pedidos.models import Pedido
-from usuarios.models import Perfil
 
 from .models import ConfiguracionNegocio
 
@@ -18,6 +17,16 @@ class ImagenPortadaWidget(forms.ClearableFileInput):
     portada de categorías y por la imagen de la tarjeta "Pedidos"."""
 
     template_name = "panel/includes/_widget_imagen_portada.html"
+
+
+class ImagenSimpleWidget(forms.ClearableFileInput):
+    """ClearableFileInput reducido al botón "Seleccionar archivo": sin
+    nombre del archivo actual ni checkbox "Eliminar imagen". Elegir un
+    archivo nuevo reemplaza al anterior al guardar (comportamiento normal
+    de un ImageField); no hace falta un control de borrado aparte. Usado
+    por el formulario de Producto."""
+
+    template_name = "panel/includes/_widget_imagen_simple.html"
 
 
 def _slug_unico(model, nombre, slug_ingresado, instance_pk=None):
@@ -36,16 +45,23 @@ def _slug_unico(model, nombre, slug_ingresado, instance_pk=None):
 
 
 class CategoriaForm(forms.ModelForm):
+    """El formulario NO expone "orden": el orden de las categorías se
+    arrastra y suelta en la lista (ver panel_categorias_orden.js +
+    categoria_reordenar), no se escribe a mano. Tampoco expone "activo"
+    (se maneja aparte, igual que antes) — sí expone "mostrar_en_productos"
+    y "mostrar_en_inicio", independientes entre sí."""
+
     class Meta:
         model = Categoria
         fields = [
-            "nombre", "slug", "descripcion", "orden",
+            "nombre", "slug", "descripcion",
             "imagen_categoria", "imagen_pos_x", "imagen_pos_y", "imagen_tamano",
+            "mostrar_en_productos", "mostrar_en_inicio",
         ]
         widgets = {
             "descripcion": forms.Textarea(attrs={"rows": 2}),
             "slug": forms.HiddenInput(),
-            "imagen_categoria": ImagenPortadaWidget(),
+            "imagen_categoria": ImagenSimpleWidget(),
             "imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
             "imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
             "imagen_tamano": forms.NumberInput(attrs={"step": 1, "min": 50, "max": 5000}),
@@ -146,14 +162,17 @@ class PortadaImagenForm(forms.ModelForm):
 
 
 class ProductoForm(forms.ModelForm):
+    """El formulario NO expone slug, descripción (corta/larga) ni el estado
+    activo/inactivo: el slug se autogenera una sola vez (al crear) y se
+    conserva tal cual en cada edición para no romper URLs existentes, y los
+    productos siempre se crean/mantienen activos (default del modelo, ver
+    [[panel-productos-reorganizacion]])."""
+
     class Meta:
         model = Producto
         fields = [
             "categoria",
             "nombre",
-            "slug",
-            "descripcion_corta",
-            "descripcion",
             "imagen",
             "imagen_pos_x",
             "imagen_pos_y",
@@ -163,8 +182,7 @@ class ProductoForm(forms.ModelForm):
             "destacado",
         ]
         widgets = {
-            "descripcion": forms.Textarea(attrs={"rows": 3}),
-            "imagen": ImagenPortadaWidget(),
+            "imagen": ImagenSimpleWidget(),
             "imagen_pos_x": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
             "imagen_pos_y": forms.NumberInput(attrs={"step": 1, "min": 0, "max": 100}),
             "imagen_zoom": forms.NumberInput(attrs={"step": 1, "min": 100, "max": 200}),
@@ -172,7 +190,6 @@ class ProductoForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.fields["slug"].required = False
         self.fields["precio"].required = False
         # Los completa/actualiza el editor visual de imagen (mismo mecanismo
         # que Categoria); si llegan vacíos se usa el default del modelo.
@@ -182,9 +199,6 @@ class ProductoForm(forms.ModelForm):
 
     def clean(self):
         cleaned = super().clean()
-        nombre = cleaned.get("nombre")
-        if nombre:
-            cleaned["slug"] = _slug_unico(Producto, nombre, cleaned.get("slug"), self.instance.pk)
         if cleaned.get("imagen_pos_x") in (None, ""):
             cleaned["imagen_pos_x"] = 50
         if cleaned.get("imagen_pos_y") in (None, ""):
@@ -193,11 +207,24 @@ class ProductoForm(forms.ModelForm):
             cleaned["imagen_zoom"] = 100
         return cleaned
 
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        # Slug sin campo visible: se genera solo la primera vez (al crear).
+        # Al editar se conserva el que ya tiene, aunque cambie el nombre,
+        # para no alterar URLs ya publicadas.
+        if not instance.slug:
+            instance.slug = _slug_unico(Producto, instance.nombre, None, instance.pk)
+        if commit:
+            instance.save()
+            self.save_m2m()
+        return instance
+
 
 VarianteProductoFormSet = inlineformset_factory(
     Producto,
     VarianteProducto,
-    fields=["nombre", "modalidad", "precio", "orden", "activo"],
+    fields=["nombre", "modalidad", "precio", "orden"],
+    widgets={"orden": forms.HiddenInput()},
     extra=1,
     can_delete=True,
 )
@@ -291,40 +318,6 @@ class ConfiguracionNegocioForm(forms.ModelForm):
             "costo_envio",
             "envio_gratis_desde",
         ]
-
-
-class PerfilAdminForm(forms.ModelForm):
-    """Edición administrativa del perfil de CUALQUIER usuario: mismos datos
-    (User + Perfil combinados) que usa el propio cliente en
-    usuarios.forms.PerfilForm, pero accesible desde el panel para un admin."""
-
-    first_name = forms.CharField(max_length=150, required=False, label="Nombre")
-    last_name = forms.CharField(max_length=150, required=False, label="Apellido")
-    email = forms.EmailField(required=False, label="Email")
-
-    class Meta:
-        model = Perfil
-        fields = ["telefono", "direccion"]
-
-    def __init__(self, *args, usuario=None, **kwargs):
-        self.usuario = usuario
-        super().__init__(*args, **kwargs)
-        if usuario is not None:
-            self.fields["first_name"].initial = usuario.first_name
-            self.fields["last_name"].initial = usuario.last_name
-            self.fields["email"].initial = usuario.email
-
-    def save(self, commit=True):
-        perfil = super().save(commit=False)
-        if self.usuario is not None:
-            self.usuario.first_name = self.cleaned_data["first_name"]
-            self.usuario.last_name = self.cleaned_data["last_name"]
-            self.usuario.email = self.cleaned_data["email"]
-        if commit:
-            perfil.save()
-            if self.usuario is not None:
-                self.usuario.save(update_fields=["first_name", "last_name", "email"])
-        return perfil
 
 
 class PedidoEstadoForm(forms.ModelForm):

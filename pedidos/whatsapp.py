@@ -16,7 +16,7 @@ def construir_mensaje(pedido):
         "Hola! Quiero confirmar el siguiente pedido en Capricho:",
         "",
         f"Pedido #{pedido.pk}",
-        f"Nombre: {pedido.nombre} {pedido.apellido}",
+        f"Nombre: {(pedido.nombre + ' ' + pedido.apellido).strip()}",
         f"Fecha del pedido: {pedido.fecha_pedido.strftime('%d/%m/%Y')}",
         f"Entrega: {pedido.get_tipo_entrega_display()}",
     ]

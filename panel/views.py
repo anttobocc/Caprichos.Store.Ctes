@@ -15,7 +15,6 @@ from django.views.decorators.http import require_POST
 from catalogo import views as catalogo_views
 from catalogo.models import Categoria, Combo, Producto
 from pedidos.models import Pedido
-from usuarios.models import Perfil
 
 from .forms import (
     CategoriaForm,
@@ -24,7 +23,6 @@ from .forms import (
     ConfiguracionNegocioForm,
     PedidoEstadoForm,
     PedidosImagenForm,
-    PerfilAdminForm,
     PortadaImagenForm,
     ProductoForm,
     UsuarioCrearForm,
@@ -272,6 +270,37 @@ def categoria_toggle_activo(request, pk):
 
 @panel_admin_required
 @require_POST
+def categoria_reordenar(request):
+    """Guarda el nuevo orden tras arrastrar y soltar una fila en la lista
+    de categorías (ver static/js/panel_categorias_orden.js). Recibe
+    {"orden": [id, id, ...]} en el orden visual final; cada id se
+    corresponde con una posición (índice) que pasa a ser su "orden"."""
+    try:
+        datos = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({"ok": False, "error": "Cuerpo de la petición inválido."}, status=400)
+
+    orden_ids = datos.get("orden")
+    if not isinstance(orden_ids, list) or not orden_ids:
+        return JsonResponse({"ok": False, "error": "Falta la lista de orden."}, status=400)
+
+    categorias = Categoria.objects.filter(pk__in=orden_ids)
+    categorias_por_id = {categoria.pk: categoria for categoria in categorias}
+    if len(categorias_por_id) != len(set(orden_ids)):
+        return JsonResponse({"ok": False, "error": "Alguna categoría no existe."}, status=400)
+
+    actualizadas = []
+    for indice, categoria_id in enumerate(orden_ids):
+        categoria = categorias_por_id[categoria_id]
+        categoria.orden = indice
+        actualizadas.append(categoria)
+    Categoria.objects.bulk_update(actualizadas, ["orden"])
+
+    return JsonResponse({"ok": True})
+
+
+@panel_admin_required
+@require_POST
 def categoria_eliminar(request, pk):
     categoria = get_object_or_404(Categoria, pk=pk)
     nombre = categoria.nombre
@@ -282,15 +311,16 @@ def categoria_eliminar(request, pk):
 
 def _variantes_activas(formset):
     """Variantes que quedarían activas tras guardar el formset (no marcadas
-    para borrar y con activo=True)."""
+    para borrar). El formulario ya no expone "activo": toda variante que
+    llega hasta acá se crea/mantiene activa (default del modelo), así que
+    alcanza con que tenga datos y no esté marcada para eliminar."""
     activas = []
     for form in formset.forms:
         if not form.cleaned_data:
             continue
         if form.cleaned_data.get("DELETE"):
             continue
-        if form.cleaned_data.get("activo"):
-            activas.append(form)
+        activas.append(form)
     return activas
 
 
@@ -489,34 +519,6 @@ def configuracion(request):
 
 
 @panel_admin_required
-def perfiles_lista(request):
-    query = request.GET.get("q", "").strip()
-    perfiles = Perfil.objects.select_related("usuario").order_by("usuario__username")
-    if query:
-        perfiles = perfiles.filter(usuario__username__icontains=query)
-    pagina = _paginar(request, perfiles)
-    for perfil in pagina:
-        perfil.form_editar = PerfilAdminForm(
-            instance=perfil, usuario=perfil.usuario, auto_id=f"id_perfil_{perfil.pk}_%s",
-        )
-    return render(request, "panel/perfiles_lista.html", {"perfiles": pagina, "q": query})
-
-
-@panel_admin_required
-def perfil_editar(request, pk):
-    perfil = get_object_or_404(Perfil.objects.select_related("usuario"), pk=pk)
-    if request.method == "POST":
-        form = PerfilAdminForm(request.POST, instance=perfil, usuario=perfil.usuario)
-        if form.is_valid():
-            form.save()
-            messages.success(request, "Perfil actualizado correctamente.")
-            return redirect("panel:perfiles")
-    else:
-        form = PerfilAdminForm(instance=perfil, usuario=perfil.usuario)
-    return render(request, "panel/perfil_form.html", {"form": form, "perfil": perfil})
-
-
-@panel_admin_required
 def combos_lista(request):
     combos = Combo.objects.order_by("nombre").prefetch_related("items__producto")
     pagina = _paginar(request, combos)
@@ -620,11 +622,12 @@ def preview_producto(request, slug):
 # ningún otro nombre de entidad/prefijo, ni siquiera si el modelo tuviera
 # más campos de imagen en el futuro sin agregarlos acá explícitamente.
 _ENTIDADES_EDITABLES = {
-    "categoria": (Categoria, "pk", {"imagen": "flotante"}),
+    "categoria": (Categoria, "pk", {"imagen": "flotante", "imagen_mobile": "flotante-movil"}),
     "producto": (Producto, "pk", {"imagen": "recorte"}),
     "combo": (Combo, "pk", {"imagen": "recorte"}),
     "configuracion": (ConfiguracionNegocio, "singleton", {
         "pedidos_imagen": "flotante",
+        "pedidos_imagen_mobile": "flotante-movil",
         "portada_imagen": "recorte",
     }),
 }
@@ -656,7 +659,9 @@ def preview_guardar_imagen(request):
 
     campo_x = f"{prefijo}_pos_x"
     campo_y = f"{prefijo}_pos_y"
-    campo_tercero = f"{prefijo}_tamano" if modo == "flotante" else f"{prefijo}_zoom"
+    # "recorte" (portada/producto/combo) guarda el tercer valor como zoom;
+    # los dos modos "flotante" (desktop y mobile) lo guardan como tamaño.
+    campo_tercero = f"{prefijo}_zoom" if modo == "recorte" else f"{prefijo}_tamano"
 
     try:
         valor_x = int(datos.get("pos_x"))

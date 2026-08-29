@@ -27,7 +27,11 @@
                 <td>
                     <form method="post" action="{% url 'pedidos:carrito_actualizar' linea.clave %}">
                         {% csrf_token %}
-                        <input type="number" name="cantidad" value="{{ linea.cantidad }}" min="1">
+                        <div class="stepper-cantidad">
+                            <button type="button" class="stepper-cantidad__boton" data-stepper-menos aria-label="Restar una unidad">−</button>
+                            <input type="number" name="cantidad" value="{{ linea.cantidad }}" min="1" class="stepper-cantidad__valor" data-stepper-valor readonly>
+                            <button type="button" class="stepper-cantidad__boton" data-stepper-mas aria-label="Sumar una unidad">+</button>
+                        </div>
                         <button type="submit">Actualizar</button>
                     </form>
                 </td>

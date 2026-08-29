@@ -34,15 +34,17 @@
             <div class="admin-table-scroll">
                 <table class="admin-table admin-table--categorias">
                     <thead>
-                        <tr><th>Nombre</th><th>Productos</th><th>Orden</th><th>Estado</th><th>Acciones</th></tr>
+                        <tr><th></th><th>Nombre</th><th>Productos</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
-                    <tbody>
+                    <tbody data-categorias-body>
                         {% for categoria in categorias %}
                         {% url 'panel:categoria_toggle_activo' categoria.pk as url_toggle %}
-                        <tr>
+                        <tr data-categoria-fila data-id="{{ categoria.pk }}">
+                            <td class="admin-table__arrastrar">
+                                <button type="button" class="admin-variante-fila__handle" data-arrastrar aria-label="Arrastrar para reordenar">⠿⠿</button>
+                            </td>
                             <td>{{ categoria.nombre }}</td>
                             <td>{{ categoria.productos.count }}</td>
-                            <td>{{ categoria.orden }}</td>
                             <td>{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=categoria.activo %}</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-categoria-{{ categoria.pk }}">Editar</button>
@@ -53,9 +55,11 @@
                         {% empty %}
                         <tr><td colspan="5" class="admin-table__vacio">No se encontraron categorías.</td></tr>
                         {% endfor %}
+                    </tbody>
+                    <tbody>
                         <tr>
+                            <td></td>
                             <td>Pedidos</td>
-                            <td>—</td>
                             <td>—</td>
                             <td>—</td>
                             <td class="admin-table__acciones">
@@ -64,8 +68,8 @@
                             </td>
                         </tr>
                         <tr>
+                            <td></td>
                             <td>Portada / Hero</td>
-                            <td>—</td>
                             <td>—</td>
                             <td>—</td>
                             <td class="admin-table__acciones">
@@ -99,6 +103,10 @@
 {% url 'panel:categoria_eliminar' categoria.pk as url_eliminar %}
 {% include "panel/includes/_confirmar_eliminar.html" with id_base="modal-eliminar-categoria" pk=categoria.pk titulo="¿Eliminar categoría?" objeto_nombre=categoria.nombre accion_url=url_eliminar %}
 {% endfor %}
+{% endblock %}
 
-{% block panel_extra_js %}<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>{% endblock %}
+{% block panel_extra_js %}
+<script>window.CAPRICHO_CATEGORIA_REORDENAR_URL = "{% url 'panel:categoria_reordenar' %}";</script>
+<script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>
+<script src="{% static 'js/panel_categorias_orden.js' %}" defer></script>
 {% endblock %}

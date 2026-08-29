@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -172,11 +174,16 @@ class ConfiguracionNegocioPanelTests(TestCase):
 def datos_formset_variantes(variantes=None, total_forms=None):
     """Arma los datos de management form + forms del inline de variantes
     (prefix "variantes"). `variantes` es una lista de dicts con nombre/precio/
-    orden/activo; si viene vacia, se manda TOTAL_FORMS=0 (sin formularios) en
-    vez de un form "extra" sin completar: un form extra recién instanciado
-    trae valores iniciales de los defaults del modelo (activo=True, orden=0),
-    y compararlos contra un POST vacío hace que Django lo considere
-    "modificado" y dispare validación de campos obligatorios."""
+    orden; si viene vacia, se manda TOTAL_FORMS=0 (sin formularios) en vez de
+    un form "extra" sin completar: un form extra recién instanciado trae
+    valores iniciales de los defaults del modelo (orden=0), y compararlos
+    contra un POST vacío hace que Django lo considere "modificado" y dispare
+    validación de campos obligatorios.
+
+    El formulario ya NO expone "activo" (ver [[panel-productos-form-compacto]]):
+    toda variante nueva se crea activa por default del modelo, y una
+    variante existente conserva el "activo" que ya tenía en la base, sin
+    importar lo que se mande acá."""
     variantes = variantes or []
     if total_forms is None:
         total_forms = len(variantes)
@@ -190,8 +197,6 @@ def datos_formset_variantes(variantes=None, total_forms=None):
         datos[f"variantes-{i}-nombre"] = variante.get("nombre", "")
         datos[f"variantes-{i}-precio"] = str(variante.get("precio", ""))
         datos[f"variantes-{i}-orden"] = str(variante.get("orden", 0))
-        if variante.get("activo", True):
-            datos[f"variantes-{i}-activo"] = "on"
         datos[f"variantes-{i}-id"] = str(variante.get("id", ""))
     return datos
 
@@ -220,18 +225,25 @@ class CategoriaCRUDPanelTests(TestCase):
         self.assertEqual(respuesta.status_code, 403)
 
     def test_admin_crea_categoria(self):
+        # "mostrar_en_productos"/"mostrar_en_inicio" en "on" simulan los
+        # checkboxes tildados por default (el form los inicializa así,
+        # igual que el default=True del modelo) que manda un navegador real.
         respuesta = self.client.post(reverse("panel:categoria_crear"), {
-            "nombre": "Nueva Categoria Test", "slug": "", "descripcion": "", "orden": 0,
+            "nombre": "Nueva Categoria Test", "slug": "", "descripcion": "",
+            "mostrar_en_productos": "on", "mostrar_en_inicio": "on",
         })
         self.assertRedirects(respuesta, reverse("panel:categorias"))
         categoria = Categoria.objects.get(nombre="Nueva Categoria Test")
         self.assertEqual(categoria.slug, "nueva-categoria-test")
         self.assertTrue(categoria.activo)
+        self.assertTrue(categoria.mostrar_en_productos)
+        self.assertTrue(categoria.mostrar_en_inicio)
 
     def test_admin_edita_categoria(self):
         categoria = crear_categoria_test()
         respuesta = self.client.post(reverse("panel:categoria_editar", args=[categoria.pk]), {
-            "nombre": "Categoria Editada Test", "slug": "categoria-panel-test", "descripcion": "", "orden": 1,
+            "nombre": "Categoria Editada Test", "slug": "categoria-panel-test", "descripcion": "",
+            "mostrar_en_productos": "on", "mostrar_en_inicio": "on",
         })
         self.assertRedirects(respuesta, reverse("panel:categorias"))
         categoria.refresh_from_db()
@@ -244,6 +256,41 @@ class CategoriaCRUDPanelTests(TestCase):
         categoria.refresh_from_db()
         self.assertFalse(categoria.activo)
 
+    def test_admin_configura_visibilidad_independiente(self):
+        # Ejemplo del enunciado: mostrar en productos pero no en inicio.
+        categoria = crear_categoria_test()
+        respuesta = self.client.post(reverse("panel:categoria_editar", args=[categoria.pk]), {
+            "nombre": categoria.nombre, "slug": categoria.slug, "descripcion": "",
+            "mostrar_en_productos": "on",
+            # "mostrar_en_inicio" ausente = checkbox destildado.
+        })
+        self.assertRedirects(respuesta, reverse("panel:categorias"))
+        categoria.refresh_from_db()
+        self.assertTrue(categoria.activo)
+        self.assertTrue(categoria.mostrar_en_productos)
+        self.assertFalse(categoria.mostrar_en_inicio)
+
+    def test_categoria_oculta_en_inicio_no_aparece_en_home_pero_si_en_productos(self):
+        categoria = crear_categoria_test(mostrar_en_productos=True, mostrar_en_inicio=False)
+        respuesta_home = self.client.get(reverse("catalogo:home"))
+        self.assertNotContains(respuesta_home, categoria.nombre)
+        respuesta_productos = self.client.get(reverse("catalogo:productos"))
+        self.assertContains(respuesta_productos, categoria.nombre)
+
+    def test_admin_reordena_categorias_por_drag_and_drop(self):
+        cat_a = crear_categoria_test(nombre="Cat A", slug="cat-a", orden=0)
+        cat_b = crear_categoria_test(nombre="Cat B", slug="cat-b", orden=1)
+        respuesta = self.client.post(
+            reverse("panel:categoria_reordenar"),
+            data=json.dumps({"orden": [cat_b.pk, cat_a.pk]}),
+            content_type="application/json",
+        )
+        self.assertEqual(respuesta.status_code, 200)
+        cat_a.refresh_from_db()
+        cat_b.refresh_from_db()
+        self.assertEqual(cat_b.orden, 0)
+        self.assertEqual(cat_a.orden, 1)
+
 
 class ProductoCRUDPanelTests(TestCase):
     def setUp(self):
@@ -255,9 +302,6 @@ class ProductoCRUDPanelTests(TestCase):
         datos = {
             "categoria": self.categoria.pk,
             "nombre": "Producto Panel Test",
-            "slug": "",
-            "descripcion_corta": "",
-            "descripcion": "",
             "precio": "1000",
             "unidad_venta": "unidad",
             "destacado": False,
@@ -293,7 +337,7 @@ class ProductoCRUDPanelTests(TestCase):
     def test_c_producto_con_variantes_activas_precio_vacio_guarda(self):
         datos = self._datos_producto(precio="")
         datos.update(datos_formset_variantes([
-            {"nombre": "Cocinadas", "precio": 100, "orden": 0, "activo": True},
+            {"nombre": "Cocinadas", "precio": 100, "orden": 0},
         ]))
         respuesta = self.client.post(reverse("panel:producto_crear"), datos)
         self.assertRedirects(respuesta, reverse("panel:productos"))
@@ -305,36 +349,40 @@ class ProductoCRUDPanelTests(TestCase):
     def test_d_producto_con_variantes_activas_y_precio_propio_da_error_y_no_guarda(self):
         datos = self._datos_producto(precio="1000")
         datos.update(datos_formset_variantes([
-            {"nombre": "Cocinadas", "precio": 100, "orden": 0, "activo": True},
+            {"nombre": "Cocinadas", "precio": 100, "orden": 0},
         ]))
         respuesta = self.client.post(reverse("panel:producto_crear"), datos)
         self.assertEqual(respuesta.status_code, 200)
         self.assertContains(respuesta, "Un producto con variantes debe tener el precio del producto vacío.")
         self.assertFalse(Producto.objects.filter(nombre="Producto Panel Test").exists())
 
-    def test_e_producto_con_solo_variantes_inactivas_y_precio_se_comporta_como_sin_variantes(self):
-        datos = self._datos_producto(precio="1000")
+    def test_e_variantes_nuevas_se_crean_siempre_activas(self):
+        # El formulario ya no expone "activo": toda variante nueva se crea
+        # activa (default del modelo), sin importar que no se mande el campo.
+        datos = self._datos_producto(precio="")
         datos.update(datos_formset_variantes([
-            {"nombre": "Vieja", "precio": 100, "orden": 0, "activo": False},
+            {"nombre": "Cocinadas", "precio": 100, "orden": 0},
         ]))
         respuesta = self.client.post(reverse("panel:producto_crear"), datos)
         self.assertRedirects(respuesta, reverse("panel:productos"))
         producto = Producto.objects.get(nombre="Producto Panel Test")
-        self.assertEqual(producto.precio, 1000)
-        self.assertFalse(producto.tiene_variantes)
+        self.assertTrue(producto.variantes.get().activo)
 
     def test_admin_edita_producto(self):
         producto = Producto.objects.create(
             categoria=self.categoria, nombre="Producto Editar Test", slug="producto-editar-test",
             unidad_venta="unidad", precio=500,
         )
-        datos = self._datos_producto(nombre="Producto Editado Test", slug="producto-editar-test", precio="750")
+        datos = self._datos_producto(nombre="Producto Editado Test", precio="750")
         datos.update(datos_formset_variantes([]))
         respuesta = self.client.post(reverse("panel:producto_editar", args=[producto.pk]), datos)
         self.assertRedirects(respuesta, reverse("panel:productos"))
         producto.refresh_from_db()
         self.assertEqual(producto.nombre, "Producto Editado Test")
         self.assertEqual(producto.precio, 750)
+        # El slug no es un campo del formulario: se conserva tal cual pese a
+        # que el nombre cambió, para no romper la URL pública del producto.
+        self.assertEqual(producto.slug, "producto-editar-test")
 
     def test_admin_cambia_categoria_de_producto(self):
         otra_categoria = Categoria.objects.create(nombre="Otra Categoria Test", slug="otra-categoria-test")
@@ -343,7 +391,7 @@ class ProductoCRUDPanelTests(TestCase):
             unidad_venta="unidad", precio=500,
         )
         datos = self._datos_producto(
-            nombre="Producto Cambia Categoria Test", slug="producto-cambia-categoria-test",
+            nombre="Producto Cambia Categoria Test",
             categoria=otra_categoria.pk,
         )
         datos.update(datos_formset_variantes([]))
@@ -352,26 +400,29 @@ class ProductoCRUDPanelTests(TestCase):
         producto.refresh_from_db()
         self.assertEqual(producto.categoria_id, otra_categoria.pk)
 
-    def test_admin_desactiva_variante_desde_el_inline(self):
+    def test_admin_edita_variantes_sin_poder_desactivarlas_desde_el_inline(self):
+        # El formulario ya no expone "activo" de la variante: aunque se
+        # edite su precio, el estado activo (True por default) no cambia
+        # porque el campo no forma parte del formset.
         producto = Producto.objects.create(
             categoria=self.categoria, nombre="Producto Desactivar Variante Test", slug="producto-desactivar-variante-test",
             unidad_venta="docena", precio=None,
         )
         variante = VarianteProducto.objects.create(producto=producto, nombre="Cocinadas", precio=100)
         datos = self._datos_producto(
-            nombre="Producto Desactivar Variante Test", slug="producto-desactivar-variante-test", precio="900",
+            nombre="Producto Desactivar Variante Test", precio="",
         )
         datos.update(datos_formset_variantes([
-            {"id": variante.pk, "nombre": "Cocinadas", "precio": 100, "orden": 0, "activo": False},
+            {"id": variante.pk, "nombre": "Cocinadas", "precio": 120, "orden": 0},
         ]))
         datos["variantes-INITIAL_FORMS"] = "1"
         respuesta = self.client.post(reverse("panel:producto_editar", args=[producto.pk]), datos)
         self.assertRedirects(respuesta, reverse("panel:productos"))
         variante.refresh_from_db()
         producto.refresh_from_db()
-        self.assertFalse(variante.activo)
-        self.assertFalse(producto.tiene_variantes)
-        self.assertEqual(producto.precio, 900)
+        self.assertTrue(variante.activo)
+        self.assertEqual(variante.precio, 120)
+        self.assertTrue(producto.tiene_variantes)
 
     def test_admin_edita_variantes_desde_el_inline(self):
         producto = Producto.objects.create(
@@ -379,9 +430,9 @@ class ProductoCRUDPanelTests(TestCase):
             unidad_venta="docena", precio=None,
         )
         variante = VarianteProducto.objects.create(producto=producto, nombre="Cocinadas", precio=100)
-        datos = self._datos_producto(nombre="Producto Variantes Test", slug="producto-variantes-test", precio="")
+        datos = self._datos_producto(nombre="Producto Variantes Test", precio="")
         datos.update(datos_formset_variantes([
-            {"id": variante.pk, "nombre": "Cocinadas", "precio": 150, "orden": 1, "activo": True},
+            {"id": variante.pk, "nombre": "Cocinadas", "precio": 150, "orden": 1},
         ]))
         datos["variantes-INITIAL_FORMS"] = "1"
         respuesta = self.client.post(reverse("panel:producto_editar", args=[producto.pk]), datos)
@@ -426,9 +477,6 @@ class ImagenProductoTests(TestCase):
         datos = {
             "categoria": self.categoria.pk,
             "nombre": "Producto Con Imagen Test",
-            "slug": "",
-            "descripcion_corta": "",
-            "descripcion": "",
             "imagen": imagen,
             "precio": "1000",
             "unidad_venta": "unidad",

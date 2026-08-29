@@ -38,6 +38,23 @@
     margin-left: 8px;
 }
 
+.ppe-aviso__vista {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 600;
+}
+
+.ppe-aviso__vista select {
+    font: inherit;
+    color: #1f2a1f;
+    background: #f5efe6;
+    border: none;
+    border-radius: 4px;
+    padding: 3px 8px;
+    cursor: pointer;
+}
+
 .modo-edicion [data-editable-imagen] {
     /* Las imágenes "flotantes" de categoría/pedidos tienen
        pointer-events:none en el sitio público (para no tapar el enlace

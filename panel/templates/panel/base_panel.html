@@ -39,9 +39,8 @@
         <a href="{% url 'panel:dashboard' %}" class="{% if url_actual == 'dashboard' %}activo{% endif %}">Inicio</a>
         <a href="{% url 'panel:categorias' %}" class="{% if url_actual == 'categorias' or url_actual == 'categoria_crear' or url_actual == 'categoria_editar' %}activo{% endif %}">Categorías</a>
         <a href="{% url 'panel:productos' %}" class="{% if url_actual == 'productos' or url_actual == 'producto_crear' or url_actual == 'producto_editar' %}activo{% endif %}">Productos</a>
-        <a href="{% url 'panel:usuarios' %}" class="{% if url_actual == 'usuarios' or url_actual == 'usuario_crear' or url_actual == 'usuario_editar' or url_actual == 'usuario_password' %}activo{% endif %}">Usuarios</a>
-        <a href="{% url 'panel:perfiles' %}" class="{% if url_actual == 'perfiles' or url_actual == 'perfil_editar' %}activo{% endif %}">Perfiles</a>
         <a href="{% url 'panel:combos' %}" class="{% if url_actual == 'combos' or url_actual == 'combo_crear' or url_actual == 'combo_editar' %}activo{% endif %}">Combos</a>
+        <a href="{% url 'panel:usuarios' %}" class="{% if url_actual == 'usuarios' or url_actual == 'usuario_crear' or url_actual == 'usuario_editar' or url_actual == 'usuario_password' %}activo{% endif %}">Usuarios</a>
         <a href="{% url 'panel:configuracion' %}" class="{% if url_actual == 'configuracion' %}activo{% endif %}">Configuración</a>
     </nav>
 

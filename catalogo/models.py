@@ -8,6 +8,16 @@ class Categoria(models.Model):
     descripcion = models.TextField(blank=True)
     orden = models.PositiveIntegerField(default=0)
     activo = models.BooleanField(default=True)
+    mostrar_en_productos = models.BooleanField(
+        default=True,
+        verbose_name="mostrar en productos",
+        help_text="Si está desactivado, la categoría no aparece en la sección Productos ni en sus filtros.",
+    )
+    mostrar_en_inicio = models.BooleanField(
+        default=True,
+        verbose_name="mostrar en inicio",
+        help_text="Si está desactivado, la categoría no aparece en la sección de categorías del Inicio.",
+    )
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     imagen_categoria = models.ImageField(
         verbose_name="imagen de portada",
@@ -33,6 +43,36 @@ class Categoria(models.Model):
         default=260,
         validators=[MinValueValidator(50), MaxValueValidator(5000)],
         help_text="Alto de la imagen en px (el ancho se ajusta proporcionalmente).",
+    )
+    # Ajuste independiente del de arriba: la tarjeta de categoría en mobile
+    # (.m-card, ver catalogo/home.html y catalogo.css) es un diseño propio,
+    # no una versión reducida de la tarjeta desktop, así que necesita su
+    # propia posición/escala de imagen en vez de heredar imagen_pos_x/y/
+    # imagen_tamano. A diferencia de los campos de arriba (0-100, recorte
+    # dentro de una caja fija), acá la imagen es una capa libre sobre TODA
+    # la tarjeta (.m-card, no .m-card__imagen): X/Y pueden salir de 0-100
+    # (con SmallIntegerField, no Positive) para poder arrastrarla bien
+    # afuera de la tarjeta hacia cualquier lado, y el tamaño no tiene techo
+    # atado al recuadro. Mismo prefijo "imagen_mobile" para que
+    # panel/views.py::preview_guardar_imagen los siga tratando con la
+    # misma lógica genérica (modo "flotante-movil").
+    imagen_mobile_pos_x = models.SmallIntegerField(
+        verbose_name="posición horizontal mobile (X)",
+        default=50,
+        validators=[MinValueValidator(-100), MaxValueValidator(200)],
+        help_text="Posición horizontal en % relativo a toda la tarjeta mobile (50 = centro; puede salir de 0-100 para mover la imagen bien hacia los costados).",
+    )
+    imagen_mobile_pos_y = models.SmallIntegerField(
+        verbose_name="posición vertical mobile (Y)",
+        default=50,
+        validators=[MinValueValidator(-100), MaxValueValidator(200)],
+        help_text="Posición vertical en % relativo a toda la tarjeta mobile (50 = centro; puede salir de 0-100 para mover la imagen bien hacia arriba/abajo).",
+    )
+    imagen_mobile_tamano = models.PositiveSmallIntegerField(
+        verbose_name="tamaño mobile",
+        default=100,
+        validators=[MinValueValidator(20), MaxValueValidator(400)],
+        help_text="Escala de la imagen dentro de la tarjeta mobile, en % (100 = tamaño base, sin recortar).",
     )
 
     class Meta:

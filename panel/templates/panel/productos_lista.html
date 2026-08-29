@@ -1,5 +1,6 @@
 {% extends "panel/base_panel.html" %}
 {% load static %}
+{% load catalogo_extras %}
 
 {% block title %}Productos | Panel Capricho{% endblock %}
 
@@ -35,7 +36,7 @@
                 <table class="admin-table">
                     <thead>
                         <tr>
-                            <th>Nombre</th><th>Categoría</th><th>Precio</th><th>Unidad</th>
+                            <th>Nombre</th><th>Precio</th><th>Unidad</th>
                             <th>Variantes</th><th>Estado</th><th>Acciones</th>
                         </tr>
                     </thead>
@@ -43,13 +44,17 @@
                         {% for producto in productos %}
                         {% ifchanged producto.categoria_id %}
                         <tr class="admin-table__grupo">
-                            <td colspan="7">{{ producto.categoria.nombre }}</td>
+                            <td colspan="6">
+                                <div class="admin-table__grupo-fila">
+                                    <span>{{ producto.categoria.nombre }}</span>
+                                    <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-producto-nuevo" data-panel-preset-categoria="{{ producto.categoria.pk }}">+ Agregar producto</button>
+                                </div>
+                            </td>
                         </tr>
                         {% endifchanged %}
                         {% url 'panel:producto_toggle_activo' producto.pk as url_toggle %}
                         <tr>
-                            <td>{{ producto.nombre }}</td>
-                            <td>{{ producto.categoria.nombre }}</td>
+                            <td>{{ producto|nombre_sin_categoria }}</td>
                             <td>{% if producto.precio %}${{ producto.precio }}{% else %}según variante{% endif %}</td>
                             <td>{{ producto.get_unidad_venta_display }}</td>
                             <td>{{ producto.tiene_variantes|yesno:"Sí,No" }}</td>
@@ -61,7 +66,7 @@
                             </td>
                         </tr>
                         {% empty %}
-                        <tr><td colspan="7" class="admin-table__vacio">No se encontraron productos.</td></tr>
+                        <tr><td colspan="6" class="admin-table__vacio">No se encontraron productos.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
@@ -85,8 +90,9 @@
 {% endfor %}
 
 <script>window.CAPRICHO_PLANTILLAS_VARIANTES = {{ plantillas_variantes_json|safe }};</script>
+{% endblock %}
+
 {% block panel_extra_js %}
 <script src="{% static 'js/panel_categoria_imagen.js' %}" defer></script>
 <script src="{% static 'js/panel_variantes.js' %}" defer></script>
-{% endblock %}
 {% endblock %}

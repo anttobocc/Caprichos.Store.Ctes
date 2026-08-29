@@ -49,6 +49,30 @@ class ConfiguracionNegocio(models.Model):
         validators=[MinValueValidator(50), MaxValueValidator(5000)],
         help_text="Alto de la imagen en px (el ancho se ajusta proporcionalmente).",
     )
+    # Igual que Categoria.imagen_mobile_*: ajuste independiente para la
+    # tarjeta "Pedidos" del grid mobile (.m-card--cta), que es un diseño
+    # propio y no una copia reducida de la tarjeta desktop. La imagen es
+    # una capa libre sobre TODA la tarjeta, por eso X/Y admiten valores
+    # fuera de 0-100 (SmallIntegerField, no Positive) y el tamaño no tiene
+    # techo atado a ningún recuadro fijo.
+    pedidos_imagen_mobile_pos_x = models.SmallIntegerField(
+        verbose_name="posición horizontal mobile (X)",
+        default=50,
+        validators=[MinValueValidator(-100), MaxValueValidator(200)],
+        help_text="Posición horizontal en % relativo a toda la tarjeta mobile (50 = centro; puede salir de 0-100 para mover la imagen bien hacia los costados).",
+    )
+    pedidos_imagen_mobile_pos_y = models.SmallIntegerField(
+        verbose_name="posición vertical mobile (Y)",
+        default=50,
+        validators=[MinValueValidator(-100), MaxValueValidator(200)],
+        help_text="Posición vertical en % relativo a toda la tarjeta mobile (50 = centro; puede salir de 0-100 para mover la imagen bien hacia arriba/abajo).",
+    )
+    pedidos_imagen_mobile_tamano = models.PositiveSmallIntegerField(
+        verbose_name="tamaño mobile",
+        default=100,
+        validators=[MinValueValidator(20), MaxValueValidator(400)],
+        help_text="Escala de la imagen dentro de la tarjeta mobile, en % (100 = tamaño base, sin recortar).",
+    )
     portada_imagen = models.ImageField(
         verbose_name="imagen principal de la portada",
         upload_to="productos/",
