@@ -1338,6 +1338,10 @@
     gap: 4px;
 }
 
+.carrito-drawer__campo[hidden] {
+    display: none;
+}
+
 .carrito-drawer__campo label {
     font-size: 0.8rem;
     font-weight: 600;
@@ -1368,6 +1372,158 @@
     color: #a33;
     font-size: 0.82rem;
     margin: 0;
+}
+
+/* ----- Modo de entrega: retiro / envío ----- */
+.entrega-toggle {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.entrega-toggle__opcion {
+    flex: 1 1 130px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 12px;
+    border: 1px solid var(--color-beige);
+    border-radius: 10px;
+    background: var(--color-blanco-calido);
+    color: var(--color-marron);
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.entrega-toggle__opcion:has(input:checked) {
+    border-color: var(--color-terracota);
+    background: var(--color-crema-oscuro);
+    font-weight: 600;
+}
+
+.entrega-toggle__opcion input {
+    width: 17px;
+    height: 17px;
+    accent-color: var(--color-terracota);
+    flex-shrink: 0;
+}
+
+/* ----- Selector de fecha propio (reemplaza el <input type="date"> nativo) ----- */
+.fecha-picker {
+    position: relative;
+}
+
+.fecha-picker__resumen {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 12px;
+    border: 1px solid var(--color-beige);
+    border-radius: 8px;
+    font-family: var(--fuente-texto);
+    font-size: 0.88rem;
+    background: var(--color-blanco-calido);
+    color: var(--color-marron);
+    cursor: pointer;
+    text-align: left;
+}
+
+.fecha-picker__resumen svg {
+    flex-shrink: 0;
+    color: var(--color-terracota);
+}
+
+.fecha-picker__resumen:focus,
+.fecha-picker--abierto .fecha-picker__resumen {
+    outline: none;
+    border-color: var(--color-terracota);
+}
+
+.fecha-picker__texto--vacio {
+    color: #6b5c4f;
+}
+
+.fecha-picker__panel {
+    position: absolute;
+    top: calc(100% + 6px);
+    left: 0;
+    right: 0;
+    z-index: 5;
+    padding: 10px;
+    background: var(--color-blanco-calido);
+    border: 1px solid var(--color-beige);
+    border-radius: 12px;
+    box-shadow: 0 12px 28px -14px rgba(59, 46, 38, 0.5);
+    /* Nunca puede desbordar el panel del drawer (min(420px, 92vw)) por los
+       lados: el grid de abajo reparte los botones en columnas que entran
+       en ese ancho, así que esto solo protege por si algún día se usa en
+       un contenedor más angosto. */
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+.fecha-picker__grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    gap: 8px;
+    max-height: 260px;
+    overflow-y: auto;
+}
+
+.fecha-picker__dia {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 2px;
+    min-height: 62px;
+    padding: 6px 4px;
+    border: 1px solid var(--color-beige);
+    border-radius: 10px;
+    background: var(--color-crema);
+    color: var(--color-marron);
+    font-family: var(--fuente-texto);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.fecha-picker__dia:hover {
+    border-color: var(--color-terracota);
+}
+
+.fecha-picker__dia-nombre {
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: #6b5c4f;
+}
+
+.fecha-picker__dia-numero {
+    font-family: var(--fuente-titulos);
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1;
+    color: var(--color-oliva-oscuro);
+}
+
+.fecha-picker__dia-mes {
+    font-size: 0.66rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--color-terracota);
+}
+
+.fecha-picker__dia--activo {
+    background: var(--color-terracota);
+    border-color: var(--color-terracota);
+}
+
+.fecha-picker__dia--activo .fecha-picker__dia-nombre,
+.fecha-picker__dia--activo .fecha-picker__dia-numero,
+.fecha-picker__dia--activo .fecha-picker__dia-mes {
+    color: var(--color-blanco-calido);
 }
 
 /* ----- Confirmación tras finalizar el pedido ----- */
@@ -1445,7 +1601,6 @@
         position: relative;
         width: 100%;
         aspect-ratio: 1 / 1.05;
-        overflow: hidden;
     }
 
     .m-hero__imagen img {
@@ -1485,8 +1640,52 @@
     }
 
     .m-hero__texto {
+        position: relative;
+        z-index: 0;
         text-align: center;
-        padding: 40px 24px 32px;
+        padding: 40px 24px 48px;
+        background: var(--color-crema-oscuro);
+    }
+
+    /* Mismo recurso que .hero__flores en desktop (flores-portada.png),
+       reescalado a mobile: dos copias grandes a los laterales, la
+       derecha espejada con scaleX(-1), opacidad baja y por debajo del
+       texto (z-index) para que queden como fondo decorativo sin
+       interferir con la lectura. Se dejan sobresalir del ancho de
+       .m-hero__texto a propósito (sin overflow:hidden acá): el
+       overflow-x:hidden global de <body>, ver base.css, es lo que
+       evita que esto produzca scroll horizontal, no un recorte local. */
+    .m-hero__flores {
+        position: absolute;
+        top: 14px;
+        z-index: 1;
+        width: 210px;
+        pointer-events: none;
+        opacity: 0.42;
+    }
+
+    .m-hero__flores img {
+        display: block;
+        width: 100%;
+        height: auto;
+        object-fit: contain;
+    }
+
+    .m-hero__flores--izq {
+        left: -78px;
+    }
+
+    .m-hero__flores--der {
+        right: -78px;
+        transform: scaleX(-1);
+    }
+
+    .m-hero__decorativa,
+    .m-hero__texto h1,
+    .m-hero__descripcion,
+    .m-hero__boton {
+        position: relative;
+        z-index: 2;
     }
 
     .m-hero__decorativa {
@@ -1522,7 +1721,7 @@
 
     /* ---------- m-categorias: grilla 2x2 con imagen grande ---------- */
     .m-categorias {
-        padding: 0 16px 40px;
+        padding: 24px 16px 40px;
     }
 
     .m-categorias__grid {

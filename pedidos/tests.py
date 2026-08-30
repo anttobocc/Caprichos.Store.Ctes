@@ -266,6 +266,29 @@ class CheckoutTests(TestCase):
         self.assertEqual(Pedido.objects.count(), 1)
         self.assertRedirects(respuesta, reverse("pedidos:pedido_detalle", args=[Pedido.objects.first().pk]))
 
+    def test_fecha_pasada_da_error(self):
+        self._agregar_producto()
+        datos = self._datos_checkout(fecha_pedido=(date.today() - timedelta(days=5)).isoformat())
+        respuesta = self.client.post(reverse("pedidos:checkout"), datos)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.context["form"].errors)
+        self.assertEqual(Pedido.objects.count(), 0)
+
+    def test_fecha_exactamente_diez_dias_permite_continuar(self):
+        self._agregar_producto()
+        datos = self._datos_checkout(fecha_pedido=(date.today() + timedelta(days=10)).isoformat())
+        respuesta = self.client.post(reverse("pedidos:checkout"), datos)
+        self.assertEqual(Pedido.objects.count(), 1)
+        self.assertRedirects(respuesta, reverse("pedidos:pedido_detalle", args=[Pedido.objects.first().pk]))
+
+    def test_fecha_once_dias_da_error(self):
+        self._agregar_producto()
+        datos = self._datos_checkout(fecha_pedido=(date.today() + timedelta(days=11)).isoformat())
+        respuesta = self.client.post(reverse("pedidos:checkout"), datos)
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertTrue(respuesta.context["form"].errors)
+        self.assertEqual(Pedido.objects.count(), 0)
+
     def test_envio_sin_direccion_da_error(self):
         self._agregar_producto()
         datos = self._datos_checkout(tipo_entrega="envio", direccion_envio="")

@@ -149,6 +149,44 @@
         }
     });
 
+    /* ------------------------------ Modo de entrega (retiro/envío) ------------------------------ */
+    /* Muestra/oculta "Dirección de envío" y recalcula el total mostrado
+     * (subtotal + costo de envío) según el radio elegido. El total real
+     * SIEMPRE se recalcula en el servidor al confirmar (ver
+     * pedidos/views.py checkout() y _costo_envio); esto solo evita que el
+     * cliente vea un total desactualizado antes de enviar el formulario. */
+    function actualizarEntrega(form) {
+        if (!form) {
+            return;
+        }
+        var seleccionado = form.querySelector("[data-entrega-radio]:checked");
+        var esEnvio = !!seleccionado && seleccionado.value === "envio";
+
+        var campoDireccion = form.querySelector("[data-campo-direccion]");
+        if (campoDireccion) {
+            campoDireccion.hidden = !esEnvio;
+            var inputDireccion = campoDireccion.querySelector("input");
+            if (inputDireccion) {
+                inputDireccion.required = esEnvio;
+            }
+        }
+
+        var totalEl = form.querySelector("[data-total-valor]");
+        if (totalEl) {
+            var subtotal = parseFloat(form.dataset.subtotal || "0") || 0;
+            var costoEnvio = parseFloat(form.dataset.costoEnvio || "0") || 0;
+            var total = subtotal + (esEnvio ? costoEnvio : 0);
+            totalEl.textContent = total.toFixed(2);
+        }
+    }
+
+    document.addEventListener("change", function (evento) {
+        var radio = evento.target.closest("[data-entrega-radio]");
+        if (radio) {
+            actualizarEntrega(radio.closest("form"));
+        }
+    });
+
     /* ------------------------------ Formularios ------------------------------ */
     document.addEventListener("submit", function (evento) {
         // Actualizar cantidad desde el drawer (también se dispara solo,

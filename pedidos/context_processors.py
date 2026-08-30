@@ -1,5 +1,7 @@
 from .carrito import SESSION_KEY, Carrito
+from .envio import costo_envio
 from .forms import CheckoutForm
+from .models import Pedido
 
 
 def carrito_cantidad(request):
@@ -28,10 +30,16 @@ def carrito_resumen(request):
             "telefono": perfil.telefono if perfil else "",
         }
     checkout_form = CheckoutForm(initial=initial)
+    total = carrito.total()
 
     return {
         "carrito_lineas": lineas,
-        "carrito_total": carrito.total(),
+        "carrito_total": total,
         "carrito_hay_no_disponibles": carrito.hay_no_disponibles(),
         "carrito_checkout_form": checkout_form,
+        # Estimación mostrada en el drawer junto a la opción "Envío", antes
+        # de confirmar: el total real que se cobra siempre se recalcula en
+        # el servidor al hacer POST (ver pedidos/views.py checkout()), esto
+        # es solo para que el cliente vea el costo esperado antes de elegir.
+        "carrito_costo_envio": costo_envio(checkout_form.config, Pedido.TipoEntrega.ENVIO, total),
     }

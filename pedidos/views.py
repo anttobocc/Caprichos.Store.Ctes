@@ -1,5 +1,3 @@
-from decimal import Decimal
-
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db import transaction
@@ -13,22 +11,12 @@ from panel.models import ConfiguracionNegocio
 
 from . import whatsapp
 from .carrito import Carrito
+from .envio import costo_envio as _costo_envio
 from .forms import CheckoutForm
 from .models import ItemPedido, Pedido
 
 LOGIN_URL_CLIENTE = "usuarios:login"
 SESSION_KEY_ULTIMO_PEDIDO = "ultimo_pedido_id"
-
-
-def _costo_envio(config, tipo_entrega, subtotal):
-    """Servidor calcula el costo de envío, nunca se confía en el frontend."""
-    if tipo_entrega != Pedido.TipoEntrega.ENVIO:
-        return Decimal("0")
-    if not config.envio_habilitado:
-        return Decimal("0")
-    if config.envio_gratis_desde is not None and subtotal >= config.envio_gratis_desde:
-        return Decimal("0")
-    return config.costo_envio or Decimal("0")
 
 
 def _cantidad_valida(valor):

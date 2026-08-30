@@ -1,0 +1,21 @@
+{% comment %}
+Selector de fecha propio (reemplaza el <input type="date"> nativo del
+navegador) para el campo fecha_pedido. Recibe por contexto:
+  campo_id, campo_name, fecha_min (date), fecha_max (date), fecha_valor (str "YYYY-MM-DD" o vacío)
+El rango válido lo define SIEMPRE el backend (CheckoutForm.fecha_minima/
+fecha_maxima, ver pedidos/forms.py) — este partial solo lo expone vía
+data-min/data-max para que static/js/fecha_picker.js arme los botones de
+día; la validación real sigue estando en CheckoutForm.clean_fecha_pedido.
+{% endcomment %}
+<div class="fecha-picker" data-fecha-picker data-min="{{ fecha_min|date:'Y-m-d' }}" data-max="{{ fecha_max|date:'Y-m-d' }}">
+    <input type="hidden" name="{{ campo_name }}" id="{{ campo_id }}" value="{{ fecha_valor|default:'' }}" data-fecha-picker-input>
+    <button type="button" class="fecha-picker__resumen" id="{{ campo_id }}-boton" data-fecha-picker-resumen aria-haspopup="true" aria-expanded="false">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="3"/><path d="M3 10h18M8 3v4M16 3v4"/>
+        </svg>
+        <span data-fecha-picker-texto class="fecha-picker__texto--vacio">Elegí una fecha</span>
+    </button>
+    <div class="fecha-picker__panel" data-fecha-picker-panel hidden role="listbox" aria-labelledby="{{ campo_id }}-boton">
+        <div class="fecha-picker__grid" data-fecha-picker-grid></div>
+    </div>
+</div>

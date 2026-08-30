@@ -54,9 +54,8 @@ carrito_hay_no_disponibles, carrito_checkout_form.
 {% if carrito_hay_no_disponibles %}
 <p class="form-error">Hay productos no disponibles en tu carrito. Quitalos para poder confirmar el pedido.</p>
 {% else %}
-<form method="post" action="{% url 'pedidos:checkout' %}" class="carrito-drawer__checkout" data-carrito-checkout-form novalidate>
+<form method="post" action="{% url 'pedidos:checkout' %}" class="carrito-drawer__checkout" data-carrito-checkout-form data-subtotal="{{ carrito_total|stringformat:'.2f' }}" data-costo-envio="{{ carrito_costo_envio|default:'0'|stringformat:'.2f' }}" novalidate>
     {% csrf_token %}
-    <input type="hidden" name="tipo_entrega" value="retiro">
     <h3>Tus datos</h3>
 
     <div class="carrito-drawer__campo">
@@ -69,17 +68,40 @@ carrito_hay_no_disponibles, carrito_checkout_form.
         <input type="tel" id="cd-telefono" name="telefono" value="{{ carrito_checkout_form.telefono.value|default:'' }}" required>
         <span class="admin-field__error" data-error-para="telefono"></span>
     </div>
+
     <div class="carrito-drawer__campo">
-        <label for="cd-fecha">Fecha del pedido</label>
-        <input type="date" id="cd-fecha" name="fecha_pedido" min="{{ carrito_checkout_form.fecha_minima|date:'Y-m-d' }}" value="{{ carrito_checkout_form.fecha_pedido.value|default:'' }}" required>
+        <label>Modo de entrega</label>
+        <div class="entrega-toggle" data-entrega-toggle>
+            <label class="entrega-toggle__opcion">
+                <input type="radio" name="tipo_entrega" value="retiro" data-entrega-radio {% if carrito_checkout_form.tipo_entrega.value|default:"retiro" == "retiro" %}checked{% endif %}>
+                <span>Retiro en el local</span>
+            </label>
+            {% if carrito_checkout_form.config.envio_habilitado %}
+            <label class="entrega-toggle__opcion">
+                <input type="radio" name="tipo_entrega" value="envio" data-entrega-radio {% if carrito_checkout_form.tipo_entrega.value == "envio" %}checked{% endif %}>
+                <span>Envío{% if carrito_costo_envio %} (+${{ carrito_costo_envio }}){% else %} (gratis){% endif %}</span>
+            </label>
+            {% endif %}
+        </div>
+        <span class="admin-field__error" data-error-para="tipo_entrega"></span>
+    </div>
+    <div class="carrito-drawer__campo" data-campo-direccion {% if carrito_checkout_form.tipo_entrega.value != "envio" %}hidden{% endif %}>
+        <label for="cd-direccion">Dirección de envío</label>
+        <input type="text" id="cd-direccion" name="direccion_envio" value="{{ carrito_checkout_form.direccion_envio.value|default:'' }}" placeholder="Calle, número, barrio">
+        <span class="admin-field__error" data-error-para="direccion_envio"></span>
+    </div>
+
+    <div class="carrito-drawer__campo">
+        <label id="cd-fecha-label">Fecha del pedido</label>
+        {% include "pedidos/_fecha_picker.html" with campo_id="cd-fecha" campo_name="fecha_pedido" fecha_min=carrito_checkout_form.fecha_minima fecha_max=carrito_checkout_form.fecha_maxima fecha_valor=carrito_checkout_form.fecha_pedido.value %}
         <span class="admin-field__error" data-error-para="fecha_pedido"></span>
-        <span class="carrito-drawer__ayuda">Se toman pedidos con al menos {{ carrito_checkout_form.config.dias_anticipacion_pedido }} día{{ carrito_checkout_form.config.dias_anticipacion_pedido|pluralize }} de anticipación.</span>
+        <span class="carrito-drawer__ayuda">Se toman pedidos con entre {{ carrito_checkout_form.config.dias_anticipacion_pedido }} y {{ carrito_checkout_form.dias_maximo }} día{{ carrito_checkout_form.dias_maximo|pluralize }} de anticipación.</span>
     </div>
 
     <p class="carrito-drawer__error-general" data-error-general hidden></p>
 
     <div class="carrito-drawer__resumen">
-        <div class="carrito-drawer__total"><span>Total</span><strong>${{ carrito_total }}</strong></div>
+        <div class="carrito-drawer__total"><span>Total</span><strong>$<span data-total-valor>{{ carrito_total }}</span></strong></div>
         <button type="submit" class="boton carrito-drawer__boton" data-carrito-finalizar-boton>Finalizar pedido</button>
     </div>
 </form>

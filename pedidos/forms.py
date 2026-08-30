@@ -1,6 +1,7 @@
 from datetime import timedelta
 
 from django import forms
+from django.conf import settings
 from django.utils import timezone
 
 from panel.models import ConfiguracionNegocio
@@ -35,7 +36,13 @@ class CheckoutForm(forms.ModelForm):
             self.fields["nombre_completo"].initial = f"{instance.nombre} {instance.apellido}".strip()
         self.config = ConfiguracionNegocio.get_solo()
         self.fecha_minima = timezone.localdate() + timedelta(days=self.config.dias_anticipacion_pedido)
+        self.dias_maximo = getattr(settings, "MAX_ORDER_ADVANCE_DAYS", 10)
+        # max(...) evita un rango imposible si algún día la anticipación
+        # mínima configurada superara la ventana máxima fija (ver
+        # clean_fecha_pedido): siempre queda al menos fecha_minima disponible.
+        self.fecha_maxima = max(self.fecha_minima, timezone.localdate() + timedelta(days=self.dias_maximo))
         self.fields["fecha_pedido"].widget.attrs["min"] = self.fecha_minima.isoformat()
+        self.fields["fecha_pedido"].widget.attrs["max"] = self.fecha_maxima.isoformat()
         if not self.config.envio_habilitado:
             self.fields["tipo_entrega"].choices = [
                 choice for choice in Pedido.TipoEntrega.choices if choice[0] != Pedido.TipoEntrega.ENVIO
@@ -62,6 +69,10 @@ class CheckoutForm(forms.ModelForm):
             raise forms.ValidationError(
                 f"Los pedidos requieren al menos {self.config.dias_anticipacion_pedido} día(s) de anticipación. "
                 f"La fecha más próxima disponible es {self.fecha_minima.strftime('%d/%m/%Y')}."
+            )
+        if fecha_pedido > self.fecha_maxima:
+            raise forms.ValidationError(
+                f"Los pedidos se pueden programar con hasta {self.fecha_maxima.strftime('%d/%m/%Y')} de anticipación."
             )
         return fecha_pedido
 

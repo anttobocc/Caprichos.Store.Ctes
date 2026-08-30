@@ -139,3 +139,4 @@ LOGOUT_REDIRECT_URL = 'panel:login'
 
 # Reglas propias del negocio (Capricho)
 MIN_ORDER_ADVANCE_DAYS = 1
+MAX_ORDER_ADVANCE_DAYS = 10
