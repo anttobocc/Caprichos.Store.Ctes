@@ -5,6 +5,13 @@ numéricos) — sin tocar esa lógica, sigue sincronizada por
 static/js/panel_categoria_imagen.js. No se muestra el slug (se autogenera
 desde el nombre, ver CategoriaForm._slug_unico) ni "orden" (se arrastra y
 suelta en la lista, ver panel_categorias_orden.js).
+
+Presentación con encabezados de sección (ícono + título) y cajas para
+Posición X/Y y Visibilidad — ver "admin-seccion-titulo"/"admin-imagen-caja"/
+"admin-visibilidad-fila" en panel.css. Estas clases son propias de este
+formulario (no las usan producto/portada/pedidos, que reutilizan el mismo
+"data-imagen-editor"/ImagenSimpleWidget con su presentación original) para
+no alterar esos otros formularios.
 {% endcomment %}
 {% include "panel/includes/_campo.html" with field=form.nombre %}
 {% include "panel/includes/_campo.html" with field=form.descripcion %}
@@ -12,14 +19,20 @@ suelta en la lista, ver panel_categorias_orden.js).
 
 <hr class="admin-divisor">
 
-<div class="admin-field">
-    <label>Imagen de portada</label>
-    {{ form.imagen_categoria }}
-    <span class="admin-field__ayuda">Imagen mostrada en la tarjeta de esta categoría en la página de inicio.</span>
-    {% for error in form.imagen_categoria.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+<div class="admin-seccion-titulo">
+    <span class="admin-seccion-titulo__icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 15.5l-5.2-5.2-3.8 3.8-3-3-4 4"/></svg>
+    </span>
+    <h3>Imagen de portada</h3>
 </div>
 
-<div class="admin-imagen-editor" data-imagen-editor data-modo="flotante">
+<div class="admin-imagen-editor admin-imagen-editor--categoria" data-imagen-editor data-modo="flotante">
+    <div class="admin-imagen-seccion__info">
+        {{ form.imagen_categoria }}
+        <p class="admin-field__ayuda">Imagen mostrada en la tarjeta de esta categoría en la página de inicio.</p>
+        {% for error in form.imagen_categoria.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+    </div>
+
     <span class="admin-field__ayuda">Arrastrá la imagen o usá los controles para elegir qué parte queda visible en la portada.</span>
     <div class="admin-imagen-editor__lienzo" data-lienzo>
         <img
@@ -33,7 +46,7 @@ suelta en la lista, ver panel_categorias_orden.js).
         <span class="admin-imagen-editor__vacio" data-imagen-vacio {% if categoria.imagen_categoria %}hidden{% endif %}>Elegí una imagen para previsualizarla acá</span>
     </div>
 
-    <div class="admin-imagen-editor__ejes">
+    <div class="admin-imagen-caja">
         <div class="admin-imagen-editor__eje">
             <span class="admin-imagen-editor__eje-label">Posición X</span>
             <div class="admin-imagen-editor__controles">
@@ -44,6 +57,8 @@ suelta en la lista, ver panel_categorias_orden.js).
             {% for error in form.imagen_pos_x.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
         </div>
 
+        <div class="admin-imagen-caja__divisor" aria-hidden="true"></div>
+
         <div class="admin-imagen-editor__eje">
             <span class="admin-imagen-editor__eje-label">Posición Y</span>
             <div class="admin-imagen-editor__controles">
@@ -53,22 +68,40 @@ suelta en la lista, ver panel_categorias_orden.js).
             </div>
             {% for error in form.imagen_pos_y.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
         </div>
+    </div>
 
-        <div class="admin-imagen-editor__eje">
-            <span class="admin-imagen-editor__eje-label">Tamaño</span>
-            <div class="admin-imagen-editor__controles admin-imagen-editor__controles--tamano">
-                <input type="range" min="50" max="5000" step="1" value="{{ categoria.imagen_tamano|default:260 }}" data-tamano-slider>
-                {{ form.imagen_tamano }}
-            </div>
-            {% for error in form.imagen_tamano.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
+    <div class="admin-imagen-editor__eje">
+        <span class="admin-imagen-editor__eje-label">Tamaño</span>
+        <div class="admin-imagen-editor__controles admin-imagen-editor__controles--tamano">
+            <input type="range" min="50" max="5000" step="1" value="{{ categoria.imagen_tamano|default:260 }}" data-tamano-slider>
+            {{ form.imagen_tamano }}
         </div>
+        {% for error in form.imagen_tamano.errors %}<span class="admin-field__error">{{ error }}</span>{% endfor %}
     </div>
 </div>
 
 <hr class="admin-divisor">
 
-<div class="admin-panel-form__seccion">
+<div class="admin-seccion-titulo">
+    <span class="admin-seccion-titulo__icono" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+    </span>
     <h3>Visibilidad</h3>
-    {% include "panel/includes/_campo.html" with field=form.mostrar_en_productos %}
-    {% include "panel/includes/_campo.html" with field=form.mostrar_en_inicio %}
+</div>
+
+<div class="admin-visibilidad-lista">
+    <label class="admin-visibilidad-fila">
+        <p>{{ form.mostrar_en_productos.help_text }}</p>
+        <span class="admin-visibilidad-fila__control">
+            <strong>Mostrar en productos:</strong>
+            {{ form.mostrar_en_productos }}
+        </span>
+    </label>
+    <label class="admin-visibilidad-fila">
+        <p>{{ form.mostrar_en_inicio.help_text }}</p>
+        <span class="admin-visibilidad-fila__control">
+            <strong>Mostrar en inicio:</strong>
+            {{ form.mostrar_en_inicio }}
+        </span>
+    </label>
 </div>

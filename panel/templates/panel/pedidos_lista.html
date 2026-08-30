@@ -34,7 +34,20 @@
     <div class="admin-table-scroll">
         <table class="admin-table">
             <thead>
-                <tr><th>#</th><th>Cliente</th><th>Estado</th><th>Entrega</th><th>Total</th><th>Fecha pedido</th><th>Acciones</th></tr>
+                <tr>
+                    <th>#</th>
+                    <th>Cliente</th>
+                    <th>Estado</th>
+                    <th>Entrega</th>
+                    <th>Total</th>
+                    <th>
+                        <a class="admin-table__orden" href="?{% for key, value in request.GET.items %}{% if key != 'orden' and key != 'page' %}{{ key }}={{ value|urlencode }}&{% endif %}{% endfor %}orden={% if orden == 'asc' %}desc{% else %}asc{% endif %}" title="{% if orden == 'asc' %}Mostrar más recientes primero{% else %}Mostrar más antiguos primero{% endif %}">
+                            Fecha pedido
+                            <span class="admin-table__orden-icono" aria-hidden="true">{% if orden == 'asc' %}↑{% else %}↓{% endif %}</span>
+                        </a>
+                    </th>
+                    <th>Acciones</th>
+                </tr>
             </thead>
             <tbody>
                 {% for pedido in pedidos %}

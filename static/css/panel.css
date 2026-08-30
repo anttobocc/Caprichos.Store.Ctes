@@ -749,6 +749,24 @@ fieldset.admin-fieldset .admin-field__ayuda--intro {
     text-align: center;
 }
 
+.admin-table__orden {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    color: inherit !important;
+    text-decoration: none !important;
+    cursor: pointer;
+}
+
+.admin-table__orden:hover {
+    color: var(--admin-terracota) !important;
+}
+
+.admin-table__orden-icono {
+    color: var(--admin-terracota);
+    font-size: 0.8em;
+}
+
 .admin-table__arrastrar {
     width: 1%;
     white-space: nowrap;
@@ -1548,6 +1566,139 @@ dialog.admin-modal::backdrop {
 .admin-imagen-editor__controles--tamano input[type="number"] {
     width: 68px;
     flex-shrink: 0;
+}
+
+/* ==================== Formulario de Categoría (encabezados + cajas) ==================== */
+/* Propio de _categoria_panel_campos.html: producto/portada/pedidos siguen
+   con la presentación original del mismo data-imagen-editor/ImagenSimpleWidget. */
+.admin-seccion-titulo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.admin-seccion-titulo__icono {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--admin-green-dark);
+    color: var(--admin-surface);
+}
+
+.admin-seccion-titulo h3 {
+    margin: 0;
+    font-family: var(--fuente-titulos);
+    font-size: 1.02rem;
+    color: var(--admin-text);
+}
+
+.admin-imagen-seccion__info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+/* Botón "Seleccionar archivo" con acento terracota + ícono, solo acá
+   (el widget/HTML es el mismo ImagenSimpleWidget compartido con Producto;
+   esto es puramente CSS scoped al contenedor de Categoría). */
+.admin-imagen-editor--categoria .admin-imagen-archivo__boton {
+    color: var(--admin-terracota) !important;
+    border-color: var(--admin-terracota);
+    gap: 8px;
+}
+
+.admin-imagen-editor--categoria .admin-imagen-archivo__boton:hover {
+    background: rgba(193, 102, 63, 0.08);
+}
+
+.admin-imagen-editor--categoria .admin-imagen-archivo__boton::before {
+    content: "";
+    width: 14px;
+    height: 14px;
+    flex-shrink: 0;
+    background-color: currentColor;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11M7 9l5-5 5 5M4 20h16'/%3E%3C/svg%3E") center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 4v11M7 9l5-5 5 5M4 20h16'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* Caja de Posición X / Posición Y lado a lado con divisor, igual estética
+   que las cajas de Visibilidad de abajo. */
+.admin-imagen-caja {
+    display: flex;
+    align-items: stretch;
+    gap: 12px;
+    padding: 14px 12px;
+    background: var(--admin-surface-soft);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+}
+
+.admin-imagen-caja .admin-imagen-editor__eje {
+    flex: 1;
+    min-width: 0;
+    align-items: center;
+    text-align: center;
+}
+
+.admin-imagen-caja .admin-imagen-editor__controles {
+    width: 100%;
+    justify-content: center;
+}
+
+.admin-imagen-caja__divisor {
+    width: 1px;
+    flex-shrink: 0;
+    background: var(--admin-border);
+}
+
+/* Filas de Visibilidad: texto explicativo a la izquierda, nombre + checkbox
+   a la derecha, en una caja clickeable completa (mismo <label>). */
+.admin-visibilidad-lista {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.admin-visibilidad-fila {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 14px;
+    background: var(--admin-surface-soft);
+    border: 1px solid var(--admin-border);
+    border-radius: var(--admin-radius-sm);
+    cursor: pointer;
+}
+
+.admin-visibilidad-fila p {
+    margin: 0;
+    flex: 1 1 200px;
+    font-size: 0.82rem;
+    color: var(--admin-text-soft);
+    line-height: 1.4;
+}
+
+.admin-visibilidad-fila__control {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    font-size: 0.88rem;
+    color: var(--admin-text);
+}
+
+.admin-visibilidad-fila__control input[type="checkbox"] {
+    width: 22px;
+    height: 22px;
+    accent-color: var(--admin-terracota);
+    cursor: pointer;
 }
 
 /* ============================== Login administrativo ============================ */

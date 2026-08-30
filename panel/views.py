@@ -458,7 +458,11 @@ def producto_eliminar(request, pk):
 def pedidos_lista(request):
     query = request.GET.get("q", "").strip()
     estado = request.GET.get("estado", "").strip()
-    pedidos = Pedido.objects.order_by("-fecha_creacion")
+    # "asc" = fecha de pedido más antigua primero; cualquier otro valor (o
+    # ausente) = más reciente primero, el orden por defecto de siempre.
+    orden = request.GET.get("orden", "").strip()
+    orden_campo = "fecha_pedido" if orden == "asc" else "-fecha_pedido"
+    pedidos = Pedido.objects.order_by(orden_campo, "-pk")
     if query:
         pedidos = pedidos.filter(
             models.Q(nombre__icontains=query)
@@ -472,6 +476,7 @@ def pedidos_lista(request):
         "q": query,
         "estado": estado,
         "estados": Pedido.Estado.choices,
+        "orden": orden,
     })
 
 

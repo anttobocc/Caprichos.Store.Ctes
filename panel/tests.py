@@ -571,6 +571,24 @@ class GestionPedidosPanelTests(TestCase):
         self.assertContains(respuesta, "Buscable")
         self.assertNotContains(respuesta, "Otro Distinto")
 
+    def test_orden_por_defecto_muestra_fecha_de_pedido_mas_reciente_primero(self):
+        from datetime import date, timedelta
+
+        antiguo = crear_pedido_test(nombre="PedidoAntiguoXYZ", fecha_pedido=date.today() + timedelta(days=1))
+        reciente = crear_pedido_test(nombre="PedidoRecienteXYZ", fecha_pedido=date.today() + timedelta(days=5))
+        respuesta = self.client.get(reverse("panel:pedidos"))
+        pedidos = list(respuesta.context["pedidos"])
+        self.assertEqual([p.pk for p in pedidos], [reciente.pk, antiguo.pk])
+
+    def test_orden_asc_muestra_fecha_de_pedido_mas_antigua_primero(self):
+        from datetime import date, timedelta
+
+        antiguo = crear_pedido_test(nombre="PedidoAntiguoXYZ", fecha_pedido=date.today() + timedelta(days=1))
+        reciente = crear_pedido_test(nombre="PedidoRecienteXYZ", fecha_pedido=date.today() + timedelta(days=5))
+        respuesta = self.client.get(reverse("panel:pedidos"), {"orden": "asc"})
+        pedidos = list(respuesta.context["pedidos"])
+        self.assertEqual([p.pk for p in pedidos], [antiguo.pk, reciente.pk])
+
     def test_anonimo_no_accede_al_detalle(self):
         pedido = crear_pedido_test()
         self.client.logout()
