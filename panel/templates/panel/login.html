@@ -1,10 +1,11 @@
 {% extends "base.html" %}
 {% load static %}
+{% load panel_extras %}
 
 {% block title %}Panel Capricho | Iniciar sesión{% endblock %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+    <link rel="stylesheet" href="{% static_v 'css/panel.css' %}">
 {% endblock %}
 
 {% block content %}

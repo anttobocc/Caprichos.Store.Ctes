@@ -33,7 +33,7 @@
 
         <div class="admin-table-wrap">
             <div class="admin-table-scroll">
-                <table class="admin-table">
+                <table class="admin-table admin-table--tarjetas-movil">
                     <thead>
                         <tr>
                             <th>Nombre</th><th>Precio</th><th>Unidad</th>
@@ -54,11 +54,11 @@
                         {% endifchanged %}
                         {% url 'panel:producto_toggle_activo' producto.pk as url_toggle %}
                         <tr>
-                            <td>{{ producto|nombre_sin_categoria }}</td>
-                            <td>{% if producto.precio %}${{ producto.precio }}{% else %}según variante{% endif %}</td>
-                            <td>{{ producto.get_unidad_venta_display }}</td>
-                            <td>{{ producto.tiene_variantes|yesno:"Sí,No" }}</td>
-                            <td>{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=producto.activo %}</td>
+                            <td class="admin-table__titulo">{{ producto|nombre_sin_categoria }}</td>
+                            <td data-label="Precio">{% if producto.precio %}${{ producto.precio }}{% else %}según variante{% endif %}</td>
+                            <td data-label="Unidad">{{ producto.get_unidad_venta_display }}</td>
+                            <td data-label="Variantes">{{ producto.tiene_variantes|yesno:"Sí,No" }}</td>
+                            <td data-label="Estado">{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=producto.activo %}</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-producto-{{ producto.pk }}">Editar</button>
                                 <a href="{% url 'panel:preview_producto' producto.slug %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>

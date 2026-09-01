@@ -32,7 +32,7 @@
 
         <div class="admin-table-wrap">
             <div class="admin-table-scroll">
-                <table class="admin-table admin-table--categorias">
+                <table class="admin-table admin-table--categorias admin-table--tarjetas-movil">
                     <thead>
                         <tr><th></th><th>Nombre</th><th>Productos</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
@@ -43,9 +43,9 @@
                             <td class="admin-table__arrastrar">
                                 <button type="button" class="admin-variante-fila__handle" data-arrastrar aria-label="Arrastrar para reordenar">⠿⠿</button>
                             </td>
-                            <td>{{ categoria.nombre }}</td>
-                            <td>{{ categoria.productos.count }}</td>
-                            <td>{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=categoria.activo %}</td>
+                            <td class="admin-table__titulo">{{ categoria.nombre }}</td>
+                            <td data-label="Productos">{{ categoria.productos.count }}</td>
+                            <td data-label="Estado">{% include "panel/includes/_switch.html" with accion_url=url_toggle activo=categoria.activo %}</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-categoria-{{ categoria.pk }}">Editar</button>
                                 <a href="{% url 'panel:preview_home' %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>
@@ -59,9 +59,9 @@
                     <tbody>
                         <tr>
                             <td></td>
-                            <td>Pedidos</td>
-                            <td>—</td>
-                            <td>—</td>
+                            <td class="admin-table__titulo">Pedidos</td>
+                            <td data-label="Productos">—</td>
+                            <td data-label="Estado">—</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-pedidos-imagen">Editar</button>
                                 <a href="{% url 'panel:preview_home' %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>
@@ -69,9 +69,9 @@
                         </tr>
                         <tr>
                             <td></td>
-                            <td>Portada / Hero</td>
-                            <td>—</td>
-                            <td>—</td>
+                            <td class="admin-table__titulo">Portada / Hero</td>
+                            <td data-label="Productos">—</td>
+                            <td data-label="Estado">—</td>
                             <td class="admin-table__acciones">
                                 <button type="button" class="admin-btn admin-btn--secondary admin-btn--sm" data-panel-target="#panel-portada-imagen">Editar</button>
                                 <a href="{% url 'panel:preview_home' %}" class="admin-btn admin-btn--secondary admin-btn--sm">Vista previa ✎</a>

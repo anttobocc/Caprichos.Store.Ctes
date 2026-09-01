@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 
-from .models import Categoria, Producto, VarianteProducto
+from .models import Categoria, Combo, Producto, VarianteProducto
 
 
 def crear_categoria(**kwargs):
@@ -138,6 +138,67 @@ class CatalogoPublicoTests(TestCase):
         respuesta = self.client.get(reverse("catalogo:productos"))
         self.assertContains(respuesta, "Desde $100")
         self.assertNotContains(respuesta, "Desde $1.00")
+
+
+def crear_combo(**kwargs):
+    datos = {
+        "nombre": "Combo Test",
+        "slug": "combo-test",
+        "descripcion": "Linea uno\nLinea dos",
+        "precio_promocional": 3500,
+        "activo": True,
+    }
+    datos.update(kwargs)
+    return Combo.objects.create(**datos)
+
+
+class ComboPublicoTests(TestCase):
+    def test_combo_activo_aparece_en_pagina_de_combos(self):
+        crear_combo(nombre="Combo Visible Test", slug="combo-visible-test")
+        respuesta = self.client.get(reverse("catalogo:combos"))
+        self.assertContains(respuesta, "Combo Visible Test")
+
+    def test_combo_inactivo_no_aparece_en_pagina_de_combos(self):
+        crear_combo(nombre="Combo Oculto Test", slug="combo-oculto-test", activo=False)
+        respuesta = self.client.get(reverse("catalogo:combos"))
+        self.assertNotContains(respuesta, "Combo Oculto Test")
+
+    def test_combo_activo_da_200_en_detalle(self):
+        crear_combo(nombre="Combo Detalle Test", slug="combo-detalle-test")
+        respuesta = self.client.get(reverse("catalogo:combo_detalle", args=["combo-detalle-test"]))
+        self.assertEqual(respuesta.status_code, 200)
+        self.assertContains(respuesta, "Combo Detalle Test")
+
+    def test_combo_inactivo_da_404_en_detalle(self):
+        crear_combo(nombre="Combo Inactivo Test", slug="combo-inactivo-test", activo=False)
+        respuesta = self.client.get(reverse("catalogo:combo_detalle", args=["combo-inactivo-test"]))
+        self.assertEqual(respuesta.status_code, 404)
+
+    def test_combo_inexistente_da_404_en_detalle(self):
+        respuesta = self.client.get(reverse("catalogo:combo_detalle", args=["no-existe"]))
+        self.assertEqual(respuesta.status_code, 404)
+
+    def test_descripcion_del_combo_conserva_saltos_de_linea(self):
+        crear_combo(nombre="Combo Descripcion Test", slug="combo-descripcion-test", descripcion="Linea uno\nLinea dos")
+        respuesta = self.client.get(reverse("catalogo:combo_detalle", args=["combo-descripcion-test"]))
+        self.assertContains(respuesta, "Linea uno<br>Linea dos")
+
+    def test_combo_activo_aparece_en_todos_los_productos(self):
+        crear_combo(nombre="Combo En Listado Test", slug="combo-en-listado-test")
+        respuesta = self.client.get(reverse("catalogo:productos"))
+        self.assertContains(respuesta, "Combo En Listado Test")
+
+    def test_combo_no_aparece_al_filtrar_por_categoria(self):
+        categoria = crear_categoria()
+        crear_producto(categoria, nombre="Producto Con Categoria Test", slug="producto-con-categoria-test")
+        crear_combo(nombre="Combo Filtro Test", slug="combo-filtro-test")
+        respuesta = self.client.get(reverse("catalogo:productos"), {"categoria": categoria.slug})
+        self.assertNotContains(respuesta, "Combo Filtro Test")
+
+    def test_combo_inactivo_no_aparece_en_todos_los_productos(self):
+        crear_combo(nombre="Combo Inactivo Listado Test", slug="combo-inactivo-listado-test", activo=False)
+        respuesta = self.client.get(reverse("catalogo:productos"))
+        self.assertNotContains(respuesta, "Combo Inactivo Listado Test")
 
 
 class ProductoModeloTests(TestCase):

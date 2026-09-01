@@ -31,7 +31,7 @@
 
         <div class="admin-table-wrap">
             <div class="admin-table-scroll">
-                <table class="admin-table">
+                <table class="admin-table admin-table--tarjetas-movil">
                     <thead>
                         <tr><th>Usuario</th><th>Nombre</th><th>Email</th><th>Rol</th><th>Estado</th><th>Acciones</th></tr>
                     </thead>
@@ -39,11 +39,11 @@
                         {% for usuario in usuarios %}
                         {% url 'panel:usuario_toggle_activo' usuario.pk as url_toggle %}
                         <tr>
-                            <td>{{ usuario.username }}</td>
-                            <td>{{ usuario.first_name }} {{ usuario.last_name }}</td>
-                            <td>{{ usuario.email|default:"—" }}</td>
-                            <td>{% if usuario.is_staff %}<span class="admin-badge admin-badge--accent">Administrador</span>{% else %}<span class="admin-badge admin-badge--off">Cliente</span>{% endif %}</td>
-                            <td>
+                            <td class="admin-table__titulo">{{ usuario.username }}</td>
+                            <td data-label="Nombre">{{ usuario.first_name }} {{ usuario.last_name }}</td>
+                            <td data-label="Email">{{ usuario.email|default:"—" }}</td>
+                            <td data-label="Rol">{% if usuario.is_staff %}<span class="admin-badge admin-badge--accent">Administrador</span>{% else %}<span class="admin-badge admin-badge--off">Cliente</span>{% endif %}</td>
+                            <td data-label="Estado">
                                 {% if usuario.pk == request.user.pk %}
                                     <span class="admin-switch__etiqueta">Activo</span>
                                 {% else %}

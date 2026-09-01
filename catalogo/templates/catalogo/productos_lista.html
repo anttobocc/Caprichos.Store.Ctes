@@ -17,11 +17,15 @@
     </ul>
 
     <div class="productos-grid">
+        {% for combo in combos %}
+            {% include "catalogo/_combo_card.html" %}
+        {% endfor %}
         {% for producto in productos %}
             {% include "catalogo/_producto_card.html" %}
-        {% empty %}
-            <p>No hay productos disponibles.</p>
         {% endfor %}
+        {% if not combos and not productos %}
+            <p>No hay productos disponibles.</p>
+        {% endif %}
     </div>
 </section>
 {% endblock %}

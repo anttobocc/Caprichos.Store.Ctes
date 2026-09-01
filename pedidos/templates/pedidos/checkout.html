@@ -8,7 +8,7 @@
 <h2>Resumen</h2>
 <ul>
     {% for linea in lineas %}
-    <li>{{ linea.cantidad }} x {{ linea.producto.nombre }}{% if linea.variante %} ({{ linea.variante.nombre }}){% endif %} — ${{ linea.subtotal }}</li>
+    <li>{{ linea.cantidad }} x {{ linea.nombre }}{% if linea.variante %} ({{ linea.variante.nombre }}){% endif %} — ${{ linea.subtotal }}</li>
     {% endfor %}
 </ul>
 <p>Subtotal: ${{ subtotal }}</p>

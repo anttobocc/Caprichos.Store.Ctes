@@ -21,14 +21,14 @@ carrito_hay_no_disponibles, carrito_checkout_form.
     {% for linea in carrito_lineas %}
     <li class="carrito-drawer__item">
         <div class="carrito-drawer__item-imagen">
-            {% if linea.producto.imagen %}
-                <img src="{{ linea.producto.imagen.url }}" alt="">
+            {% if linea.imagen %}
+                <img src="{{ linea.imagen.url }}" alt="">
             {% else %}
                 <span aria-hidden="true">🍰</span>
             {% endif %}
         </div>
         <div class="carrito-drawer__item-info">
-            <p class="carrito-drawer__item-nombre">{{ linea.producto.nombre }}</p>
+            <p class="carrito-drawer__item-nombre">{{ linea.nombre }}</p>
             {% if linea.variante %}<p class="carrito-drawer__item-variante">{{ linea.variante.nombre }}</p>{% endif %}
             <p class="carrito-drawer__item-detalle">${{ linea.precio_unitario }} c/u</p>
             {% if not linea.disponible %}<p class="producto-card__no-disponible">No disponible</p>{% endif %}

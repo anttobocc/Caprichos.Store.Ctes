@@ -21,7 +21,7 @@
             {% for linea in lineas %}
             <tr>
                 <td>
-                    {{ linea.producto.nombre }}{% if linea.variante %} — {{ linea.variante.nombre }}{% endif %}
+                    {{ linea.nombre }}{% if linea.variante %} — {{ linea.variante.nombre }}{% endif %}
                     {% if not linea.disponible %}<br><span class="producto-card__no-disponible">No disponible</span>{% endif %}
                 </td>
                 <td>

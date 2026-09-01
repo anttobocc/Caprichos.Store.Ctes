@@ -5,7 +5,7 @@ from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 
-from catalogo.models import Categoria, Producto, VarianteProducto
+from catalogo.models import Categoria, Combo, Producto, VarianteProducto
 from pedidos.models import ItemPedido, Pedido
 
 
@@ -198,6 +198,26 @@ def datos_formset_variantes(variantes=None, total_forms=None):
         datos[f"variantes-{i}-precio"] = str(variante.get("precio", ""))
         datos[f"variantes-{i}-orden"] = str(variante.get("orden", 0))
         datos[f"variantes-{i}-id"] = str(variante.get("id", ""))
+    return datos
+
+
+def datos_formset_combo_items(items=None, total_forms=None):
+    """Igual criterio que datos_formset_variantes pero para el inline de
+    productos del combo (prefix "items", campos producto/cantidad, sin
+    "orden")."""
+    items = items or []
+    if total_forms is None:
+        total_forms = len(items)
+    datos = {
+        "items-TOTAL_FORMS": str(max(total_forms, len(items))),
+        "items-INITIAL_FORMS": "0",
+        "items-MIN_NUM_FORMS": "0",
+        "items-MAX_NUM_FORMS": "1000",
+    }
+    for i, item in enumerate(items):
+        datos[f"items-{i}-producto"] = str(item.get("producto", ""))
+        datos[f"items-{i}-cantidad"] = str(item.get("cantidad", 1))
+        datos[f"items-{i}-id"] = str(item.get("id", ""))
     return datos
 
 
@@ -503,6 +523,98 @@ class ImagenProductoTests(TestCase):
         respuesta = self.client.get(reverse("catalogo:producto_detalle", args=["producto-imagen-detalle-test"]))
         self.assertContains(respuesta, producto.imagen.url)
         producto.imagen.delete(save=True)
+
+
+class ComboCRUDPanelTests(TestCase):
+    def setUp(self):
+        crear_admin()
+        self.client.login(username="admin", password="clave-valida-123")
+        self.categoria = crear_categoria_test()
+        self.producto = Producto.objects.create(
+            categoria=self.categoria, nombre="Producto Del Combo Test", slug="producto-del-combo-test",
+            unidad_venta="unidad", precio=1000,
+        )
+
+    def _datos_combo(self, **overrides):
+        datos = {
+            "nombre": "Combo Panel Test",
+            "descripcion": "2 scones\n1 budin",
+            "precio_promocional": "3500",
+        }
+        datos.update(overrides)
+        return datos
+
+    def test_cliente_no_accede_al_crud_de_combos(self):
+        self.client.logout()
+        crear_cliente("cliente_combo")
+        self.client.login(username="cliente_combo", password="clave-valida-123")
+        respuesta = self.client.get(reverse("panel:combo_crear"))
+        self.assertEqual(respuesta.status_code, 403)
+
+    def test_admin_crea_combo_con_items(self):
+        datos = self._datos_combo()
+        datos.update(datos_formset_combo_items([
+            {"producto": self.producto.pk, "cantidad": 2},
+        ]))
+        respuesta = self.client.post(reverse("panel:combo_crear"), datos)
+        self.assertRedirects(respuesta, reverse("panel:combos"))
+        combo = Combo.objects.get(nombre="Combo Panel Test")
+        self.assertEqual(combo.precio_promocional, 3500)
+        self.assertTrue(combo.activo)
+        self.assertTrue(combo.slug)
+        item = combo.items.get()
+        self.assertEqual(item.producto_id, self.producto.pk)
+        self.assertEqual(item.cantidad, 2)
+
+    def test_admin_edita_combo_preserva_slug_al_renombrar(self):
+        combo = Combo.objects.create(
+            nombre="Combo Editar Test", slug="combo-editar-test", precio_promocional=1000,
+        )
+        # El campo slug viaja en el POST con su valor actual (así lo manda el
+        # form real: bound field pre-completado con el valor de la instancia).
+        datos = self._datos_combo(nombre="Combo Renombrado Test", precio_promocional="1200", slug=combo.slug)
+        datos.update(datos_formset_combo_items([]))
+        respuesta = self.client.post(reverse("panel:combo_editar", args=[combo.pk]), datos)
+        self.assertRedirects(respuesta, reverse("panel:combos"))
+        combo.refresh_from_db()
+        self.assertEqual(combo.nombre, "Combo Renombrado Test")
+        self.assertEqual(combo.precio_promocional, 1200)
+        # El slug no es un campo visible del formulario: se conserva pese a
+        # que el nombre cambió, para no romper la URL pública del combo.
+        self.assertEqual(combo.slug, "combo-editar-test")
+
+    def test_admin_activa_desactiva_combo(self):
+        combo = Combo.objects.create(
+            nombre="Combo Toggle Test", slug="combo-toggle-test", precio_promocional=1000,
+        )
+        respuesta = self.client.post(reverse("panel:combo_toggle_activo", args=[combo.pk]), {"activo": ""})
+        self.assertRedirects(respuesta, reverse("panel:combos"))
+        combo.refresh_from_db()
+        self.assertFalse(combo.activo)
+
+    def test_admin_elimina_combo(self):
+        combo = Combo.objects.create(
+            nombre="Combo Eliminar Test", slug="combo-eliminar-test", precio_promocional=1000,
+        )
+        respuesta = self.client.post(reverse("panel:combo_eliminar", args=[combo.pk]))
+        self.assertRedirects(respuesta, reverse("panel:combos"))
+        self.assertFalse(Combo.objects.filter(pk=combo.pk).exists())
+
+    def test_subida_de_imagen_al_crear_combo(self):
+        contenido_gif = (
+            b"GIF87a\x01\x00\x01\x00\x80\x00\x00\x00\x00\x00\xff\xff\xff,"
+            b"\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02D\x01\x00;"
+        )
+        imagen = SimpleUploadedFile("combo.gif", contenido_gif, content_type="image/gif")
+        datos = self._datos_combo()
+        datos["imagen"] = imagen
+        datos.update(datos_formset_combo_items([]))
+        respuesta = self.client.post(reverse("panel:combo_crear"), datos)
+        self.assertRedirects(respuesta, reverse("panel:combos"))
+        combo = Combo.objects.get(nombre="Combo Panel Test")
+        self.assertTrue(combo.imagen)
+        self.assertIn("combos/", combo.imagen.name)
+        combo.imagen.delete(save=True)
 
 
 def crear_pedido_test(usuario=None, **kwargs):

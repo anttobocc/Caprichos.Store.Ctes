@@ -4,6 +4,7 @@ Uso: {% include "panel/includes/_confirmar_eliminar.html" with id_base="modal-el
 {% endcomment %}
 <dialog id="{{ id_base }}-{{ pk }}" class="admin-modal">
     <div class="admin-modal__cuerpo">
+        <button type="button" class="admin-modal__cerrar" data-modal-close aria-label="Cerrar">✕</button>
         <h2>{{ titulo|default:"¿Eliminar?" }}</h2>
         <p>¿Estás seguro de que querés eliminar "{{ objeto_nombre }}"?</p>
         <p class="admin-modal__aviso">Esta acción no se puede deshacer.</p>

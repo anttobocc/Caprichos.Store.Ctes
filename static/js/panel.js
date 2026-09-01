@@ -38,7 +38,53 @@
         }
     }
 
+    /* Nav off-canvas mobile (header ☰, ver base_panel.html/panel.css): no depende
+     * del ancho de pantalla acá, solo de que exista el marcado (en escritorio
+     * .panel-header-movil/.panel-nav-movil están display:none, así que el botón
+     * que abre esto ni se ve). */
+    function abrirNavMovil() {
+        const nav = document.querySelector(".panel-nav-movil");
+        const backdrop = document.querySelector(".panel-nav-backdrop");
+        const boton = document.querySelector("[data-panel-nav-abrir]");
+        if (!nav) return;
+        nav.classList.add("panel-nav-movil--abierta");
+        nav.setAttribute("aria-hidden", "false");
+        if (backdrop) backdrop.hidden = false;
+        if (boton) boton.setAttribute("aria-expanded", "true");
+        document.body.classList.add("panel-nav-movil-abierto");
+    }
+
+    function cerrarNavMovil() {
+        const nav = document.querySelector(".panel-nav-movil");
+        const backdrop = document.querySelector(".panel-nav-backdrop");
+        const boton = document.querySelector("[data-panel-nav-abrir]");
+        if (!nav) return;
+        nav.classList.remove("panel-nav-movil--abierta");
+        nav.setAttribute("aria-hidden", "true");
+        if (backdrop) backdrop.hidden = true;
+        if (boton) boton.setAttribute("aria-expanded", "false");
+        document.body.classList.remove("panel-nav-movil-abierto");
+    }
+
+    document.addEventListener("keydown", function (evento) {
+        if (evento.key === "Escape") {
+            cerrarNavMovil();
+        }
+    });
+
     document.addEventListener("click", function (evento) {
+        const abridorNav = evento.target.closest("[data-panel-nav-abrir]");
+        if (abridorNav) {
+            abrirNavMovil();
+            return;
+        }
+
+        const cerradorNav = evento.target.closest("[data-panel-nav-cerrar]");
+        if (cerradorNav) {
+            cerrarNavMovil();
+            return;
+        }
+
         const abridorModal = evento.target.closest("[data-modal-target]");
         if (abridorModal) {
             const dialogo = document.querySelector(abridorModal.getAttribute("data-modal-target"));

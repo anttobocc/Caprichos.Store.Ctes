@@ -32,7 +32,7 @@
 
 <div class="admin-table-wrap">
     <div class="admin-table-scroll">
-        <table class="admin-table">
+        <table class="admin-table admin-table--tarjetas-movil">
             <thead>
                 <tr>
                     <th>#</th>
@@ -52,12 +52,12 @@
             <tbody>
                 {% for pedido in pedidos %}
                 <tr>
-                    <td>#{{ pedido.pk }}</td>
-                    <td>{{ pedido.nombre }} {{ pedido.apellido }}</td>
-                    <td><span class="admin-badge admin-badge--accent">{{ pedido.get_estado_display }}</span></td>
-                    <td>{{ pedido.get_tipo_entrega_display }}</td>
-                    <td>${{ pedido.total }}</td>
-                    <td>{{ pedido.fecha_pedido|date:"d/m/Y" }}</td>
+                    <td data-label="#">#{{ pedido.pk }}</td>
+                    <td class="admin-table__titulo">{{ pedido.nombre }} {{ pedido.apellido }}</td>
+                    <td data-label="Estado"><span class="admin-badge admin-badge--accent">{{ pedido.get_estado_display }}</span></td>
+                    <td data-label="Entrega">{{ pedido.get_tipo_entrega_display }}</td>
+                    <td data-label="Total">${{ pedido.total }}</td>
+                    <td data-label="Fecha">{{ pedido.fecha_pedido|date:"d/m/Y" }}</td>
                     <td class="admin-table__acciones">
                         <a href="{% url 'panel:pedido_detalle' pedido.pk %}" class="admin-btn admin-btn--secondary admin-btn--sm">Ver detalle</a>
                     </td>

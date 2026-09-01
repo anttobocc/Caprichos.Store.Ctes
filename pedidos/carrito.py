@@ -3,24 +3,38 @@
 La sesión guarda únicamente identificadores y cantidades:
 
     {"<producto_id>:<variante_id o vacío>": cantidad}
+    {"combo:<combo_id>": cantidad}
 
 El precio NUNCA se guarda en la sesión: Carrito.items() y Carrito.total()
-siempre vuelven a consultar Producto/VarianteProducto en la base para
+siempre vuelven a consultar Producto/VarianteProducto/Combo en la base para
 resolver el precio vigente. Esto es intencional (ver Etapa 4 y Etapa 5):
 producto sin variantes -> Producto.precio; producto con variantes activas
--> VarianteProducto.precio; nunca una tercera fuente.
+-> VarianteProducto.precio; combo -> Combo.precio_promocional; nunca una
+tercera fuente.
+
+Las claves de producto son siempre "<id-numérico>:<...>", así que el prefijo
+"combo:" (nunca numérico) no puede colisionar con ninguna clave de producto
+ya guardada en una sesión existente — es 100% aditivo.
 
 "activo" y "disponible" son conceptos distintos: un producto/variante
 inactivo no puede permanecer en el carrito (se quita solo); un producto
-"no disponible" sí permanece visible, pero bloquea el checkout.
+"no disponible" sí permanece visible, pero bloquea el checkout. Combo no
+tiene esa segunda distinción: si no está activo, la línea se descarta
+directamente en Carrito.items(), así que una LineaCarritoCombo resuelta
+siempre está disponible.
 """
-from catalogo.models import Producto, VarianteProducto
+from catalogo.models import Combo, Producto, VarianteProducto
 
 SESSION_KEY = "carrito"
+PREFIJO_COMBO = "combo:"
 
 
 def _clave(producto_id, variante_id):
     return f"{producto_id}:{variante_id or ''}"
+
+
+def _clave_combo(combo_id):
+    return f"{PREFIJO_COMBO}{combo_id}"
 
 
 class LineaCarrito:
@@ -29,6 +43,14 @@ class LineaCarrito:
         self.producto = producto
         self.variante = variante
         self.cantidad = cantidad
+
+    @property
+    def nombre(self):
+        return self.producto.nombre
+
+    @property
+    def imagen(self):
+        return self.producto.imagen
 
     @property
     def precio_unitario(self):
@@ -41,6 +63,40 @@ class LineaCarrito:
     @property
     def disponible(self):
         return self.producto.disponible
+
+
+class LineaCarritoCombo:
+    """Línea de carrito para un Combo — misma interfaz que LineaCarrito
+    (clave/cantidad/nombre/imagen/precio_unitario/subtotal/disponible) para
+    que las plantillas del carrito no necesiten ramificar por tipo.
+    `variante` siempre es None: los combos no tienen variantes."""
+
+    def __init__(self, clave, combo, cantidad):
+        self.clave = clave
+        self.combo = combo
+        self.producto = None
+        self.variante = None
+        self.cantidad = cantidad
+
+    @property
+    def nombre(self):
+        return self.combo.nombre
+
+    @property
+    def imagen(self):
+        return self.combo.imagen
+
+    @property
+    def precio_unitario(self):
+        return self.combo.precio_promocional
+
+    @property
+    def subtotal(self):
+        return self.precio_unitario * self.cantidad
+
+    @property
+    def disponible(self):
+        return True
 
 
 class Carrito:
@@ -60,6 +116,14 @@ class Carrito:
         de llamar acá."""
         datos = self._datos()
         clave = _clave(producto.pk, variante.pk if variante else None)
+        datos[clave] = datos.get(clave, 0) + cantidad
+        self._guardar()
+
+    def agregar_combo(self, combo, cantidad=1):
+        """Agrega `cantidad` unidades de `combo` al carrito. Misma no-validación
+        que `agregar()`: la vista ya resolvió `combo` (activo) antes de llamar."""
+        datos = self._datos()
+        clave = _clave_combo(combo.pk)
         datos[clave] = datos.get(clave, 0) + cantidad
         self._guardar()
 
@@ -98,6 +162,21 @@ class Carrito:
         claves_a_quitar = []
 
         for clave, cantidad in list(datos.items()):
+            if clave.startswith(PREFIJO_COMBO):
+                try:
+                    combo_id = int(clave[len(PREFIJO_COMBO):])
+                except ValueError:
+                    claves_a_quitar.append(clave)
+                    continue
+                combo = Combo.objects.filter(pk=combo_id, activo=True).first()
+                if combo is None:
+                    claves_a_quitar.append(clave)
+                    if mensajes is not None:
+                        mensajes.append("Un combo de tu carrito ya no está disponible y fue quitado.")
+                    continue
+                lineas.append(LineaCarritoCombo(clave, combo, cantidad))
+                continue
+
             producto_id_str, _, variante_id_str = clave.partition(":")
             try:
                 producto_id = int(producto_id_str)

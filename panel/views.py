@@ -622,6 +622,11 @@ def preview_producto(request, slug):
     return catalogo_views.producto_detalle(request, slug, modo_edicion=True)
 
 
+@panel_admin_required
+def preview_combo(request, slug):
+    return catalogo_views.combo_detalle(request, slug, modo_edicion=True)
+
+
 # Lista blanca de qué se puede editar desde la preview: entidad -> (modelo,
 # lookup por pk o "singleton", {prefijo_de_campo: modo}). No se acepta
 # ningún otro nombre de entidad/prefijo, ni siquiera si el modelo tuviera

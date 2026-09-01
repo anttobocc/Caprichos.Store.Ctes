@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.template.loader import render_to_string
 from django.views.decorators.http import require_POST
 
-from catalogo.models import Producto, VarianteProducto
+from catalogo.models import Combo, Producto, VarianteProducto
 from panel.models import ConfiguracionNegocio
 
 from . import whatsapp
@@ -103,6 +103,25 @@ def carrito_agregar(request, producto_id):
 
 
 @require_POST
+def carrito_agregar_combo(request, combo_id):
+    combo = get_object_or_404(Combo, pk=combo_id, activo=True)
+    es_ajax = _es_ajax(request)
+
+    cantidad = _cantidad_valida(request.POST.get("cantidad", 1))
+    if cantidad is None:
+        if es_ajax:
+            return _respuesta_drawer_json(request, error="La cantidad debe ser un número entero mayor o igual a 1.")
+        messages.error(request, "La cantidad debe ser un número entero mayor o igual a 1.")
+        return redirect("catalogo:combo_detalle", slug=combo.slug)
+
+    Carrito(request).agregar_combo(combo, cantidad)
+    if es_ajax:
+        return _respuesta_drawer_json(request)
+    messages.success(request, f'"{combo.nombre}" se agregó al carrito.')
+    return redirect("pedidos:carrito")
+
+
+@require_POST
 def carrito_actualizar(request, clave):
     cantidad = _cantidad_valida(request.POST.get("cantidad"))
     if cantidad is None:
@@ -190,11 +209,13 @@ def checkout(request):
                 pedido.save()
 
                 for linea in lineas:
+                    es_combo = linea.producto is None
                     ItemPedido.objects.create(
                         pedido=pedido,
                         producto=linea.producto,
                         variante=linea.variante,
-                        nombre_producto=linea.producto.nombre,
+                        combo=linea.combo if es_combo else None,
+                        nombre_producto=linea.nombre,
                         nombre_variante=linea.variante.nombre if linea.variante else "",
                         cantidad=linea.cantidad,
                         precio_unitario=linea.precio_unitario,

@@ -2,7 +2,7 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
-from catalogo.models import Producto, VarianteProducto
+from catalogo.models import Combo, Producto, VarianteProducto
 
 
 class Pedido(models.Model):
@@ -67,7 +67,18 @@ class ItemPedido(models.Model):
         blank=True,
         related_name="items_pedido",
     )
-    # Snapshots: conservan el detalle del pedido aunque el producto/variante se elimine, cambie o se desactive después.
+    combo = models.ForeignKey(
+        Combo,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="items_pedido",
+    )
+    # Snapshots: conservan el detalle del pedido aunque el producto/variante/combo
+    # se elimine, cambie o se desactive después. Para una línea de combo,
+    # "producto"/"variante" quedan en null y "nombre_producto" guarda el nombre
+    # del combo (se reutiliza el mismo campo snapshot en vez de agregar uno
+    # "nombre_combo" redundante).
     nombre_producto = models.CharField(max_length=200)
     nombre_variante = models.CharField(max_length=100, blank=True)
     cantidad = models.PositiveIntegerField(validators=[MinValueValidator(1)])

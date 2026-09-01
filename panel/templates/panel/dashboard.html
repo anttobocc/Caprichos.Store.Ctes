@@ -59,18 +59,18 @@
     {% if pedidos_recientes %}
     <div class="admin-table-wrap">
         <div class="admin-table-scroll">
-            <table class="admin-table">
+            <table class="admin-table admin-table--tarjetas-movil">
                 <thead>
                     <tr><th>Pedido</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Total</th></tr>
                 </thead>
                 <tbody>
                     {% for pedido in pedidos_recientes %}
                     <tr>
-                        <td><a href="{% url 'panel:pedido_detalle' pedido.pk %}">#{{ pedido.pk }}</a></td>
-                        <td>{{ pedido.nombre }} {{ pedido.apellido }}</td>
-                        <td>{{ pedido.fecha_creacion|date:"d/m/Y" }}</td>
-                        <td><span class="admin-badge admin-badge--accent">{{ pedido.get_estado_display }}</span></td>
-                        <td>${{ pedido.total }}</td>
+                        <td data-label="Pedido"><a href="{% url 'panel:pedido_detalle' pedido.pk %}">#{{ pedido.pk }}</a></td>
+                        <td class="admin-table__titulo">{{ pedido.nombre }} {{ pedido.apellido }}</td>
+                        <td data-label="Fecha">{{ pedido.fecha_creacion|date:"d/m/Y" }}</td>
+                        <td data-label="Estado"><span class="admin-badge admin-badge--accent">{{ pedido.get_estado_display }}</span></td>
+                        <td data-label="Total">${{ pedido.total }}</td>
                     </tr>
                     {% endfor %}
                 </tbody>

@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from catalogo.models import Categoria, Producto, VarianteProducto
+from catalogo.models import Categoria, Combo, Producto, VarianteProducto
 from panel.models import ConfiguracionNegocio
 
 from . import whatsapp
@@ -33,6 +33,17 @@ def crear_producto(categoria, **kwargs):
     }
     datos.update(kwargs)
     return Producto.objects.create(**datos)
+
+
+def crear_combo(**kwargs):
+    datos = {
+        "nombre": "Combo Pedidos Test",
+        "slug": "combo-pedidos-test",
+        "precio_promocional": 3500,
+        "activo": True,
+    }
+    datos.update(kwargs)
+    return Combo.objects.create(**datos)
 
 
 def fecha_valida(dias_extra=0):
@@ -205,6 +216,53 @@ class CarritoTests(TestCase):
         )
         respuesta = self.client.get(reverse("pedidos:carrito"))
         self.assertEqual(respuesta.context["lineas"][0].precio_unitario, 1000)
+
+
+class CarritoComboTests(TestCase):
+    def setUp(self):
+        self.usuario = crear_usuario()
+        self.client.login(username="cliente", password="clave-valida-123")
+
+    def test_agregar_combo(self):
+        combo = crear_combo()
+        respuesta = self.client.post(reverse("pedidos:carrito_agregar_combo", args=[combo.pk]), {"cantidad": 2})
+        self.assertRedirects(respuesta, reverse("pedidos:carrito"))
+        respuesta = self.client.get(reverse("pedidos:carrito"))
+        self.assertEqual(len(respuesta.context["lineas"]), 1)
+        linea = respuesta.context["lineas"][0]
+        self.assertEqual(linea.cantidad, 2)
+        self.assertEqual(linea.precio_unitario, combo.precio_promocional)
+        self.assertEqual(linea.nombre, combo.nombre)
+
+    def test_producto_y_combo_conviven_en_el_mismo_carrito(self):
+        categoria = crear_categoria()
+        producto = crear_producto(categoria)
+        combo = crear_combo()
+        self.client.post(reverse("pedidos:carrito_agregar", args=[producto.pk]), {"cantidad": 1})
+        self.client.post(reverse("pedidos:carrito_agregar_combo", args=[combo.pk]), {"cantidad": 1})
+        respuesta = self.client.get(reverse("pedidos:carrito"))
+        self.assertEqual(len(respuesta.context["lineas"]), 2)
+        self.assertEqual(respuesta.context["total"], producto.precio + combo.precio_promocional)
+
+    def test_combo_inactivo_no_se_puede_agregar(self):
+        combo = crear_combo(slug="combo-inactivo-agregar-test", activo=False)
+        self.client.post(reverse("pedidos:carrito_agregar_combo", args=[combo.pk]), {"cantidad": 1})
+        respuesta = self.client.get(reverse("pedidos:carrito"))
+        self.assertEqual(len(respuesta.context["lineas"]), 0)
+
+    def test_combo_desactivado_se_elimina_del_carrito_si_ya_estaba(self):
+        combo = crear_combo(slug="combo-se-desactiva-test")
+        self.client.post(reverse("pedidos:carrito_agregar_combo", args=[combo.pk]), {"cantidad": 1})
+        combo.activo = False
+        combo.save(update_fields=["activo"])
+        respuesta = self.client.get(reverse("pedidos:carrito"))
+        self.assertEqual(len(respuesta.context["lineas"]), 0)
+
+    def test_cantidad_invalida_no_agrega_combo(self):
+        combo = crear_combo(slug="combo-cantidad-invalida-test")
+        self.client.post(reverse("pedidos:carrito_agregar_combo", args=[combo.pk]), {"cantidad": "abc"})
+        respuesta = self.client.get(reverse("pedidos:carrito"))
+        self.assertEqual(len(respuesta.context["lineas"]), 0)
 
 
 class CheckoutTests(TestCase):
@@ -426,6 +484,26 @@ class CreacionPedidoTests(TestCase):
         item.refresh_from_db()
         self.assertEqual(item.nombre_variante, "Cocinadas")
         self.assertEqual(item.precio_unitario, 500)
+
+    def test_crea_pedido_e_item_con_combo(self):
+        combo = crear_combo(nombre="Combo Checkout Test", slug="combo-checkout-test", precio_promocional=3500)
+        self.client.post(reverse("pedidos:carrito_agregar_combo", args=[combo.pk]), {"cantidad": 2})
+        datos = {
+            "nombre_completo": "Ana Test", "telefono": "111222333",
+            "tipo_entrega": "retiro", "direccion_envio": "", "fecha_pedido": fecha_valida(), "observaciones": "",
+        }
+        self.client.post(reverse("pedidos:checkout"), datos)
+
+        pedido = Pedido.objects.get()
+        self.assertEqual(pedido.total, 7000)
+
+        item = ItemPedido.objects.get(pedido=pedido)
+        self.assertIsNone(item.producto)
+        self.assertEqual(item.combo, combo)
+        self.assertEqual(item.cantidad, 2)
+        self.assertEqual(item.precio_unitario, 3500)
+        self.assertEqual(item.nombre_producto, "Combo Checkout Test")
+        self.assertEqual(item.subtotal, 7000)
 
     def test_no_crea_pedido_si_hay_producto_no_disponible(self):
         producto = crear_producto(self.categoria)

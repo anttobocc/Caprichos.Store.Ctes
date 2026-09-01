@@ -93,26 +93,21 @@
     text-transform: uppercase;
 }
 
+/* display:flex (no grid) porque la cantidad de links es variable: "Combos"
+   aparece/desaparece según haya combos activos (ver hay_combos_activos en
+   context_processors.py). Un grid a N columnas fijas + nth-child se rompe
+   apenas cambia esa cantidad — ver commit que agregó Combos como 4to link,
+   se iba a una segunda línea porque el grid estaba fijo a 3 columnas. Flex
+   con gap flexible centra cualquier cantidad de links en una sola línea. */
 .site-nav:not(.site-nav--mobile) {
     grid-column: 2;
     justify-self: stretch;
     width: 100%;
-    display: grid;
-    grid-template-columns: 1fr auto 1fr;
+    display: flex;
+    justify-content: center;
     align-items: center;
-    gap: 24px;
-}
-
-.site-nav:not(.site-nav--mobile) > a:nth-child(1) {
-    justify-self: end;
-}
-
-.site-nav:not(.site-nav--mobile) > a:nth-child(2) {
-    justify-self: center;
-}
-
-.site-nav:not(.site-nav--mobile) > a:nth-child(3) {
-    justify-self: start;
+    flex-wrap: nowrap;
+    gap: clamp(14px, 2vw, 24px);
 }
 
 .site-nav a:hover,
@@ -1597,6 +1592,16 @@
    ============================================================ */
 
 /* ---------- m-hero: portada mobile ---------- */
+/* La sección entera (imagen + bloque de texto + flores + sello) es
+   flujo normal: sin position:fixed/sticky/transform en .m-hero,
+   .m-hero__imagen ni .m-hero__texto. Antes había un will-change:
+   transform acá pensado para evitar que el navegador recompusiera
+   imagen y texto como capas separadas durante el scroll, pero en la
+   práctica lograba justo lo contrario: promovía a .m-hero a su propia
+   capa de composición, y esa capa terminaba desincronizándose del
+   resto del documento en el scroll de mobile — es decir, ERA la causa
+   del "el texto se mueve independiente", no la solución. Se quitó a
+   propósito; no reintroducir will-change/transform en este bloque. */
 .m-hero__imagen {
         position: relative;
         width: 100%;
@@ -1645,16 +1650,42 @@
         text-align: center;
         padding: 40px 24px 48px;
         background: var(--color-crema-oscuro);
+        /* .m-hero__flores (ver abajo) se dejan sobresalir del ancho de
+           este contenedor a propósito, pero el recorte de ese sobrante
+           tiene que pasar ACÁ, no dejárselo al overflow-x:hidden global
+           de <body> (ver base.css): ese contenido escapando hasta el
+           borde real del documento es lo que en mobile alteraba el
+           containing block del carrito lateral (position:fixed), que
+           vive fuera de .home-mobile — el drawer se abría desplazado
+           solo en Inicio. Con el recorte local acá, el resultado visual
+           no cambia (el ancho de este bloque ya es el ancho completo de
+           pantalla en mobile), pero nada de Home se filtra fuera de la
+           página.
+
+           IMPORTANTE: tiene que ser "overflow: hidden" en los DOS ejes,
+           nunca solo "overflow-x: hidden". Con overflow-x:hidden y
+           overflow-y en su default (visible), la spec de CSS obliga al
+           navegador a recalcular ese overflow-y como "auto" — este
+           elemento pasaba a ser, sin que se viera en ningún lado del
+           código, un contenedor con scroll propio. .m-hero__flores es
+           position:absolute con una imagen de aspect-ratio 1024x1536:
+           a 210px de ancho renderiza ~315px de alto y sobresale por
+           abajo del cuerpo de texto, así que ese scroll-y "fantasma"
+           SÍ tenía contenido para desplazar. Eso es lo que en el
+           teléfono se sentía como que la franja completa "rebotaba"
+           sola al tocarla (el scroll elástico/rubber-band de iOS
+           enganchando ese contenedor interno en vez de dejar pasar el
+           gesto a la página). overflow:hidden en los dos ejes recorta
+           igual el sobrante horizontal y además el vertical (que nunca
+           debía verse) sin crear ningún contenedor desplazable. */
+        overflow: hidden;
     }
 
     /* Mismo recurso que .hero__flores en desktop (flores-portada.png),
        reescalado a mobile: dos copias grandes a los laterales, la
        derecha espejada con scaleX(-1), opacidad baja y por debajo del
        texto (z-index) para que queden como fondo decorativo sin
-       interferir con la lectura. Se dejan sobresalir del ancho de
-       .m-hero__texto a propósito (sin overflow:hidden acá): el
-       overflow-x:hidden global de <body>, ver base.css, es lo que
-       evita que esto produzca scroll horizontal, no un recorte local. */
+       interferir con la lectura. */
     .m-hero__flores {
         position: absolute;
         top: 14px;

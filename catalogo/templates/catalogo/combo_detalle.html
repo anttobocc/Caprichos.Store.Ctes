@@ -1,0 +1,42 @@
+{% extends "catalogo/base_catalogo.html" %}
+
+{% block title %}{{ combo.nombre }} | Capricho{% endblock %}
+
+{% block catalogo_content %}
+<section class="contenedor producto-detalle">
+    <div class="producto-detalle__imagen">
+        {% if combo.imagen %}
+            <img src="{{ combo.imagen.url }}" alt="{{ combo.nombre }}" style="--img-x:{{ combo.imagen_pos_x }};--img-y:{{ combo.imagen_pos_y }};--img-zoom:{{ combo.imagen_zoom }};"{% if modo_edicion %} data-editable-imagen data-entidad="combo" data-id="{{ combo.pk }}" data-prefijo="imagen" data-modo="recorte" data-nombre="{{ combo.nombre }}"{% endif %}>
+        {% else %}
+            <div class="producto-card__sin-imagen producto-detalle__sin-imagen" aria-hidden="true">🎁</div>
+        {% endif %}
+    </div>
+
+    <div class="producto-detalle__info">
+        <p class="producto-card__categoria">Combo</p>
+        <h1>{{ combo.nombre }}</h1>
+
+        {% if combo.descripcion %}<p>{{ combo.descripcion|linebreaksbr }}</p>{% endif %}
+
+        {% if combo.precio_individual_total %}
+            <p class="producto-card__unidad"><s>${{ combo.precio_individual_total }}</s></p>
+        {% endif %}
+        <p class="producto-card__precio">${{ combo.precio_promocional }}</p>
+
+        <form method="post" action="{% url 'pedidos:carrito_agregar_combo' combo.pk %}" class="producto-detalle__form">
+            {% csrf_token %}
+            <div class="producto-detalle__cantidad">
+                <span>Cantidad:</span>
+                <div class="stepper-cantidad">
+                    <button type="button" class="stepper-cantidad__boton" data-stepper-menos aria-label="Restar una unidad">−</button>
+                    <input type="number" name="cantidad" value="1" min="1" class="stepper-cantidad__valor" data-stepper-valor readonly>
+                    <button type="button" class="stepper-cantidad__boton" data-stepper-mas aria-label="Sumar una unidad">+</button>
+                </div>
+            </div>
+            <button type="submit" class="boton">Agregar al carrito</button>
+        </form>
+    </div>
+</section>
+
+<p class="contenedor pagina-listado__volver"><a href="{% url 'catalogo:combos' %}">← Volver a combos</a></p>
+{% endblock %}

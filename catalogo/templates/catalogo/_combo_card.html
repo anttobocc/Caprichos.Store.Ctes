@@ -1,19 +1,23 @@
 {% load static %}
 <article class="producto-card">
-    {% if combo.imagen %}
-        <img src="{{ combo.imagen.url }}" alt="{{ combo.nombre }}" class="producto-card__imagen-link" style="--img-x:{{ combo.imagen_pos_x }};--img-y:{{ combo.imagen_pos_y }};--img-zoom:{{ combo.imagen_zoom }};"{% if modo_edicion %} data-editable-imagen data-entidad="combo" data-id="{{ combo.pk }}" data-prefijo="imagen" data-modo="recorte" data-nombre="{{ combo.nombre }}"{% endif %}>
-    {% else %}
-        <div class="producto-card__sin-imagen" aria-hidden="true">🎁</div>
-    {% endif %}
+    <a href="{% url 'catalogo:combo_detalle' combo.slug %}" class="producto-card__imagen-link">
+        {% if combo.imagen %}
+            <img src="{{ combo.imagen.url }}" alt="{{ combo.nombre }}" style="--img-x:{{ combo.imagen_pos_x }};--img-y:{{ combo.imagen_pos_y }};--img-zoom:{{ combo.imagen_zoom }};"{% if modo_edicion %} data-editable-imagen data-entidad="combo" data-id="{{ combo.pk }}" data-prefijo="imagen" data-modo="recorte" data-nombre="{{ combo.nombre }}"{% endif %}>
+        {% else %}
+            <div class="producto-card__sin-imagen" aria-hidden="true">🎁</div>
+        {% endif %}
+    </a>
     <div class="producto-card__cuerpo">
         <p class="producto-card__categoria">Combo</p>
-        <h3>{{ combo.nombre }}</h3>
-        {% if combo.descripcion %}<p class="producto-card__descripcion">{{ combo.descripcion }}</p>{% endif %}
+        <h3><a href="{% url 'catalogo:combo_detalle' combo.slug %}">{{ combo.nombre }}</a></h3>
+        {% if combo.descripcion %}<p class="producto-card__descripcion">{{ combo.descripcion|linebreaksbr }}</p>{% endif %}
 
         {% if combo.precio_individual_total %}
             <p class="producto-card__unidad"><s>${{ combo.precio_individual_total }}</s></p>
         {% endif %}
         <p class="producto-card__precio">${{ combo.precio_promocional }}</p>
+
+        <a href="{% url 'catalogo:combo_detalle' combo.slug %}" class="boton producto-card__boton">Ver combo</a>
     </div>
     <svg class="producto-card__decor" viewBox="0 0 120 160" aria-hidden="true">
         <path d="M18 148 C 40 115 55 90 102 18" stroke="currentColor" stroke-width="1.4" fill="none" stroke-linecap="round"/>

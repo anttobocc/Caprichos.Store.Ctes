@@ -50,7 +50,7 @@
             <a href="{% url 'catalogo:home' %}" class="{% if request.resolver_match.url_name == 'home' %}site-nav__link--activo{% endif %}">Inicio</a>
             <a href="{% url 'catalogo:productos' %}">Productos</a>
             <a href="{% url 'catalogo:home' %}#destacados">Destacados</a>
-            {% if hay_combos_activos %}<a href="{% url 'catalogo:home' %}#combos">Combos</a>{% endif %}
+            {% if hay_combos_activos %}<a href="{% url 'catalogo:combos' %}">Combos</a>{% endif %}
         </nav>
 
         <div class="site-header__acciones">

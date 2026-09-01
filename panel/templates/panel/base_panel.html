@@ -1,8 +1,9 @@
 {% extends "base.html" %}
 {% load static %}
+{% load panel_extras %}
 
 {% block extra_css %}
-    <link rel="stylesheet" href="{% static 'css/panel.css' %}">
+    <link rel="stylesheet" href="{% static_v 'css/panel.css' %}">
     {% block panel_extra_css %}{% endblock %}
 {% endblock %}
 
@@ -44,6 +45,59 @@
         <a href="{% url 'panel:configuracion' %}" class="{% if url_actual == 'configuracion' %}activo{% endif %}">Configuración</a>
     </nav>
 
+    {% comment %}
+    Header + nav mobile (≤767px, ver panel.css): NO es el mismo header/nav de
+    arriba encogido — son elementos nuevos, ocultos en escritorio por CSS, que
+    reemplazan visualmente a .panel-header/.panel-nav en pantallas chicas
+    (mismo criterio que .home-desktop/.home-mobile en la home pública: dos
+    interfaces separadas, no una sola achicada). Mismos 6 links y mismas
+    acciones de cuenta que arriba, duplicados acá adentro del cajón off-canvas
+    para no tocar en absoluto el header/nav de escritorio existentes.
+    {% endcomment %}
+    <header class="panel-header-movil">
+        <button type="button" class="panel-header-movil__menu" data-panel-nav-abrir aria-expanded="false" aria-controls="panel-nav-movil" aria-label="Abrir menú">
+            <span aria-hidden="true">☰</span>
+        </button>
+        <a href="{% url 'panel:dashboard' %}" class="panel-header-movil__marca">
+            <span class="panel-header-movil__isotipo" aria-hidden="true">
+                <svg viewBox="0 0 40 18">
+                    <path d="M6 17c-3.2-4-1-8.4 2-12.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M20 17c-3.2-5-1-9.4 2-14.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                    <path d="M34 17c-3.2-4-1-8.4 2-12.4" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linecap="round"/>
+                </svg>
+                <span class="panel-header-movil__letra">C</span>
+            </span>
+            <strong>CAPRICHO</strong>
+        </a>
+        <a href="{% url 'catalogo:home' %}" class="panel-header-movil__accion" target="_blank" rel="noopener" aria-label="Ver sitio">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        </a>
+    </header>
+
+    <div class="panel-nav-backdrop" data-panel-nav-cerrar hidden></div>
+
+    <aside id="panel-nav-movil" class="panel-nav-movil" aria-hidden="true">
+        <div class="panel-nav-movil__header">
+            <span class="panel-nav-movil__bienvenida">Bienvenido/a, <strong>{{ request.user.get_short_name|default:request.user.username }}</strong></span>
+            <button type="button" class="panel-nav-movil__cerrar" data-panel-nav-cerrar aria-label="Cerrar menú">✕</button>
+        </div>
+        <nav class="panel-nav-movil__links">
+            <a href="{% url 'panel:dashboard' %}" data-panel-nav-cerrar class="{% if url_actual == 'dashboard' %}activo{% endif %}">Inicio</a>
+            <a href="{% url 'panel:categorias' %}" data-panel-nav-cerrar class="{% if url_actual == 'categorias' or url_actual == 'categoria_crear' or url_actual == 'categoria_editar' %}activo{% endif %}">Categorías</a>
+            <a href="{% url 'panel:productos' %}" data-panel-nav-cerrar class="{% if url_actual == 'productos' or url_actual == 'producto_crear' or url_actual == 'producto_editar' %}activo{% endif %}">Productos</a>
+            <a href="{% url 'panel:combos' %}" data-panel-nav-cerrar class="{% if url_actual == 'combos' or url_actual == 'combo_crear' or url_actual == 'combo_editar' %}activo{% endif %}">Combos</a>
+            <a href="{% url 'panel:usuarios' %}" data-panel-nav-cerrar class="{% if url_actual == 'usuarios' or url_actual == 'usuario_crear' or url_actual == 'usuario_editar' or url_actual == 'usuario_password' %}activo{% endif %}">Usuarios</a>
+            <a href="{% url 'panel:configuracion' %}" data-panel-nav-cerrar class="{% if url_actual == 'configuracion' %}activo{% endif %}">Configuración</a>
+        </nav>
+        <div class="panel-nav-movil__footer">
+            <a href="{% url 'panel:usuario_password' request.user.pk %}" class="admin-btn admin-btn--secondary" data-panel-nav-cerrar>Cambiar contraseña</a>
+            <form method="post" action="{% url 'panel:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="admin-btn admin-btn--primary">Cerrar sesión</button>
+            </form>
+        </div>
+    </aside>
+
     <main class="panel-main">
         {% block breadcrumbs %}{% endblock %}
 
@@ -62,6 +116,6 @@
 </div>
 {% endif %}
 {% endwith %}
-<script src="{% static 'js/panel.js' %}" defer></script>
+<script src="{% static_v 'js/panel.js' %}" defer></script>
 {% block panel_extra_js %}{% endblock %}
 {% endblock %}

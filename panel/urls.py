@@ -42,5 +42,6 @@ urlpatterns = [
     path("preview/productos/", views.preview_productos, name="preview_productos"),
     path("preview/categoria/<slug:slug>/", views.preview_categoria, name="preview_categoria"),
     path("preview/producto/<slug:slug>/", views.preview_producto, name="preview_producto"),
+    path("preview/combo/<slug:slug>/", views.preview_combo, name="preview_combo"),
     path("preview/guardar-imagen/", views.preview_guardar_imagen, name="preview_guardar_imagen"),
 ]

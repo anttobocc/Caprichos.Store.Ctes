@@ -1,0 +1,37 @@
+{% extends "catalogo/base_catalogo.html" %}
+
+{% block title %}Combos | Capricho{% endblock %}
+
+{% block catalogo_content %}
+<section class="pagina-listado contenedor">
+    <div class="seccion-titulo">
+        <svg class="seccion-titulo__corazon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M12 21s-7.5-4.6-10-9.3C.4 8 2 4.5 5.6 4.5c2 0 3.6 1.1 4.4 2.7.8-1.6 2.4-2.7 4.4-2.7C18 4.5 19.6 8 20 11.7 17.5 16.4 12 21 12 21z" fill="var(--color-terracota)"/></svg>
+        <h1 class="titulo-decorado titulo-decorado--destacados">
+            <svg class="titulo-decorado__rama" viewBox="0 0 64 24" aria-hidden="true">
+                <path d="M2 12h42" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M16 12c0-5 4-8 8-8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M16 12c0 5 4 8 8 8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M32 12c0-4 3-6 6-6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M32 12c0 4 3 6 6 6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+            </svg>
+            Combos
+            <svg class="titulo-decorado__rama titulo-decorado__rama--derecha" viewBox="0 0 64 24" aria-hidden="true">
+                <path d="M2 12h42" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M16 12c0-5 4-8 8-8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M16 12c0 5 4 8 8 8" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M32 12c0-4 3-6 6-6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+                <path d="M32 12c0 4 3 6 6 6" stroke="var(--color-oliva)" stroke-width="1.2" fill="none"/>
+            </svg>
+        </h1>
+        <p class="subtitulo-centrado">Aprovechá nuestras promociones</p>
+    </div>
+
+    <div class="productos-grid">
+        {% for combo in combos %}
+            {% include "catalogo/_combo_card.html" %}
+        {% empty %}
+            <p>No hay combos disponibles por el momento.</p>
+        {% endfor %}
+    </div>
+</section>
+{% endblock %}

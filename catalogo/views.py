@@ -22,10 +22,31 @@ def lista_productos(request, modo_edicion=False):
     if categoria_slug:
         categoria_actual = get_object_or_404(Categoria, slug=categoria_slug, activo=True, mostrar_en_productos=True)
         productos = productos.filter(categoria=categoria_actual)
+    # Combo no tiene categoría propia, así que solo aparece en el listado
+    # general ("Todos"): en cuanto se filtra por una categoría puntual se
+    # excluye naturalmente, sin necesidad de un caso especial en el filtro.
+    combos = Combo.objects.filter(activo=True) if not categoria_actual else Combo.objects.none()
     return render(request, "catalogo/productos_lista.html", {
         "productos": productos,
+        "combos": combos,
         "categorias": Categoria.objects.filter(activo=True, mostrar_en_productos=True),
         "categoria_actual": categoria_actual,
+        "modo_edicion": modo_edicion,
+    })
+
+
+def combos_publico(request, modo_edicion=False):
+    combos = Combo.objects.filter(activo=True)
+    return render(request, "catalogo/combos_lista.html", {
+        "combos": combos,
+        "modo_edicion": modo_edicion,
+    })
+
+
+def combo_detalle(request, slug, modo_edicion=False):
+    combo = get_object_or_404(Combo.objects.prefetch_related("items__producto"), slug=slug, activo=True)
+    return render(request, "catalogo/combo_detalle.html", {
+        "combo": combo,
         "modo_edicion": modo_edicion,
     })
 
